@@ -111,7 +111,7 @@ async def start_command(update: Update, context: CallbackContext):
     language_code = user_data.chosen_language if user_data is not None else user.language_code
     
     if user_data == None:
-        initialize_user_data(user_id, first_name, last_name, language_code)
+        await initialize_user_data(user_id, first_name, last_name, language_code)
         
     user_data = await load_user_data(user_id)
     LOGGER.info(user_data)
