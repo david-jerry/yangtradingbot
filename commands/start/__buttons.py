@@ -572,7 +572,7 @@ async def home_button_callback(update: Update, context: CallbackContext):
     user_id = str(query.from_user.id)
     user = str(query.from_user)
     
-    user_initial_data = load_user_data(user_id)
+    user_initial_data = await load_user_data(user_id)
 
     if user_initial_data != None:
         first_name = user_initial_data.first_name

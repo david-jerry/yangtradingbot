@@ -97,7 +97,7 @@ async def start_command(update: Update, context: CallbackContext):
     user_id = str(user.id)
 
     context.user_data["message_stack"] = []
-    user_initial_data = load_user_data(user_id)
+    user_initial_data = await load_user_data(user_id)
 
     if user_initial_data != None:
         first_name = user_initial_data.first_name
