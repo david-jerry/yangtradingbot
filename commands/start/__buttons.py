@@ -22,7 +22,7 @@ from constants import (
     wallets_message,
 )
 from utils import generate_wallet
-from utils_data import load_user_data, update_user_data
+from utils_data import load_user_data, save_user_data, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
@@ -484,9 +484,40 @@ async def home_button_callback(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     await query.answer()
     command = query.data
+    user_id = str(query.from_user.id)
+    user = str(query.from_user)
 
     welcome_message = create_welcome_message()
     last_message_id = context.user_data.get("last_message_id") or None
+    
+    user_data = await load_user_data(user_id)
+    language_code = user_data.chosen_language if user_data is not None else user.language_code
+    
+    if user_data == None:
+        data = {
+            "user_id": user_id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": f"{user_id}@mail.com",
+            "chosen_language": language_code,
+            "wallet_address": None,
+            "wallet_private_key": None,
+            "wallet_phrase": None,
+            "agreed_to_terms": False,
+        }
+        
+        user_data = await save_user_data(data)
+        
+        LOGGER.info(f"User Data: {user_data}")
+
+    status = user_data.agreed_to_terms
+
+
+    if not status:
+        start_button_mu = start_button_markup
+    else:
+        start_button_mu = start_button_markup2
+
 
     # Delete the previous message if available
     if last_message_id != None:
@@ -503,7 +534,7 @@ async def home_button_callback(update: Update, context: CallbackContext):
             bot_profile_photo,
             caption=welcome_message,
             parse_mode=ParseMode.HTML,
-            reply_markup=start_button_markup,
+            reply_markup=start_button_mu,
         )
     else:
         await query.message.reply_text(welcome_message, parse_mode=ParseMode.HTML)
