@@ -571,8 +571,17 @@ async def home_button_callback(update: Update, context: CallbackContext):
     command = query.data
     user_id = str(query.from_user.id)
     user = str(query.from_user)
+    
+    user_initial_data = load_user_data(user_id)
 
-    welcome_message = create_welcome_message()
+    if user_initial_data != None:
+        first_name = user_initial_data.first_name
+        last_name = user_initial_data.last_name
+    else:
+        first_name = user.first_name
+        last_name = user.last_name
+
+
     last_message_id = context.user_data.get("last_message_id") or None
     
     user_data = await load_user_data(user_id)
@@ -581,8 +590,8 @@ async def home_button_callback(update: Update, context: CallbackContext):
     if user_data == None:
         data = {
             "user_id": user_id,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
+            "first_name": first_name,
+            "last_name": last_name,
             "email": f"{user_id}@mail.com",
             "chosen_language": language_code,
             "wallet_address": None,

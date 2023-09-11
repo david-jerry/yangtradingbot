@@ -97,15 +97,23 @@ async def start_command(update: Update, context: CallbackContext):
     user_id = str(user.id)
 
     context.user_data["message_stack"] = []
+    user_initial_data = load_user_data(user_id)
+
+    if user_initial_data != None:
+        first_name = user_initial_data.first_name
+        last_name = user_initial_data.last_name
+    else:
+        first_name = user.first_name
+        last_name = user.last_name
+        
 
     # Fetch the bot's profile photo
     bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
     bot_profile_photo = bot_profile_photos.photos[0][0] if bot_profile_photos else None
 
-    first_name = user.first_name
-    last_name = user.last_name
+    
 
-    welcome_message = create_welcome_message()
+    # welcome_message = create_welcome_message()
 
     user_data = await load_user_data(user_id)
     language_code = user_data.chosen_language if user_data is not None else user.language_code
@@ -124,10 +132,9 @@ async def start_command(update: Update, context: CallbackContext):
         }
         await save_user_data(data)
         
-    user_data = await load_user_data(user_id)
-    LOGGER.info(f"{user_data}")
+    user_awaited_data = await load_user_data(user_id)
 
-    status = user_data.agreed_to_terms
+    status = user_awaited_data.agreed_to_terms
 
 
     if not status:
@@ -148,7 +155,3 @@ async def start_command(update: Update, context: CallbackContext):
             welcome_message, parse_mode=ParseMode.HTML, reply_markup=start_button_markup
         )
     
-
-
-def create_welcome_message():
-    return welcome_message
