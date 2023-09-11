@@ -24,7 +24,6 @@ def save_user_data(user_data):
 
 @sync_to_async
 def load_user_data(user_id):
-    global user_data
     try:
         user_data = CustomUser.objects.filter(user_id=user_id).first()
         return user_data
