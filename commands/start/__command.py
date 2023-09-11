@@ -125,7 +125,7 @@ async def start_command(update: Update, context: CallbackContext):
         await save_user_data(data)
         
     user_data = await load_user_data(user_id)
-    LOGGER.info(user_data)
+    LOGGER.info(f"{user_data}")
 
     status = user_data.agreed_to_terms
 
