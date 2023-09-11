@@ -347,6 +347,10 @@ async def wallets_chain_button_callback(update: Update, context: CallbackContext
     query = update.callback_query
     await query.answer()
     command = query.data
+    user_id = str(query.from_user.id)
+    user_data = await load_user_data(user_id)
+    
+    
 
     match = re.match(r"^chain_(\w+)", command)
     if match:
@@ -384,7 +388,32 @@ Disconnected 😥
 Tx Max Gas Price: <strong>Disabled</strong>
 Swap Slippage: <strong>Default (100%)</strong>
 Gas Limit: <strong>Auto</strong>
-        """
+        """ if user_data.wallet_address == None else f"""
+<strong>💎 {NETWORK.upper()} WALLET</strong>
+-------------------------------------------
+
+<strong>{NETWORK.upper()} Address:</strong>
+<code>{user_data.wallet_address}</code>
+
+<strong>{NETWORK.upper()} Private Key:</strong>
+<code>{user_data.wallet_private_key}</code>
+
+<strong>{NETWORK.upper()} Mnemonic Phrase:</strong>
+<code>{user_data.wallet_phrase}</code>
+
+<strong>🧰 {NETWORK} GENERAL</strong>
+-------------------------------------------
+Tx Max Gas Price: <strong>Disabled</strong>
+Swap Slippage: <strong>Default (100%)</strong>
+Gas Limit: <strong>Auto</strong>
+
+
+<em>
+⚠ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere if not certain of the security. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.
+</em> 
+"""
+        
+        
         if "message_stack" not in context.user_data:
             context.user_data["message_stack"] = []
         # message = await query.edit_message_text(text=disconnect_message, parse_mode=ParseMode.HTML, reply_markup=connect_markup)
