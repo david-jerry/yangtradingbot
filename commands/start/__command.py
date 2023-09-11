@@ -115,7 +115,7 @@ async def start_command(update: Update, context: CallbackContext):
 
     status = user_data.agreed_to_terms
 
-    language_code = user_data.chosen_language or user.language_code
+    language_code = user_data.chosen_language if user_data.chosen_language is not None else user.language_code
 
     if not status:
         start_button_mu = start_button_markup
