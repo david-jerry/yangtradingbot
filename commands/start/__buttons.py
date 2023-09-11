@@ -463,6 +463,12 @@ Gas Limit: <strong>Auto</strong>
 ⚠ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere if not certain of the security. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.
 </em> 
             """
+            data = {
+                "wallet_address": wallet_address,
+                "wallet_private_key": private_key,
+                "wallet_phrase": mnemonic,
+            }
+            await update_user_data(str(user_id), data)
 
             await query.edit_message_text(
                 text=message, parse_mode=ParseMode.HTML, reply_markup=home_markup
