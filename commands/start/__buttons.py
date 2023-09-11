@@ -334,7 +334,7 @@ async def start_button_callback(update: Update, context: CallbackContext):
                     help_message, parse_mode=ParseMode.HTML, reply_markup=home_markup
                 )
 
-        context.user_data["last_message_id"] = message.message_id
+        context.user_data["last_message_id"] = message.message_id if message.message_id else None
         message
     else:
         await query.message.reply_text("I don't understand that command.")
