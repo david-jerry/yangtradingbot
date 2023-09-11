@@ -432,7 +432,7 @@ async def wallets_chain_connect_button_callback(
 
         if button_data == "create":
             # Generate a wallet for the specified blockchain
-            wallet_address, private_key, balance, mnemonic = generate_wallet(NETWORK, user_id)
+            wallet_address, private_key, balance, mnemonic = await generate_wallet(NETWORK, user_id)
             
 
             # Send the wallet address and private key to the user
