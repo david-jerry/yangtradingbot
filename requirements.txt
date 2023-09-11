@@ -1,0 +1,7 @@
+python-decouple==3.8
+requests==2.31.0
+python-telegram-bot==20.4
+loguru==0.5.3
+web3==6.9.0
+mnemonic==0.20
+asgiref==3.7.2
