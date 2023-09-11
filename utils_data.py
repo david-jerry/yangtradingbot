@@ -14,7 +14,7 @@ from logger import LOGGER
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'yangbot.settings')
 django.setup()
 
-
+@sync_to_async
 def save_user_data(user_data):
     # Save user data to pickle file
     user = CustomUser.objects.get_or_create(
@@ -22,7 +22,7 @@ def save_user_data(user_data):
     )
     return user
 
-
+@sync_to_async
 def load_user_data(user_id):
     global user_data
     try:
@@ -32,7 +32,7 @@ def load_user_data(user_id):
         user_data = None
         return user_data
 
-
+@sync_to_async
 def update_user_data(user_id: str, updated_data):
     user_data = load_user_data(user_id)
     if user_data != None:
