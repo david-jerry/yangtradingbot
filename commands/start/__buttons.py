@@ -158,7 +158,7 @@ async def terms_button_callback(update: Update, context: ContextTypes.DEFAULT_TY
         await update_user_data(str(user_id), {"agreed_to_terms": True if button_data == "accept" else False})
 
         user_data = await load_user_data(user_id)
-        LOGGER.info(user_data)
+        LOGGER.info(f"User Data:{user_data}")
 
         status = user_data.agreed_to_terms
 
