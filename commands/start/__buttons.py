@@ -155,19 +155,18 @@ async def terms_button_callback(update: Update, context: ContextTypes.DEFAULT_TY
     if match:
         button_data = match.group(1)
         # UPDATE PICKLE DB
-        update_user_data(str(user_id), {"agreed_to_terms": button_data})
+        await update_user_data(str(user_id), {"agreed_to_terms": button_data})
 
         user_data = await load_user_data(user_id)
         LOGGER.info(user_data)
 
-        status = user_data[user_id]["agreed_to_terms"]
+        status = user_data.agreed_to_terms
 
-        if status != "accept":
+        if not status:
             start_button_mu = start_button_markup
         else:
             start_button_mu = start_button_markup2
 
-        LOGGER.info(status)
 
         if button_data == "accept":
             await context.bot.send_message(
@@ -220,7 +219,7 @@ async def language_button_callback(update: Update, context: ContextTypes.DEFAULT
     if match:
         button_data = match.group(1)
         # UPDATE PICKLE DB
-        update_user_data(str(user_id), "chosen_language", button_data)
+        await update_user_data(str(user_id), {"chosen_language": button_data})
 
         if button_data == "en":
             await context.bot.send_message(
@@ -419,9 +418,9 @@ async def wallets_chain_connect_button_callback(
     context.user_data["message_stack"].append(
         {"message": context_message, "text": context_text, "markup": context_markup}
     )
-    status = user_data[user_id]["agreed_to_terms"]
+    status = user_data.agreed_to_terms
 
-    if status != "accept":
+    if not status:
         message = await query.edit_message_text(
             text=terms_message, parse_mode=ParseMode.HTML, reply_markup=home_markup
         )
