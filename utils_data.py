@@ -3,36 +3,40 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any, Final
 import requests
+import os
+import django
 
 from asgiref.sync import sync_to_async
+from apps.accounts.models import CustomUser
 
 from logger import LOGGER
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'src.settings')
+django.setup()
 
 
 def save_user_data(user_data):
     # Save user data to pickle file
-    with open('user_data.pkl', 'wb') as file:
-        pickle.dump(user_data, file)
-        
+    user = CustomUser.objects.get_or_create(
+        user_data
+    )
+    return user
 
-def load_user_data():
+
+def load_user_data(user_id):
     global user_data
     try:
-        with open('user_data.pkl', 'rb') as file:
-            user_data = pickle.load(file)
-            return user_data
+        user_data = CustomUser.objects.get(user_id=user_id)
+        return user_data
     except FileNotFoundError:
-        user_data = {}
+        user_data = None
         return user_data
 
-def update_user_data(user_id:str, db_key:str, db_value):
-    load_user_data()
-    if user_id in user_data:
-        user_data[str(user_id)][db_key] = db_value
-        # Save the updated user data back to pickle file
-        save_user_data(user_data)
-        load_user_data()
+
+def update_user_data(user_id: str, updated_data):
+    user_data = load_user_data(user_id)
+    if user_data != None:
+        CustomUser.objects.filter(user_id=user_id).update(updated_data)
     else:
         LOGGER.info("User not found")
         pass
-
