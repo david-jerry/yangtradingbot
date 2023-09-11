@@ -114,6 +114,7 @@ async def start_command(update: Update, context: CallbackContext):
         initialize_user_data(user_id, first_name, last_name, language_code)
         
     user_data = await load_user_data(user_id)
+    LOGGER.info(user_data)
 
     status = user_data.agreed_to_terms
 
