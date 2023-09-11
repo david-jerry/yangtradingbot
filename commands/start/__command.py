@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+import os
 import pickle
+
+import django
 
 from logger import LOGGER
 
@@ -14,6 +17,10 @@ from telegram.ext import (
     filters,
     CallbackContext,
 )
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'yangbot.settings')
+django.setup()
+
 
 from utils_data import load_user_data, save_user_data
 

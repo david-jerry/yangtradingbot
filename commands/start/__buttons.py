@@ -1,11 +1,17 @@
+import os
 import pickle
 import re
+
+
+import django
 from logger import LOGGER
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, CallbackContext
 from telegram.constants import ParseMode
 
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'yangbot.settings')
+django.setup()
 
 from constants import (
     help_message,
