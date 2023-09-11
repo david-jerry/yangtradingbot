@@ -26,7 +26,7 @@ def save_user_data(user_data):
 def load_user_data(user_id):
     global user_data
     try:
-        user_data = CustomUser.objects.get(user_id=user_id)
+        user_data = CustomUser.objects.filter(user_id=user_id).first()
         return user_data
     except FileNotFoundError:
         user_data = None
