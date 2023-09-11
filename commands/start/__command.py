@@ -111,7 +111,7 @@ async def start_command(update: Update, context: CallbackContext):
     language_code = user_data.chosen_language if user_data is not None else user.language_code
     
     if user_data == None:
-        user_data = {
+        data = {
             "user_id": user_id,
             "first_name": first_name,
             "last_name": last_name,
@@ -122,7 +122,7 @@ async def start_command(update: Update, context: CallbackContext):
             "wallet_phrase": "",
             "agreed_to_terms": False,
         }
-        await save_user_data(user_data)
+        await save_user_data(data)
         
     user_data = await load_user_data(user_id)
     LOGGER.info(user_data)
