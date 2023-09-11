@@ -107,10 +107,11 @@ async def start_command(update: Update, context: CallbackContext):
 
     welcome_message = create_welcome_message()
 
-    user_data = load_user_data(user_id)
+    user_data = await load_user_data(user_id)
     
     if user_data == None:
-        user_data = initialize_user_data(user_id, first_name, last_name, language_code)
+        initialize_user_data(user_id, first_name, last_name, language_code)
+        user_data = await load_user_data(user_id)
 
     status = user_data.agreed_to_terms
 

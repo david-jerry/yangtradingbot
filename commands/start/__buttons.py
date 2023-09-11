@@ -157,7 +157,7 @@ async def terms_button_callback(update: Update, context: ContextTypes.DEFAULT_TY
         # UPDATE PICKLE DB
         update_user_data(str(user_id), {"agreed_to_terms": button_data})
 
-        user_data = load_user_data()
+        user_data = await load_user_data(user_id)
         LOGGER.info(user_data)
 
         status = user_data[user_id]["agreed_to_terms"]
@@ -409,7 +409,7 @@ async def wallets_chain_connect_button_callback(
     await query.answer()
     command = query.data
     user_id = str(query.message.chat_id)
-    user_data = load_user_data()
+    user_data = await load_user_data(user_id)
 
     NETWORK = context.user_data.get("network_chain")
     context_message = context.user_data.get("message")
