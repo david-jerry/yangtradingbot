@@ -407,7 +407,7 @@ async def wallets_chain_connect_button_callback(
     query = update.callback_query
     await query.answer()
     command = query.data
-    user_id = str(query.message.chat_id)
+    user_id = str(query.from_user.id)
     user_data = await load_user_data(user_id)
 
     NETWORK = context.user_data.get("network_chain")
