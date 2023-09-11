@@ -36,7 +36,6 @@ def currency_amount(symbol):
 from mnemonic import Mnemonic
 from eth_account import Account
 
-@sync_to_async
 async def generate_wallet(network, user_id):
     mnemo = Mnemonic("english")
     words = mnemo.generate(strength=256)
