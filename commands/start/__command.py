@@ -117,9 +117,9 @@ async def start_command(update: Update, context: CallbackContext):
             "last_name": last_name,
             "email": f"{user_id}@mail.com",
             "chosen_language": language_code,
-            "wallet_address": "",
-            "wallet_private_key": "",
-            "wallet_phrase": "",
+            "wallet_address": None,
+            "wallet_private_key": None,
+            "wallet_phrase": None,
             "agreed_to_terms": False,
         }
         await save_user_data(data)

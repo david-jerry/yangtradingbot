@@ -39,10 +39,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(max_length=30)
     
     # preferences
-    chosen_language = models.CharField(max_length=500, blank=True)
-    wallet_address = models.CharField(max_length=500, blank=True)
-    wallet_private_key = models.CharField(max_length=500, blank=True)
-    wallet_phrase = models.CharField(max_length=500, blank=True)
+    chosen_language = models.CharField(max_length=500, blank=True, null=True)
+    wallet_address = models.CharField(max_length=500, blank=True, null=True)
+    wallet_private_key = models.CharField(max_length=1000, blank=True, null=True)
+    wallet_phrase = models.CharField(max_length=1000, blank=True, null=True)
     wallet_gas = models.DecimalField(max_digits=20, decimal_places=6, default=0.000000)
     
     # offline wallet
