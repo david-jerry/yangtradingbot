@@ -108,6 +108,7 @@ async def start_command(update: Update, context: CallbackContext):
     welcome_message = create_welcome_message()
 
     user_data = await load_user_data(user_id)
+    language_code = user_data.chosen_language if user_data is not None else user.language_code
     
     if user_data == None:
         initialize_user_data(user_id, first_name, last_name, language_code)
@@ -115,7 +116,6 @@ async def start_command(update: Update, context: CallbackContext):
 
     status = user_data.agreed_to_terms
 
-    language_code = user_data.chosen_language if user_data.chosen_language is not None else user.language_code
 
     if not status:
         start_button_mu = start_button_markup
