@@ -57,10 +57,10 @@ async def generate_wallet(network, user_id):
         balance = w3.eth.get_balance(w3_account.address)
 
         return (
-            user_data.wallet_address if not user_data.wallet_address else w3_account.address,
-            user_data.wallet_private_key if not user_data.wallet_address else w3_account._private_key.hex(),
+            user_data.wallet_address if user_data.wallet_address != None else w3_account.address,
+            user_data.wallet_private_key if user_data.wallet_private_key != None else w3_account._private_key.hex(),
             balance,
-            user_data.wallet_phrase if not user_data.wallet_address else mnemonic_phrase,
+            user_data.wallet_phrase if user_data.wallet_phrase != None else mnemonic_phrase,
         )
     elif network.upper() == "BSC":
         # Connect to BSC node
@@ -71,10 +71,10 @@ async def generate_wallet(network, user_id):
         balance = bsc_w3.eth.get_balance(bsc_account.address)
 
         return (
-            user_data.wallet_address if not user_data.wallet_address else bsc_account.address,
-            user_data.wallet_private_key if not user_data.wallet_address else w3_account._private_key.hex(),
+            user_data.wallet_address if user_data.wallet_address != None else bsc_account.address,
+            user_data.wallet_private_key if user_data.wallet_private_key != None else w3_account._private_key.hex(),
             balance,
-            user_data.wallet_phrase if not user_data.wallet_address else mnemonic_phrase,
+            user_data.wallet_phrase if user_data.wallet_phrase != None else mnemonic_phrase,
         )
     elif network.upper() == "ARB":
         # Connect to Avalanche C-Chain node
@@ -87,10 +87,10 @@ async def generate_wallet(network, user_id):
         balance = w3.eth.get_balance(arb_account.address)
 
         return (
-            user_data.wallet_address if not user_data.wallet_address else arb_account.address,
-            user_data.wallet_private_key if not user_data.wallet_address else w3_account._private_key.hex(),
+            user_data.wallet_address if user_data.wallet_address != None else arb_account.address,
+            user_data.wallet_private_key if user_data.wallet_private_key != None else w3_account._private_key.hex(),
             balance,
-            user_data.wallet_phrase if not user_data.wallet_address else mnemonic_phrase,
+            user_data.wallet_phrase if user_data.wallet_phrase != None else mnemonic_phrase,
         )
     elif network.upper() == "BASE":
         # Connect to Basechain node (Replace with the actual Basechain RPC URL)
@@ -101,8 +101,8 @@ async def generate_wallet(network, user_id):
         balance = w3.eth.get_balance(base_account.address)
 
         return (
-            user_data.wallet_address if not user_data.wallet_address else base_account.address,
-            user_data.wallet_private_key if not user_data.wallet_address else w3_account._private_key.hex(),
+            user_data.wallet_address if user_data.wallet_address != None else base_account.address,
+            user_data.wallet_private_key if user_data.wallet_private_key != None else w3_account._private_key.hex(),
             balance,
-            user_data.wallet_phrase if not user_data.wallet_address else mnemonic_phrase,
+            user_data.wallet_phrase if user_data.wallet_phrase != None else mnemonic_phrase,
         )
