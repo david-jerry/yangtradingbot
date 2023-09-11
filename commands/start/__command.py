@@ -111,7 +111,18 @@ async def start_command(update: Update, context: CallbackContext):
     language_code = user_data.chosen_language if user_data is not None else user.language_code
     
     if user_data == None:
-        await initialize_user_data(user_id, first_name, last_name, language_code)
+        user_data = {
+            "user_id": user_id,
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": f"{user_id}@mail.com",
+            "chosen_language": language_code,
+            "wallet_address": "",
+            "wallet_private_key": "",
+            "wallet_phrase": "",
+            "agreed_to_terms": False,
+        }
+        await save_user_data(user_data)
         
     user_data = await load_user_data(user_id)
     LOGGER.info(user_data)
@@ -136,21 +147,7 @@ async def start_command(update: Update, context: CallbackContext):
         await update.message.reply_text(
             welcome_message, parse_mode=ParseMode.HTML, reply_markup=start_button_markup
         )
-
-
-async def initialize_user_data(user_id, first_name, last_name, language_code):
-    user_data = {
-        "user_id": user_id,
-        "first_name": first_name,
-        "last_name": last_name,
-        "email": f"{user_id}@mail.com",
-        "chosen_language": language_code,
-        "wallet_address": "",
-        "wallet_private_key": "",
-        "wallet_phrase": "",
-        "agreed_to_terms": False,
-    }
-    await save_user_data(user_data)
+    
 
 
 def create_welcome_message():

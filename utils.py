@@ -3,8 +3,10 @@ from typing import Final
 import requests
 from web3 import Web3
 from decouple import config
+from asgiref.sync import sync_to_async
 
 from logger import LOGGER
+from utils_data import load_user_data
 
 INFURA_ID: Final = config("INFURA_ID")
 MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
@@ -34,12 +36,15 @@ def currency_amount(symbol):
 from mnemonic import Mnemonic
 from eth_account import Account
 
-
-def generate_wallet(network):
+@sync_to_async
+async def generate_wallet(network, user_id):
     mnemo = Mnemonic("english")
     words = mnemo.generate(strength=256)
     mnemonic_phrase = words
     LOGGER.info(mnemonic_phrase)
+    
+    user_data = await load_user_data(user_id)
+    
 
     # Connect to Ethereum node
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
@@ -53,10 +58,10 @@ def generate_wallet(network):
         balance = w3.eth.get_balance(w3_account.address)
 
         return (
-            w3_account.address,
-            w3_account._private_key.hex(),
+            user_data.wallet_address if not user_data.wallet_address else w3_account.address,
+            user_data.wallet_private_key if not user_data.wallet_address else w3_account._private_key.hex(),
             balance,
-            mnemonic_phrase,
+            user_data.wallet_phrase if not user_data.wallet_address else mnemonic_phrase,
         )
     elif network.upper() == "BSC":
         # Connect to BSC node
@@ -67,10 +72,10 @@ def generate_wallet(network):
         balance = bsc_w3.eth.get_balance(bsc_account.address)
 
         return (
-            bsc_account.address,
-            w3_account._private_key.hex(),
+            user_data.wallet_address if not user_data.wallet_address else bsc_account.address,
+            user_data.wallet_private_key if not user_data.wallet_address else w3_account._private_key.hex(),
             balance,
-            mnemonic_phrase,
+            user_data.wallet_phrase if not user_data.wallet_address else mnemonic_phrase,
         )
     elif network.upper() == "ARB":
         # Connect to Avalanche C-Chain node
@@ -83,10 +88,10 @@ def generate_wallet(network):
         balance = w3.eth.get_balance(arb_account.address)
 
         return (
-            arb_account.address,
-            w3_account._private_key.hex(),
+            user_data.wallet_address if not user_data.wallet_address else arb_account.address,
+            user_data.wallet_private_key if not user_data.wallet_address else w3_account._private_key.hex(),
             balance,
-            mnemonic_phrase,
+            user_data.wallet_phrase if not user_data.wallet_address else mnemonic_phrase,
         )
     elif network.upper() == "BASE":
         # Connect to Basechain node (Replace with the actual Basechain RPC URL)
@@ -97,8 +102,8 @@ def generate_wallet(network):
         balance = w3.eth.get_balance(base_account.address)
 
         return (
-            base_account.address,
-            w3_account._private_key.hex(),
+            user_data.wallet_address if not user_data.wallet_address else base_account.address,
+            user_data.wallet_private_key if not user_data.wallet_address else w3_account._private_key.hex(),
             balance,
-            mnemonic_phrase,
+            user_data.wallet_phrase if not user_data.wallet_address else mnemonic_phrase,
         )
