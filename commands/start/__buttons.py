@@ -155,7 +155,7 @@ async def terms_button_callback(update: Update, context: ContextTypes.DEFAULT_TY
     if match:
         button_data = match.group(1)
         # UPDATE PICKLE DB
-        await update_user_data(str(user_id), {"agreed_to_terms": button_data})
+        await update_user_data(str(user_id), {"agreed_to_terms": True if button_data == "accept" else False})
 
         user_data = await load_user_data(user_id)
         LOGGER.info(user_data)
