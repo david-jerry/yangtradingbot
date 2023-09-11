@@ -32,8 +32,8 @@ def load_user_data(user_id):
         return user_data
 
 @sync_to_async
-def update_user_data(user_id: str, updated_data):
-    user_data = load_user_data(user_id)
+async def update_user_data(user_id: str, updated_data):
+    user_data = await load_user_data(user_id)
     if user_data != None:
         CustomUser.objects.filter(user_id=user_id).update(updated_data)
     else:

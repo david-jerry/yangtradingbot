@@ -138,7 +138,7 @@ async def start_command(update: Update, context: CallbackContext):
         )
 
 
-def initialize_user_data(user_id, first_name, last_name, language_code):
+async def initialize_user_data(user_id, first_name, last_name, language_code):
     user_data = {
         "user_id": user_id,
         "first_name": first_name,
@@ -150,7 +150,7 @@ def initialize_user_data(user_id, first_name, last_name, language_code):
         "wallet_phrase": "",
         "agreed_to_terms": False,
     }
-    save_user_data(user_data)
+    await save_user_data(user_data)
 
 
 def create_welcome_message():
