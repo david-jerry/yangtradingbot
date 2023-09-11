@@ -58,9 +58,16 @@ chain_keyboard = [
 chain_markup = InlineKeyboardMarkup(chain_keyboard)
 
 attach_wallet = InlineKeyboardButton("Attach Wallet", callback_data="connect_attach")
+detach_wallet = InlineKeyboardButton("Detach Wallet", callback_data="connect_detach")
+detach_confirm = InlineKeyboardButton("Confirm Detach", callback_data="connect_confirm")
 create_wallet = InlineKeyboardButton("Create Wallet", callback_data="connect_create")
 connect_keyboard = [[home], [attach_wallet, back], [create_wallet]]
+detach_keyboard = [[home], [detach_wallet, back], [create_wallet]]
+detach_confirm_keyboard = [[home], [detach_confirm, back], [create_wallet]]
+
 connect_markup = InlineKeyboardMarkup(connect_keyboard)
+detach_markup = InlineKeyboardMarkup(connect_keyboard)
+detach_confirm_markup = InlineKeyboardMarkup(detach_confirm_keyboard)
 
 # ------------------------------------------------------------------------------
 # LANGUAGE BUTTONS
@@ -420,7 +427,7 @@ Gas Limit: <strong>Auto</strong>
         message = await query.edit_message_text(
             text=disconnect_message,
             parse_mode=ParseMode.HTML,
-            reply_markup=connect_markup,
+            reply_markup=connect_markup if user_data.wallet_address != None else detach_markup,
         )
         context.user_data["message"] = message
         context.user_data["text"] = disconnect_message
@@ -504,7 +511,56 @@ Gas Limit: <strong>Auto</strong>
                 text=message, parse_mode=ParseMode.HTML, reply_markup=home_markup
             )
 
+        elif button_data == "detach":
+            message = await query.edit_message_reply_markup(reply_markup=detach_confirm_markup)
+            return message
+        elif button_data == "confirm":
+            context.user_data.clear()
+            disconnect_message = f"""
+        <strong>💎 {NETWORK.upper()} WALLET</strong>
+-------------------------------------------
+        
+<pre>
+Disconnected 😥 
+</pre>
 
+<strong>🧰 GENERAL</strong>
+-------------------------------------------
+Tx Max Gas Price: <strong>Disabled</strong>
+Swap Slippage: <strong>Default (100%)</strong>
+Gas Limit: <strong>Auto</strong>
+        """ if user_data.wallet_address == None else f"""
+<strong>💎 {NETWORK.upper()} WALLET</strong>
+-------------------------------------------
+
+<strong>{NETWORK.upper()} Address:</strong>
+<code>{user_data.wallet_address}</code>
+
+<strong>{NETWORK.upper()} Private Key:</strong>
+<code>{user_data.wallet_private_key}</code>
+
+<strong>{NETWORK.upper()} Mnemonic Phrase:</strong>
+<code>{user_data.wallet_phrase}</code>
+
+<strong>🧰 {NETWORK} GENERAL</strong>
+-------------------------------------------
+Tx Max Gas Price: <strong>Disabled</strong>
+Swap Slippage: <strong>Default (100%)</strong>
+Gas Limit: <strong>Auto</strong>
+
+
+<em>
+⚠ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere if not certain of the security. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.
+</em> 
+"""
+            message = await query.edit_message_text(text=disconnect_message, reply_markup=connect_markup if user_data.wallet_address != None else detach_markup)
+            return message
+        elif button_data == "attach":
+            reply_message = """
+What's the private key of this wallet? You may also use a 12-word mnemonic phrase.            
+            """
+            message = await query.message.reply_text(reply_message, reply_to_message_id=update.message.message_id)
+            return message
 # ------------------------------------------------------------------------------
 # HOME BUTTON CALLBACK
 # ------------------------------------------------------------------------------
