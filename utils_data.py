@@ -33,9 +33,19 @@ def load_user_data(user_id):
 
 @sync_to_async
 def update_user_data(user_id: str, updated_data):
-    user_data = CustomUser.objects.filter(user_id=user_id)
-    if user_data != None:
-        CustomUser.objects.filter(user_id=user_id).update(updated_data)
-    else:
+    try:
+        user_data = CustomUser.objects.get(user_id=user_id)
+        
+        # Update user_data fields based on updated_data dictionary
+        for key, value in updated_data.items():
+            setattr(user_data, key, value)
+        
+        user_data.save()  # Save the changes to the database
+    except CustomUser.DoesNotExist:
         LOGGER.info("User not found")
-        pass
+    # user_data = CustomUser.objects.filter(user_id=user_id)
+    # if user_data != None:
+    #     CustomUser.objects.filter(user_id=user_id).update(updated_data)
+    # else:
+    #     LOGGER.info("User not found")
+    #     pass
