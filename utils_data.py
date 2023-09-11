@@ -11,7 +11,7 @@ from apps.accounts.models import CustomUser
 
 from logger import LOGGER
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'src.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'yangbot.settings')
 django.setup()
 
 
