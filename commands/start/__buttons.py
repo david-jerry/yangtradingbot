@@ -1015,6 +1015,7 @@ async def back_button_callback(update: Update, context: CallbackContext):
     if previous_messages:
         last_message = context.user_data["message_stack"].pop(0)
         LOGGER.info(last_message["text"])
+        LOGGER.info(last_message['message'])
         LOGGER.info(last_message["markup"])
         if last_message.get("markup") is not None:
             await query.edit_message_caption(
