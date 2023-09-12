@@ -193,7 +193,7 @@ def main() -> None:
     # CONVERSATION HANDLERS
     attach_conv_handler = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(wallets_chain_attach_callback, pattern=r"^wallet_attach$")
+            CallbackQueryHandler(wallets_chain_attach_callback, pattern=r"^wallet_attach")
         ],
         states={
             PRIVATEKEY: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_attachment$")), reply_wallet_attach)],

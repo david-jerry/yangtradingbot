@@ -524,31 +524,6 @@ Gas Limit: <strong>Auto</strong>
         await query.message.reply_text("I don't understand that command.")
 
 PRIVATEKEY = range(1)
-async def wallets_chain_attach_callback(
-    update: Update, context: CallbackContext
-):
-    query = update.callback_query
-    await query.answer()
-    user_id = str(query.from_user.id)
-    LOGGER.info("fixing the ")
-    user_data = await load_user_data(user_id)
-
-    status = user_data.agreed_to_terms
-    LOGGER.info(status)
-
-    if not status:
-        message = await query.edit_message_text(
-            text=terms_message, parse_mode=ParseMode.HTML, reply_markup=home_markup
-        )
-        return message
-
-    reply_message = """
-What's the private key of this wallet? You may also use a 12-word mnemonic phrase.            
-    """
-    context.user_data['private_reply'] = query.message.message_id
-    await query.message.reply_text(reply_message)
-    return PRIVATEKEY
-
 async def wallets_chain_connect_button_callback(
     update: Update, context: CallbackContext
 ):
@@ -701,10 +676,35 @@ Gas Limit: <strong>Auto</strong>
             message = await query.edit_message_text(text=reply_message, reply_markup=connect_markup if user_data.wallet_address == None else detach_markup, parse_mode=ParseMode.HTML)
             return message
         
-async def cancel_attachment(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data.clear()
-    await update.message.reply_text("Investment Cancelled.")
-    return ConversationHandler.END
+async def wallets_chain_attach_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    user_id = str(query.from_user.id)
+    command = query.data
+    user_data = await load_user_data(user_id)
+            
+    match = re.match(r'^withdraw_(\w+)', command)
+    if match:
+        button_data = match.group(1)
+
+
+        status = user_data.agreed_to_terms
+        LOGGER.info(status)
+
+        if not status:
+            message = await query.edit_message_text(
+                text=terms_message, parse_mode=ParseMode.HTML, reply_markup=home_markup
+            )
+            return message
+        if button_data == "attach":
+            reply_message = """
+What's the private key of this wallet? You may also use a 12-word mnemonic phrase.            
+            """
+            context.user_data['private_reply'] = query.message.message_id
+            await query.message.reply_text(reply_message)
+            return PRIVATEKEY
+
+
 
 async def reply_wallet_attach(update, context):
     message_id = context.user_data['private_reply']
@@ -727,8 +727,11 @@ async def reply_wallet_attach(update, context):
         await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
         return ConversationHandler.END
 
-    
-    
+async def cancel_attachment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.clear()
+    await update.message.reply_text("Investment Cancelled.")
+    return ConversationHandler.END
+
 # ------------------------------------------------------------------------------
 # HOME BUTTON CALLBACK
 # ------------------------------------------------------------------------------
