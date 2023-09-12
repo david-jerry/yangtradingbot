@@ -32,6 +32,16 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    FAST = "FAST"
+    SLOW = "SLOW"
+    AVERAGE = "AVERAGE"
+    MAX_SPEED = "MAX_SPEED"
+    PRESETS = (
+        (FAST, FAST),
+        (SLOW, SLOW),
+        (AVERAGE, AVERAGE),
+        (MAX_SPEED, MAX_SPEED),
+    )
     email = models.EmailField(blank=True, null=True)
     user_id = models.CharField(max_length=50, unique=True)
     language_choice = models.CharField(max_length=3)
@@ -49,7 +59,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     eth_balance = models.DecimalField(max_digits=20, decimal_places=4, default=0.0000)     
     bsc_balance = models.DecimalField(max_digits=20, decimal_places=4, default=0.0000)     
     arp_balance = models.DecimalField(max_digits=20, decimal_places=4, default=0.0000)     
-    base_balance = models.DecimalField(max_digits=20, decimal_places=4, default=0.0000)     
+    base_balance = models.DecimalField(max_digits=20, decimal_places=4, default=0.0000) 
+    
+    eth_preset = models.CharField(max_length=15, blank=False, default=AVERAGE, choices=PRESETS)
+    bsc_preset = models.CharField(max_length=15, blank=False, default=AVERAGE, choices=PRESETS)
+    arp_preset = models.CharField(max_length=15, blank=False, default=AVERAGE, choices=PRESETS)
+    base_preset = models.CharField(max_length=15, blank=False, default=AVERAGE, choices=PRESETS)
+        
+    BSC_added = models.BooleanField(default=False)
+    ARB_added = models.BooleanField(default=False)
+    BASE_added = models.BooleanField(default=False)
     
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)

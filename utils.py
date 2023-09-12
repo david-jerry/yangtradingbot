@@ -36,6 +36,59 @@ def currency_amount(symbol):
 from mnemonic import Mnemonic
 from eth_account import Account
 
+async def attach_wallet_function(network, user_id, key):
+    user_data = await load_user_data(user_id)
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    if user_data:
+        if network.upper() == "ETH" and user_data.wallet_address:
+            balance = w3.eth.get_balance(user_data.wallet_address)
+            wallet_address = w3.eth.account.from_key(key)
+            mnemonic_phrase = wallet_address._get_mnemonic()
+            return (mnemonic_phrase, wallet_address)
+        elif network.upper() == "BSC" and user_data.BSC_added:
+            w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
+            balance = w3.eth.get_balance(user_data.wallet_address)
+            wallet_address = w3.eth.account.from_key(key)
+            mnemonic_phrase = wallet_address._get_mnemonic()
+            return (mnemonic_phrase, wallet_address)
+        elif network.upper() == "ARB" and user_data.ARB_added:
+            w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
+            balance = w3.eth.get_balance(user_data.wallet_address)
+            wallet_address = w3.eth.account.from_key(key)
+            mnemonic_phrase = wallet_address._get_mnemonic()
+            return (mnemonic_phrase, wallet_address)
+        elif network.upper() == "BASE" and user_data.BASE_added:
+            w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
+            balance = w3.eth.get_balance(user_data.wallet_address)    
+            wallet_address = w3.eth.account.from_key(key)
+            mnemonic_phrase = wallet_address._get_mnemonic()
+            return (mnemonic_phrase, wallet_address)
+    else:
+        return None
+
+
+async def get_wallet_balance(network, user_id):
+    user_data = await load_user_data(user_id)
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    if user_data:
+        if network.upper() == "ETH" and user_data.wallet_address:
+            balance = w3.eth.get_balance(user_data.wallet_address)
+            return balance
+        elif network.upper() == "BSC" and user_data.BSC_added:
+            w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
+            balance = w3.eth.get_balance(user_data.wallet_address)
+            return balance
+        elif network.upper() == "ARB" and user_data.ARB_added:
+            w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
+            balance = w3.eth.get_balance(user_data.wallet_address)
+            return balance
+        elif network.upper() == "BASE" and user_data.BASE_added:
+            w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
+            balance = w3.eth.get_balance(user_data.wallet_address)            
+            return balance
+    else:
+        return None
+
 async def generate_wallet(network, user_id):
     mnemo = Mnemonic("english")
     words = mnemo.generate(strength=256)

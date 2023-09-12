@@ -66,3 +66,11 @@ language_message = """
 wallets_message = f"""
 Please select a chain for which you would like to create or connect a wallet.
 """
+
+wallets_asset_message = f"""
+Please select a chain for which you would like to view its assets.
+"""
+
+preference_message = """
+Please select a preset of gas price for transactions.
+"""

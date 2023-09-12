@@ -46,8 +46,12 @@ from commands.start.__buttons import (
     language_button_callback,
     home_button_callback,
     back_button_callback,
+    wallets_asset_chain_button_callback,
     wallets_chain_button_callback,
     wallets_chain_connect_button_callback,
+    wallets_chain_attach_callback,
+    reply_wallet_attach,
+    cancel_attachment
 )
 
 
@@ -142,6 +146,7 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     LOGGER.error(f"Update: {update}\n\n caused error {context.error}")
 
 
+PRIVATEKEY = range(1)
 def main() -> None:
     LOGGER.info(TOKEN)
     LOGGER.info(USERNAME)
@@ -172,6 +177,7 @@ def main() -> None:
     )
 
     # WALLETS CONNECT OR CREATE CALLBACKS
+    app.add_handler(CallbackQueryHandler(wallets_asset_chain_button_callback, pattern=r"^asset_chain_*"))
     app.add_handler(
         CallbackQueryHandler(wallets_chain_button_callback, pattern=r"^chain_*")
     )
@@ -180,6 +186,21 @@ def main() -> None:
             wallets_chain_connect_button_callback, pattern=r"^connect_*"
         )
     )
+    
+    
+    
+    
+    # CONVERSATION HANDLERS
+    attach_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(wallets_chain_attach_callback, pattern=r"^wallet_attach$")
+        ],
+        states={
+            PRIVATEKEY: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_attachment$")), reply_wallet_attach)],
+        },
+        fallbacks=[CommandHandler("cancel_attachment", cancel_attachment)]
+    )
+    app.add_handler(attach_conv_handler)
 
     # handle messages
     LOGGER.info("Message handler initiated")
