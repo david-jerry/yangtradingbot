@@ -552,6 +552,36 @@ async def configuration_next_and_back_callback(update: Update, context: Callback
             context.user_data['msg_id'] = message.message_id
             context.user_data['preset'] = "delta"
             return REPLYDELTA
+        elif button_data == "slippage":
+            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "slippage"
+            return REPLYDELTA
+        elif button_data == "gas":
+            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "gas"
+            return REPLYDELTA
+        elif button_data == "delgas":
+            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delgas"
+            return REPLYDELTA
+        elif button_data == "deldelta":
+            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "deldelta"
+            return REPLYDELTA
+        elif button_data == "delslippage":
+            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delslippage"
+            return REPLYDELTA
 
 
 def reply_preset_response(update: Update, context: CallbackContext):
