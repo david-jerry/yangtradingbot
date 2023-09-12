@@ -36,6 +36,15 @@ def currency_amount(symbol):
 from mnemonic import Mnemonic
 from eth_account import Account
 
+def back_variable(message, context, text, markup):
+    if "message_stack" not in context.user_data:
+        context.user_data["message_stack"] = []
+    
+    context.user_data["message_stack"].append(
+        {"message": message, "text": text, "markup": markup}
+    )
+
+
 async def attach_wallet_function(network, user_id, key):
     user_data = await load_user_data(user_id)
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
@@ -44,6 +53,7 @@ async def attach_wallet_function(network, user_id, key):
             balance = w3.eth.get_balance(user_data.wallet_address)
             wallet_address = w3.eth.account.from_key(key)
             mnemonic_phrase = wallet_address._get_mnemonic()
+            LOGGER.info(mnemonic_phrase)
             return (mnemonic_phrase, wallet_address)
         elif network.upper() == "BSC" and user_data.BSC_added:
             w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))

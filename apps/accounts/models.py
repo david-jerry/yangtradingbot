@@ -74,6 +74,20 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     agreed_to_terms = models.BooleanField(default=True)
     
+    max_gas = models.DecimalField(default=14.48, decimal_places=2, max_digits=20)
+    max_delta = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
+    slippage = models.DecimalField(default=100.00, decimal_places=2, max_digits=20)
+    
+    sell_hi = models.DecimalField(default=2.0, decimal_places=2, max_digits=20)
+    sell_lo = models.DecimalField(default=0.5, decimal_places=2, max_digits=20)
+    sell_hi_amount = models.DecimalField(default=20.00, decimal_places=2, max_digits=20)
+    sell_lo_amount = models.DecimalField(default=0.20, decimal_places=2, max_digits=20)
+    
+    auto_sell = models.BooleanField(default=False)
+    dupe_buy = models.BooleanField(default=False)
+    auto_buy = models.BooleanField(default=False)
+    auto_approve = models.BooleanField(default=False)
+    
     objects = CustomUserManager()
     
     @property

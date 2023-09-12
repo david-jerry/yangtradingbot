@@ -1,3 +1,4 @@
+from decimal import Decimal
 import os
 import pickle
 import re
@@ -22,7 +23,7 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import attach_wallet_function, generate_wallet, get_wallet_balance
+from utils import attach_wallet_function, back_variable, generate_wallet, get_wallet_balance
 from utils_data import load_user_data, save_user_data, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -41,6 +42,85 @@ forward = InlineKeyboardButton("⏩ ", callback_data="direct_right")
 
 direction_keyboard = [[back, forward]]
 direction_markup = InlineKeyboardMarkup(direction_keyboard)
+
+# ------------------------------------------------------------------------------
+# CONFIGURATION BUTTONS
+# ------------------------------------------------------------------------------
+pback = InlineKeyboardButton("⏪ ", callback_data="presets_left")
+pforward = InlineKeyboardButton("⏩ ", callback_data="presets_right")
+buy = InlineKeyboardButton("🛠 BUY ", callback_data="presets_buy")
+sell = InlineKeyboardButton("🛠 SELL", callback_data="presets_sell")
+approve = InlineKeyboardButton("🛠 APPROVE", callback_data="presets_approve")
+maxdelta = InlineKeyboardButton("📝  Max Gas Delta", callback_data="presets_maxdelta")
+deldelta = InlineKeyboardButton("⌫ Remove Delta", callback_data="presets_deldelta")
+slippage = InlineKeyboardButton("📝  Slippage", callback_data="presets_slippage")
+delslippage = InlineKeyboardButton("⌫ Remove Slippage", callback_data="presets_delslippage")
+maxgas = InlineKeyboardButton("📝  Max Gas Limit", callback_data="presets_maxgas")
+delgas = InlineKeyboardButton("⌫ Remove Gas Limit", callback_data="presets_delgas")
+autosell = InlineKeyboardButton("Auto Sell", callback_data="presets_autosell")
+
+NETWORK_CHAINS = ["ETH", "BSC", "ARP", "BASE"]
+SELECTED_CHAIN_INDEX = 0
+
+
+# ------------------------------------------------------------------------------
+# BUY BUTTONS
+# ------------------------------------------------------------------------------
+maxbuytax = InlineKeyboardButton("📝 Max Buy Tax", callback_data="presets_maxbuytax")
+maxselltax = InlineKeyboardButton("📝 Max Sell Tax", callback_data="presets_maxselltax")
+delbuytax = InlineKeyboardButton("⌫ Remove Buy Tax", callback_data="presets_delbuytax")
+delselltax = InlineKeyboardButton("⌫ Remove Buy Tax", callback_data="presets_delselltax")
+deldopebuy = InlineKeyboardButton("⌫ Dope Buy", callback_data="presets_deldopebuy")
+delautobuy = InlineKeyboardButton("⌫ Auto Buy", callback_data="presets_delautobuy")
+
+buy_keyboard = [
+    [home], 
+    [back],
+    [deldopebuy, delautobuy],
+    [maxbuytax, delbuytax], 
+    [maxselltax, delselltax],
+    [maxgas, delgas],
+]
+buy_markup = InlineKeyboardMarkup(buy_keyboard)
+
+
+# ------------------------------------------------------------------------------
+# SELL BUTTONS
+# ------------------------------------------------------------------------------
+sellhi = InlineKeyboardButton("📝 Sell-Hi Tax", callback_data="presets_sellhi")
+selllo = InlineKeyboardButton("📝 Sell-Lo Tax", callback_data="presets_selllo")
+sellhiamount = InlineKeyboardButton("📝 Sell-Hi Amount", callback_data="presets_sellhiamount")
+sellloamount = InlineKeyboardButton("📝 Sell-Lo Amount", callback_data="presets_sellloamount")
+delsellhi = InlineKeyboardButton("⌫ Remove Sell-Hi", callback_data="presets_delsellhi")
+delselllo = InlineKeyboardButton("⌫ Remove Sell-Lo", callback_data="presets_delselllo")
+delsellhiamount = InlineKeyboardButton("⌫ Remove Sell-Hi Amount", callback_data="presets_delsellhiamount")
+delsellloamount = InlineKeyboardButton("⌫ Remove Sell-Lo Amount", callback_data="presets_delsellloamount")
+
+sell_keyboard = [
+    [home], 
+    [back],
+    [autosell],
+    [sellhi, delsellhi],
+    [selllo, delselllo], 
+    [sellhiamount, delsellhiamount],
+    [sellloamount, delsellloamount],
+    [maxgas, delgas],
+]
+sell_markup = InlineKeyboardMarkup(sell_keyboard)
+
+# ------------------------------------------------------------------------------
+# APPROVE BUTTONS
+# ------------------------------------------------------------------------------
+autoapprove = InlineKeyboardButton("📝 Sell-Hi Tax", callback_data="presets_sellhi")
+delautoapprove = InlineKeyboardButton("📝 Sell-Lo Tax", callback_data="presets_selllo")
+approve_keyboard = [
+    [home], 
+    [back],
+    [autosell],
+    [autoapprove],
+    [maxgas, delgas],
+]
+approve_markup = InlineKeyboardMarkup(approve_keyboard)
 
 
 # ------------------------------------------------------------------------------
@@ -99,12 +179,8 @@ language_markup = InlineKeyboardMarkup(language_keyboard)
 # TERMS & CONDITION BUTTONS
 # ------------------------------------------------------------------------------
 
-accept_terms_button = InlineKeyboardButton(
-    "Accept Conditions", callback_data="terms_accept"
-)
-decline_terms_button = InlineKeyboardButton(
-    "Decline Conditions", callback_data="terms_decline"
-)
+accept_terms_button = InlineKeyboardButton("Accept Conditions", callback_data="terms_accept")
+decline_terms_button = InlineKeyboardButton("Decline Conditions", callback_data="terms_decline")
 terms_keyboard = [[accept_terms_button, decline_terms_button]]
 terms_markup = InlineKeyboardMarkup(terms_keyboard)
 
@@ -118,7 +194,7 @@ wallets = InlineKeyboardButton("Wallets", callback_data="start_wallets")
 wallets_assets = InlineKeyboardButton(
     "Wallet Assets", callback_data="start_wallet_assets"
 )
-configuration = InlineKeyboardButton("Preference", callback_data="start_configuration")
+configuration = InlineKeyboardButton("Configuration", callback_data="start_configuration")
 terms = InlineKeyboardButton("Accept Terms", callback_data="start_terms")
 snipe = InlineKeyboardButton("Sniper", callback_data="start_sniper")
 copy_trade = InlineKeyboardButton("Copy Trade", callback_data="start_trade")
@@ -168,6 +244,7 @@ async def terms_button_callback(update: Update, context: ContextTypes.DEFAULT_TY
     
     # Retrieve the message ID of the sent photo from user data
     photo_message_id = context.user_data.get("photo_message_id")
+    context.user_data["last_message_id"] = query.message.message_id
 
     # Fetch the bot's profile photo
     bot = context.bot
@@ -237,6 +314,7 @@ async def language_button_callback(update: Update, context: ContextTypes.DEFAULT
     command = query.data
 
     user_id = str(query.from_user.id)
+    context.user_data["last_message_id"] = query.message.message_id
 
     match = re.match(r"^language_(\w+)", command)
     if match:
@@ -281,10 +359,29 @@ async def language_button_callback(update: Update, context: ContextTypes.DEFAULT
 # ------------------------------------------------------------------------------
 # START BUTTON CALLBACK
 # ------------------------------------------------------------------------------
+
+def build_preset_keyboard():
+    global PRESETNETWORK
+    PRESETNETWORK = NETWORK_CHAINS[SELECTED_CHAIN_INDEX]
+    chain = InlineKeyboardButton(f"🛠 {PRESETNETWORK}", callback_data=f"presets_{PRESETNETWORK}")
+    preset_keyboard = [
+        [home],
+        [pback, chain, pforward],
+        [buy, sell, approve],
+        [maxdelta, deldelta],
+        [slippage, delslippage],
+        [maxgas, delgas]
+    ]
+    preset_markup = InlineKeyboardMarkup(preset_keyboard)
+    
+    return preset_markup  
+    
 async def start_button_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     command = query.data
+    user_id = str(query.from_user.id)
+    context.user_data["last_message_id"] = query.message.message_id
 
     match = re.match(r"^start_(\w+)", command)
     if match:
@@ -339,22 +436,42 @@ async def start_button_callback(update: Update, context: CallbackContext):
             message = await query.message.reply_text(
                 wallets_message, parse_mode=ParseMode.HTML, reply_markup=chain_markup
             )
-            if "message_stack" not in context.user_data:
-                context.user_data["message_stack"] = []
-            context.user_data["message_stack"].append(
-                {"message": message, "text": wallets_message, "markup": chain_markup}
-            )
+            back_variable(message, context, wallets_message, chain_markup)
         elif button_data == "wallet_assets":
             message = await query.edit_message_caption(
                 caption=wallets_asset_message, 
                 parse_mode=ParseMode.HTML, 
                 reply_markup=asset_chain_markup
             )
-            if "message_stack" not in context.user_data:
-                context.user_data["message_stack"] = []
-            context.user_data["message_stack"].append(
-                {"message": message, "text": wallets_message, "markup": chain_markup}
+            back_variable(message, context, wallets_asset_message, asset_chain_markup)
+        elif button_data == "configuration":
+            preset_markup = build_preset_keyboard()
+            user_data = await load_user_data(user_id)
+            wallet = user_data.wallet_address if user_data.wallet_address is not None else '<pre>Disconnected</pre>'
+            configuration_message = f"""
+            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+Wallet: {wallet}
+
+Multi-Wallets: {'💚' if user_data.wallet_address != None else '🔐'}
+
+<strong>🧰 {PRESETNETWORK} GENERAL</strong>
+-------------------------------------------
+Tx Max Gas Price: <strong>Default({user_data.max_gas} GWEI) + Delta({user_data.max_delta} GWEI)</strong>
+Swap Slippage: <strong>Default ({Decimal(user_data.slippage)}%)</strong>
+Gas Limit: <strong>Auto</strong>
+-------------------------------------------
+            """
+            message = await query.edit_message_caption(
+                caption=configuration_message,
+                parse_mode=ParseMode.HTML,
+                reply_markup=preset_markup
             )
+            
+            context.user_data['last_message'] = configuration_message
+            context.user_data['last_markup'] = preset_markup
+            
+            back_variable(message, context, configuration_message, preset_markup)
+            return message
         elif button_data == "help":
             if bot_profile_photo:
                 message = await query.message.reply_photo(
@@ -363,17 +480,80 @@ async def start_button_callback(update: Update, context: CallbackContext):
                     parse_mode=ParseMode.HTML,
                     reply_markup=home_markup,
                 )
-                context.user_data["last_message_id"] = message.message_id if message.message_id else None
+                context.user_data["last_message_id"] = query.message.message_id if query.message.message_id else None
                 message
             else:
                 message = await query.message.reply_text(
                     help_message, parse_mode=ParseMode.HTML, reply_markup=home_markup
                 )
 
-                context.user_data["last_message_id"] = message.message_id if message.message_id else None
+                context.user_data["last_message_id"] = query.message.message_id if query.message.message_id else None
                 message
     else:
         await query.message.reply_text("I don't understand that command.")
+
+
+
+
+
+
+
+# ------------------------------------------------------------------------------
+# CONFIGURATION BUTTON CALLBACK
+# ------------------------------------------------------------------------------
+async def configuration_next_and_back_callback(update: Update, context: CallbackContext):
+    global SELECTED_CHAIN_INDEX
+    
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    user_data = await load_user_data(user_id)
+    text = context.user_data['last_message']
+    markup = context.user_data['last_markup']
+    context.user_data["last_message_id"] = query.message.message_id
+    
+    
+
+    match = re.match(r"^presets_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        if button_data == "left":
+            SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
+            # Update the keyboard markup with the new selected chain
+            new_markup = build_preset_keyboard()
+
+            # Edit the message to display the updated keyboard markup
+            
+            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+            back_variable(message, context, text, new_markup)
+        elif button_data == "right":
+            SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX + 1) % len(NETWORK_CHAINS)
+            # Update the keyboard markup with the new selected chain
+            new_markup = build_preset_keyboard()
+
+            # Edit the message to display the updated keyboard markup
+            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+            back_variable(message, context, text, new_markup)
+        elif button_data == "buy":
+            message = await query.edit_message_reply_markup(reply_markup=buy_markup)
+            back_variable(message, context, text, markup)
+        elif button_data == "sell":
+            message = await query.edit_message_reply_markup(reply_markup=sell_markup)
+            back_variable(message, context, text, markup)
+        elif button_data == "approve":
+            message = await query.edit_message_reply_markup(reply_markup=approve_markup)
+            back_variable(message, context, text, markup)
+
+
+
+
+
+
+
+
+
 
 
 # ------------------------------------------------------------------------------
@@ -386,7 +566,7 @@ async def wallets_asset_chain_button_callback(update: Update, context: CallbackC
     user_id = str(query.from_user.id)
     user_data = await load_user_data(user_id)
     
-    
+    context.user_data["last_message_id"] = query.message.message_id
 
     match = re.match(r"^asset_chain_(\w+)", command)
     if match:
@@ -420,9 +600,6 @@ async def wallets_asset_chain_button_callback(update: Update, context: CallbackC
 """
         
         
-        if "message_stack" not in context.user_data:
-            context.user_data["message_stack"] = []
-        # message = await query.edit_message_text(text=disconnect_message, parse_mode=ParseMode.HTML, reply_markup=connect_markup)
         message = await query.edit_message_caption(
             caption=disconnect_message,
             parse_mode=ParseMode.HTML,
@@ -431,11 +608,10 @@ async def wallets_asset_chain_button_callback(update: Update, context: CallbackC
         context.user_data["message"] = message
         context.user_data["text"] = disconnect_message
         context.user_data["markup"] = connect_markup
-        message
+        back_variable(message, context, disconnect_message, home_markup)
+        return message
     else:
         await query.message.reply_text("I don't understand that command.")
-
-
 
 async def wallets_chain_button_callback(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -444,7 +620,7 @@ async def wallets_chain_button_callback(update: Update, context: CallbackContext
     user_id = str(query.from_user.id)
     user_data = await load_user_data(user_id)
     
-    
+    context.user_data["last_message_id"] = query.message.message_id
 
     match = re.match(r"^chain_(\w+)", command)
     if match:
@@ -532,6 +708,7 @@ async def wallets_chain_connect_button_callback(
     command = query.data
     user_id = str(query.from_user.id)
     user_data = await load_user_data(user_id)
+    context.user_data["last_message_id"] = query.message.message_id
 
     NETWORK = context.user_data.get("network_chain")
     context_message = context.user_data.get("message")
@@ -657,24 +834,7 @@ Gas Limit: <strong>Auto</strong>
 """
             message = await query.edit_message_text(text=disconnect_message, reply_markup=connect_markup if user_data.wallet_address == None else detach_markup, parse_mode=ParseMode.HTML)
             return message
-        elif button_data == "configuration":
-            reply_message = f"""
-<strong>{NETWORK.upper()} Configuration</strong>
-Wallet: {user_data.wallet_address if user_data.wallet_address != None else 'Disconnected'}
 
-Multi-Wallets: {'💚' if user_data.wallet_address != None else '🔐'}
-
-<strong>🧰 {NETWORK} GENERAL</strong>
--------------------------------------------
-Tx Max Gas Price: <strong>Disabled</strong>
-Swap Slippage: <strong>Default (100%)</strong>
-Gas Limit: <strong>Auto</strong>
--------------------------------------------
-
-
-            """
-            message = await query.edit_message_text(text=reply_message, reply_markup=connect_markup if user_data.wallet_address == None else detach_markup, parse_mode=ParseMode.HTML)
-            return message
         
 async def wallets_chain_attach_callback(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -682,38 +842,53 @@ async def wallets_chain_attach_callback(update: Update, context: CallbackContext
     user_id = str(query.from_user.id)
     command = query.data
     user_data = await load_user_data(user_id)
-            
-    match = re.match(r'^withdraw_(\w+)', command)
+    
+    context.user_data["last_message_id"] = query.message.message_id
+
+    NETWORK = context.user_data.get("network_chain")
+    context_message = context.user_data.get("message")
+    context_text = context.user_data.get("text")
+    context_markup = context.user_data.get("markup")
+
+    if "message_stack" not in context.user_data:
+        context.user_data["message_stack"] = []
+    context.user_data["message_stack"].append(
+        {"message": context_message, "text": context_text, "markup": context_markup}
+    ) if context.user_data.get('message_stack') else context.user_data["message_stack"]
+
+    match = re.match(r'^connect_(\w+)', command)
     if match:
         button_data = match.group(1)
 
-
         status = user_data.agreed_to_terms
-        LOGGER.info(status)
 
         if not status:
             message = await query.edit_message_text(
                 text=terms_message, parse_mode=ParseMode.HTML, reply_markup=home_markup
             )
             return message
+        
         if button_data == "attach":
             reply_message = """
 What's the private key of this wallet? You may also use a 12-word mnemonic phrase.            
             """
             context.user_data['private_reply'] = query.message.message_id
-            await query.message.reply_text(reply_message)
+            await query.edit_message_text(text=reply_message, reply_markup=home_markup)
             return PRIVATEKEY
 
 
 
-async def reply_wallet_attach(update, context):
+async def reply_wallet_attach(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_id = context.user_data['private_reply']
     text = update.message.text
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     NETWORK = context.user_data.get("network_chain")
     
-    if message_id and update.message.reply_to_message.message_id == message_id:
+    LOGGER.info(message_id)
+    LOGGER.info(update.message.message_id)
+    
+    if message_id and update.message.message_id > message_id:
         phrase, wallet_address = await attach_wallet_function(NETWORK, user_id, text)
         data = {
             "wallet_address": wallet_address,
@@ -731,6 +906,27 @@ async def cancel_attachment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
     await update.message.reply_text("Investment Cancelled.")
     return ConversationHandler.END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ------------------------------------------------------------------------------
 # HOME BUTTON CALLBACK
@@ -806,7 +1002,7 @@ async def home_button_callback(update: Update, context: CallbackContext):
 
 
 # ------------------------------------------------------------------------------
-# HOME BUTTON CALLBACK
+# BACK BUTTON CALLBACK
 # ------------------------------------------------------------------------------
 async def back_button_callback(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -821,8 +1017,8 @@ async def back_button_callback(update: Update, context: CallbackContext):
         LOGGER.info(last_message["text"])
         LOGGER.info(last_message["markup"])
         if last_message.get("markup") is not None:
-            await query.edit_message_text(
-                text=last_message["text"],
+            await query.edit_message_caption(
+                caption=last_message["text"],
                 parse_mode=ParseMode.HTML,
                 reply_markup=last_message["markup"],
             )

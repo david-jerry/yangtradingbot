@@ -46,6 +46,9 @@ from commands.start.__buttons import (
     language_button_callback,
     home_button_callback,
     back_button_callback,
+    
+    configuration_next_and_back_callback,
+    
     wallets_asset_chain_button_callback,
     wallets_chain_button_callback,
     wallets_chain_connect_button_callback,
@@ -169,12 +172,33 @@ def main() -> None:
         CallbackQueryHandler(language_button_callback, pattern=r"^language_*")
     )
 
+    # CONFIGURATION BUTTON CALLBACK
+    app.add_handler(CallbackQueryHandler(configuration_next_and_back_callback, pattern=r"^presets_*"))
+
     # START BUTTON CALLBACKS
     app.add_handler(CallbackQueryHandler(start_button_callback, pattern=r"^start_*"))
     app.add_handler(CallbackQueryHandler(home_button_callback, pattern=r"^home$"))
-    app.add_handler(
-        CallbackQueryHandler(back_button_callback, pattern=r"^direct_left$")
+    app.add_handler(CallbackQueryHandler(back_button_callback, pattern=r"^direct_left$"))
+    
+    
+    
+    
+    # CONVERSATION HANDLERS
+    attach_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(wallets_chain_attach_callback, pattern=r"^connect_attach")
+        ],
+        states={
+            PRIVATEKEY: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_attachment$")), reply_wallet_attach)],
+        },
+        fallbacks=[CommandHandler("cancel_attachment", cancel_attachment)]
     )
+    app.add_handler(attach_conv_handler)
+
+    
+    
+    
+    
 
     # WALLETS CONNECT OR CREATE CALLBACKS
     app.add_handler(CallbackQueryHandler(wallets_asset_chain_button_callback, pattern=r"^asset_chain_*"))
@@ -190,17 +214,6 @@ def main() -> None:
     
     
     
-    # CONVERSATION HANDLERS
-    attach_conv_handler = ConversationHandler(
-        entry_points=[
-            CallbackQueryHandler(wallets_chain_attach_callback, pattern=r"^wallet_attach")
-        ],
-        states={
-            PRIVATEKEY: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_attachment$")), reply_wallet_attach)],
-        },
-        fallbacks=[CommandHandler("cancel_attachment", cancel_attachment)]
-    )
-    app.add_handler(attach_conv_handler)
 
     # handle messages
     LOGGER.info("Message handler initiated")
