@@ -16,16 +16,21 @@ django.setup()
 
 @sync_to_async
 def save_user_data(user_data):
+    LOGGER.info(user_data)
     # Save user data to pickle file
-    user = CustomUser.objects.get_or_create(
-        user_data
+    user = CustomUser.objects.create(
+        **user_data
     )
+    LOGGER.info(user)
     return user
 
 @sync_to_async
 def load_user_data(user_id):
     try:
+        LOGGER.info("Loading user data")
+        LOGGER.info(user_id)
         user_data = CustomUser.objects.filter(user_id=user_id).first()
+        LOGGER.info(user_data)
         return user_data
     except FileNotFoundError:
         user_data = None

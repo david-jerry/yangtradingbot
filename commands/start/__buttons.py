@@ -66,7 +66,7 @@ detach_keyboard = [[home], [detach_wallet, back], [create_wallet]]
 detach_confirm_keyboard = [[home], [detach_confirm, back], [create_wallet]]
 
 connect_markup = InlineKeyboardMarkup(connect_keyboard)
-detach_markup = InlineKeyboardMarkup(connect_keyboard)
+detach_markup = InlineKeyboardMarkup(detach_keyboard)
 detach_confirm_markup = InlineKeyboardMarkup(detach_confirm_keyboard)
 
 # ------------------------------------------------------------------------------
@@ -150,8 +150,12 @@ async def terms_button_callback(update: Update, context: ContextTypes.DEFAULT_TY
     query = update.callback_query
     await query.answer()
     command = query.data
+    chat_id = query.message.chat_id
 
     user_id = str(query.from_user.id)
+    
+    # Retrieve the message ID of the sent photo from user data
+    photo_message_id = context.user_data.get("photo_message_id")
 
     # Fetch the bot's profile photo
     bot = context.bot
@@ -176,26 +180,26 @@ async def terms_button_callback(update: Update, context: ContextTypes.DEFAULT_TY
 
 
         if button_data == "accept":
+            await query.edit_message_caption(
+                caption=welcome_message,
+                parse_mode=ParseMode.HTML,
+                reply_markup=start_button_mu,
+            )
             await context.bot.send_message(
                 chat_id=query.message.chat_id,
                 text=f"<pre>You have accepted our terms and condition</pre>",
                 parse_mode=ParseMode.HTML,
-            )
-            await query.edit_message_text(
-                text=welcome_message,
-                parse_mode=ParseMode.HTML,
-                reply_markup=start_button_mu,
             )
         elif button_data == "decline" and status != "accept":
-            await context.bot.send_message(
-                chat_id=query.message.chat_id,
-                text=f"<pre>You have accepted our terms and condition</pre>",
-                parse_mode=ParseMode.HTML,
-            )
-            await query.edit_message_text(
-                text=welcome_message,
+            await query.edit_message_caption(
+                caption=welcome_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=start_button_mu,
+            )
+            await context.bot.send_message(
+                chat_id=query.message.chat_id,
+                text=f"<pre>You have declined our terms and condition. This will prevent you from accessing some features. Please ensure you have accepted and given us the right to work with your data.</pre>",
+                parse_mode=ParseMode.HTML,
             )
         else:
             await context.bot.send_message(
@@ -427,7 +431,7 @@ Gas Limit: <strong>Auto</strong>
         message = await query.edit_message_text(
             text=disconnect_message,
             parse_mode=ParseMode.HTML,
-            reply_markup=connect_markup if user_data.wallet_address != None else detach_markup,
+            reply_markup=connect_markup if user_data.wallet_address == None else detach_markup,
         )
         context.user_data["message"] = message
         context.user_data["text"] = disconnect_message
@@ -516,6 +520,13 @@ Gas Limit: <strong>Auto</strong>
             return message
         elif button_data == "confirm":
             context.user_data.clear()
+            data = {
+                "wallet_address": None,
+                "wallet_private_key": None,
+                "wallet_phrase": None,
+            }
+            await update_user_data(str(user_id), data)
+            user_data = await load_user_data(user_id)
             disconnect_message = f"""
         <strong>💎 {NETWORK.upper()} WALLET</strong>
 -------------------------------------------
@@ -553,13 +564,13 @@ Gas Limit: <strong>Auto</strong>
 ⚠ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere if not certain of the security. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.
 </em> 
 """
-            message = await query.edit_message_text(text=disconnect_message, reply_markup=connect_markup if user_data.wallet_address != None else detach_markup)
+            message = await query.edit_message_text(text=disconnect_message, reply_markup=connect_markup if user_data.wallet_address != None else detach_markup, parse_mode=ParseMode.HTML)
             return message
         elif button_data == "attach":
             reply_message = """
 What's the private key of this wallet? You may also use a 12-word mnemonic phrase.            
             """
-            message = await query.message.reply_text(reply_message, reply_to_message_id=update.message.message_id)
+            message = await query.message.reply_text(reply_message, reply_to_message_id=query.message.message_id)
             return message
 # ------------------------------------------------------------------------------
 # HOME BUTTON CALLBACK
