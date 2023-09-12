@@ -683,13 +683,23 @@ Gas Limit: <strong>Auto</strong>
             message = await query.edit_message_text(text=disconnect_message, reply_markup=connect_markup if user_data.wallet_address == None else detach_markup, parse_mode=ParseMode.HTML)
             return message
         elif button_data == "configuration":
-            reply_message = """
-What's the private key of this wallet? You may also use a 12-word mnemonic phrase.            
+            reply_message = f"""
+<strong>{NETWORK.upper()} Configuration</strong>
+Wallet: {user_data.wallet_address if user_data.wallet_address != None else 'Disconnected'}
+
+Multi-Wallets: {'💚' if user_data.wallet_address != None else '🔐'}
+
+<strong>🧰 {NETWORK} GENERAL</strong>
+-------------------------------------------
+Tx Max Gas Price: <strong>Disabled</strong>
+Swap Slippage: <strong>Default (100%)</strong>
+Gas Limit: <strong>Auto</strong>
+-------------------------------------------
+
+
             """
-            context.user_data['private_reply'] = query.message.message_id
-            message = await query.message.reply_text(reply_message, reply_to_message_id=query.message.message_id)
-            message
-            return PRIVATEKEY
+            message = await query.edit_message_text(text=reply_message, reply_markup=connect_markup if user_data.wallet_address == None else detach_markup, parse_mode=ParseMode.HTML)
+            return message
         
 async def cancel_attachment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
