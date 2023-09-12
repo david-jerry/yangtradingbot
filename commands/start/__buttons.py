@@ -570,7 +570,7 @@ async def home_button_callback(update: Update, context: CallbackContext):
     await query.answer()
     command = query.data
     user_id = str(query.from_user.id)
-    user = str(query.from_user)
+    user = query.from_user
     
     user_initial_data = await load_user_data(user_id)
 
