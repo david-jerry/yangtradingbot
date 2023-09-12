@@ -32,11 +32,11 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    email = models.EmailField(blank=True)
+    email = models.EmailField(blank=True, null=True)
     user_id = models.CharField(max_length=50, unique=True)
     language_choice = models.CharField(max_length=3)
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
+    first_name = models.CharField(max_length=30, blank=True, null=True)
+    last_name = models.CharField(max_length=30, blank=True, null=True)
     
     # preferences
     chosen_language = models.CharField(max_length=500, blank=True, null=True)
