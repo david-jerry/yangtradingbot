@@ -150,6 +150,8 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 PRIVATEKEY = range(1)
+REPLYDELTA = range(1)
+
 def main() -> None:
     LOGGER.info(TOKEN)
     LOGGER.info(USERNAME)
@@ -194,6 +196,18 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_attachment", cancel_attachment)]
     )
     app.add_handler(attach_conv_handler)
+
+    # PRESETS HANDLERS
+    preset_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(configuration_next_and_back_callback, pattern=r"^presets_*")
+        ],
+        states={
+            REPLYDELTA: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_preset$")), reply_preset_response)],
+        },
+        fallbacks=[CommandHandler("cancel_preset", cancel_preset)]
+    )
+    app.add_handler(preset_conv_handler)
 
     
     

@@ -501,6 +501,7 @@ Gas Limit: <strong>Auto</strong>
 # ------------------------------------------------------------------------------
 # CONFIGURATION BUTTON CALLBACK
 # ------------------------------------------------------------------------------
+REPLYDELTA = range(1)
 async def configuration_next_and_back_callback(update: Update, context: CallbackContext):
     global SELECTED_CHAIN_INDEX
     
@@ -545,9 +546,48 @@ async def configuration_next_and_back_callback(update: Update, context: Callback
         elif button_data == "approve":
             message = await query.edit_message_reply_markup(reply_markup=approve_markup)
             back_variable(message, context, text, markup, False, True)
+        elif button_data == "maxdelta":
+            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delta"
+            return REPLYDELTA
 
 
+def reply_preset_response(update: Update, context: CallbackContext):
+    user_id = context.user_data.get('user_id')   
+    preset = context.user_data.get('preset')
+    text = update.message.text
+    
+    if preset == "delta":
+        update_user_data(user_id, {'max_delta':round(Decimal(text), 2)})
+    elif preset == "slippage":
+        update_user_data(user_id, {'slippage':round(Decimal(text), 2)})
+    elif preset == "gas":
+        update_user_data(user_id, {'max_gas':round(Decimal(text), 2)})
+    elif preset == "delgas":
+        update_user_data(user_id, {'max_gas':round(Decimal(18.98), 2)})
+    elif preset == "deldelta":
+        update_user_data(user_id, {'max_delta':round(Decimal(0.00), 2)})
+    elif preset == "delslippage":
+        update_user_data(user_id, {'slippage':round(Decimal(100.00), 2)})
+        
 
+    # Reply to the user and highlight the last sent message
+    last_message_id = context.user_data.get('msg_id')
+    if last_message_id:
+        update.message.reply_text(
+            text=text,
+            reply_to_message_id=last_message_id,  # Highlight the last sent message
+        )
+
+    return ConversationHandler.END
+
+async def cancel_preset(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.pop('msg_id', None)
+    context.user_data.pop('preset', None)
+    await update.message.reply_text("Preset Cancelled.")
+    return ConversationHandler.END
 
 
 
