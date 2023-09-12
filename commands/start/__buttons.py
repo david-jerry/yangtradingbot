@@ -436,14 +436,14 @@ async def start_button_callback(update: Update, context: CallbackContext):
             message = await query.message.reply_text(
                 wallets_message, parse_mode=ParseMode.HTML, reply_markup=chain_markup
             )
-            back_variable(message, context, wallets_message, chain_markup)
+            back_variable(message, context, wallets_message, chain_markup, False, False)
         elif button_data == "wallet_assets":
             message = await query.edit_message_caption(
                 caption=wallets_asset_message, 
                 parse_mode=ParseMode.HTML, 
                 reply_markup=asset_chain_markup
             )
-            back_variable(message, context, wallets_asset_message, asset_chain_markup)
+            back_variable(message, context, wallets_asset_message, asset_chain_markup, True, False)
         elif button_data == "configuration":
             preset_markup = build_preset_keyboard()
             user_data = await load_user_data(user_id)
@@ -470,7 +470,7 @@ Gas Limit: <strong>Auto</strong>
             context.user_data['last_message'] = configuration_message
             context.user_data['last_markup'] = preset_markup
             
-            back_variable(message, context, configuration_message, preset_markup)
+            back_variable(message, context, configuration_message, preset_markup, True, False)
             return message
         elif button_data == "help":
             if bot_profile_photo:
@@ -527,7 +527,7 @@ async def configuration_next_and_back_callback(update: Update, context: Callback
             # Edit the message to display the updated keyboard markup
             
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
-            back_variable(message, context, text, new_markup)
+            back_variable(message, context, text, new_markup, False, True)
         elif button_data == "right":
             SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX + 1) % len(NETWORK_CHAINS)
             # Update the keyboard markup with the new selected chain
@@ -535,16 +535,16 @@ async def configuration_next_and_back_callback(update: Update, context: Callback
 
             # Edit the message to display the updated keyboard markup
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
-            back_variable(message, context, text, new_markup)
+            back_variable(message, context, text, new_markup, False, True)
         elif button_data == "buy":
             message = await query.edit_message_reply_markup(reply_markup=buy_markup)
-            back_variable(message, context, text, markup)
+            back_variable(message, context, text, markup, False, True)
         elif button_data == "sell":
             message = await query.edit_message_reply_markup(reply_markup=sell_markup)
-            back_variable(message, context, text, markup)
+            back_variable(message, context, text, markup, False, True)
         elif button_data == "approve":
             message = await query.edit_message_reply_markup(reply_markup=approve_markup)
-            back_variable(message, context, text, markup)
+            back_variable(message, context, text, markup, False, True)
 
 
 
@@ -608,7 +608,7 @@ async def wallets_asset_chain_button_callback(update: Update, context: CallbackC
         context.user_data["message"] = message
         context.user_data["text"] = disconnect_message
         context.user_data["markup"] = connect_markup
-        back_variable(message, context, disconnect_message, home_markup)
+        back_variable(message, context, disconnect_message, home_markup, True, False)
         return message
     else:
         await query.message.reply_text("I don't understand that command.")
@@ -1015,14 +1015,24 @@ async def back_button_callback(update: Update, context: CallbackContext):
     if previous_messages:
         last_message = context.user_data["message_stack"].pop(0)
         LOGGER.info(last_message["text"])
-        LOGGER.info(last_message['message'])
         LOGGER.info(last_message["markup"])
         if last_message.get("markup") is not None:
-            await query.edit_message_caption(
-                caption=last_message["text"],
-                parse_mode=ParseMode.HTML,
-                reply_markup=last_message["markup"],
-            )
+            if last_message['caption']:
+                await query.edit_message_caption(
+                    caption=last_message["text"],
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=last_message["markup"],
+                )
+            elif not last_message['caption'] and not last_message['markup_reply']:
+                await query.edit_message_text(
+                    text=last_message["text"],
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=last_message["markup"],
+                )
+            elif last_message['markup_reply']:
+                await query.edit_message_reply_markup(
+                    reply_markup=last_message["markup"],
+                )
         else:
             await query.edit_message_text(
                 text=last_message["text"], parse_mode=ParseMode.HTML

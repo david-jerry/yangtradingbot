@@ -36,12 +36,12 @@ def currency_amount(symbol):
 from mnemonic import Mnemonic
 from eth_account import Account
 
-def back_variable(message, context, text, markup):
+def back_variable(message, context, text, markup, caption, markup_reply):
     if "message_stack" not in context.user_data:
         context.user_data["message_stack"] = []
     
     context.user_data["message_stack"].append(
-        {"message": message, "text": text, "markup": markup}
+        {"message": message, "text": text, "markup": markup, "caption": caption, "markup_reply": markup_reply}
     )
 
 
