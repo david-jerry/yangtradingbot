@@ -29,11 +29,7 @@ about_message = """
 <strong>☯ About Yang Trading Bot ☯ </strong>
 -------------------------------------------
 
-📍 <strong>Location:</strong> Geneva, Switzerland
-
 📅 <strong>Founded:</strong> 2023
-
-🚀 <strong>Founder:</strong> Richard Dyuzee
 
 -------------------------------------------
 

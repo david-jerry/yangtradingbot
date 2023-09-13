@@ -23,7 +23,7 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import attach_wallet_function, back_variable, generate_wallet, get_wallet_balance
+from utils import attach_wallet_function, back_variable, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_wallet_balance
 from utils_data import load_user_data, save_user_data, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -51,13 +51,12 @@ pforward = InlineKeyboardButton("⏩ ", callback_data="presets_right")
 buy = InlineKeyboardButton("🛠 BUY ", callback_data="presets_buy")
 sell = InlineKeyboardButton("🛠 SELL", callback_data="presets_sell")
 approve = InlineKeyboardButton("🛠 APPROVE", callback_data="presets_approve")
-maxdelta = InlineKeyboardButton("📝  Max Gas Delta", callback_data="presets_maxdelta")
+maxdelta = InlineKeyboardButton("📝  Max Gas Delta", callback_data="config_maxdelta")
 deldelta = InlineKeyboardButton("⌫ Remove Delta", callback_data="presets_deldelta")
-slippage = InlineKeyboardButton("📝  Slippage", callback_data="presets_slippage")
+slippage = InlineKeyboardButton("📝  Slippage", callback_data="config_slippage")
 delslippage = InlineKeyboardButton("⌫ Remove Slippage", callback_data="presets_delslippage")
-maxgas = InlineKeyboardButton("📝  Max Gas Limit", callback_data="presets_maxgas")
+maxgas = InlineKeyboardButton("📝  Max Gas Limit", callback_data="config_maxgas")
 delgas = InlineKeyboardButton("⌫ Remove Gas Limit", callback_data="presets_delgas")
-autosell = InlineKeyboardButton("Auto Sell", callback_data="presets_autosell")
 
 NETWORK_CHAINS = ["ETH", "BSC", "ARP", "BASE"]
 SELECTED_CHAIN_INDEX = 0
@@ -66,62 +65,29 @@ SELECTED_CHAIN_INDEX = 0
 # ------------------------------------------------------------------------------
 # BUY BUTTONS
 # ------------------------------------------------------------------------------
-maxbuytax = InlineKeyboardButton("📝 Max Buy Tax", callback_data="presets_maxbuytax")
-maxselltax = InlineKeyboardButton("📝 Max Sell Tax", callback_data="presets_maxselltax")
+maxbuytax = InlineKeyboardButton("📝 Max Buy Tax", callback_data="buy_maxbuytax")
+maxselltax = InlineKeyboardButton("📝 Max Sell Tax", callback_data="buy_maxselltax")
 delbuytax = InlineKeyboardButton("⌫ Remove Buy Tax", callback_data="presets_delbuytax")
 delselltax = InlineKeyboardButton("⌫ Remove Buy Tax", callback_data="presets_delselltax")
-deldopebuy = InlineKeyboardButton("⌫ Dope Buy", callback_data="presets_deldopebuy")
-delautobuy = InlineKeyboardButton("⌫ Auto Buy", callback_data="presets_delautobuy")
-
-buy_keyboard = [
-    [home], 
-    [back],
-    [deldopebuy, delautobuy],
-    [maxbuytax, delbuytax], 
-    [maxselltax, delselltax],
-    [maxgas, delgas],
-]
-buy_markup = InlineKeyboardMarkup(buy_keyboard)
 
 
 # ------------------------------------------------------------------------------
 # SELL BUTTONS
 # ------------------------------------------------------------------------------
-sellhi = InlineKeyboardButton("📝 Sell-Hi Tax", callback_data="presets_sellhi")
-selllo = InlineKeyboardButton("📝 Sell-Lo Tax", callback_data="presets_selllo")
-sellhiamount = InlineKeyboardButton("📝 Sell-Hi Amount", callback_data="presets_sellhiamount")
-sellloamount = InlineKeyboardButton("📝 Sell-Lo Amount", callback_data="presets_sellloamount")
+sellhi = InlineKeyboardButton("📝 Sell-Hi Tax", callback_data="sell_sellhi")
+selllo = InlineKeyboardButton("📝 Sell-Lo Tax", callback_data="sell_selllo")
+sellhiamount = InlineKeyboardButton("📝 Sell-Hi Amount", callback_data="sell_sellhiamount")
+sellloamount = InlineKeyboardButton("📝 Sell-Lo Amount", callback_data="sell_sellloamount")
 delsellhi = InlineKeyboardButton("⌫ Remove Sell-Hi", callback_data="presets_delsellhi")
 delselllo = InlineKeyboardButton("⌫ Remove Sell-Lo", callback_data="presets_delselllo")
 delsellhiamount = InlineKeyboardButton("⌫ Remove Sell-Hi Amount", callback_data="presets_delsellhiamount")
 delsellloamount = InlineKeyboardButton("⌫ Remove Sell-Lo Amount", callback_data="presets_delsellloamount")
-
-sell_keyboard = [
-    [home], 
-    [back],
-    [autosell],
-    [sellhi, delsellhi],
-    [selllo, delselllo], 
-    [sellhiamount, delsellhiamount],
-    [sellloamount, delsellloamount],
-    [maxgas, delgas],
-]
-sell_markup = InlineKeyboardMarkup(sell_keyboard)
 
 # ------------------------------------------------------------------------------
 # APPROVE BUTTONS
 # ------------------------------------------------------------------------------
 autoapprove = InlineKeyboardButton("📝 Sell-Hi Tax", callback_data="presets_sellhi")
 delautoapprove = InlineKeyboardButton("📝 Sell-Lo Tax", callback_data="presets_selllo")
-approve_keyboard = [
-    [home], 
-    [back],
-    [autosell],
-    [autoapprove],
-    [maxgas, delgas],
-]
-approve_markup = InlineKeyboardMarkup(approve_keyboard)
-
 
 # ------------------------------------------------------------------------------
 # WALLET NETWORK CHAIN BUTTONS
@@ -376,12 +342,59 @@ def build_preset_keyboard():
     
     return preset_markup  
     
+    
+def build_buy_keyboard(user_data):
+    
+    deldopebuy = InlineKeyboardButton(f"{'❌' if not user_data.dupe_buy else '✅'} Dope Buy", callback_data="presets_deldopebuy")
+    delautobuy = InlineKeyboardButton(f"{'❌' if not user_data.auto_buy else '✅'} Auto Buy", callback_data="presets_delautobuy")
+
+    buy_keyboard = [
+        [home], 
+        [back],
+        [deldopebuy, delautobuy],
+        [maxbuytax, delbuytax], 
+        [maxselltax, delselltax],
+        [maxgas, delgas],
+    ]
+    buy_markup = InlineKeyboardMarkup(buy_keyboard)
+    return buy_markup
+
+def build_sell_keyboard(user_data):
+    autosell = InlineKeyboardButton(f"{'❌' if not user_data.auto_approve else '✅'} Auto Sell", callback_data="presets_autosell")
+
+    sell_keyboard = [
+        [home], 
+        [back],
+        [autosell],
+        [sellhi, delsellhi],
+        [selllo, delselllo], 
+        [sellhiamount, delsellhiamount],
+        [sellloamount, delsellloamount],
+        [maxgas, delgas],
+    ]
+    sell_markup = InlineKeyboardMarkup(sell_keyboard)
+
+    return sell_markup
+
+def build_approve_keyboard(user_data):
+    autosell = InlineKeyboardButton(f"{'❌' if not user_data.auto_approve else '✅'} Auto Sell", callback_data="presets_autosell")
+    approve_keyboard = [
+        [home], 
+        [back],
+        [autosell],
+        [autoapprove],
+        [maxgas, delgas],
+    ]
+    approve_markup = InlineKeyboardMarkup(approve_keyboard)
+    return approve_markup
+    
 async def start_button_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     command = query.data
     user_id = str(query.from_user.id)
     context.user_data["last_message_id"] = query.message.message_id
+    gas_price = await get_default_gas_price_gwei()
 
     match = re.match(r"^start_(\w+)", command)
     if match:
@@ -449,18 +462,19 @@ async def start_button_callback(update: Update, context: CallbackContext):
             user_data = await load_user_data(user_id)
             wallet = user_data.wallet_address if user_data.wallet_address is not None else '<pre>Disconnected</pre>'
             configuration_message = f"""
-            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+                <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
 Wallet: {wallet}
 
-Multi-Wallets: {'💚' if user_data.wallet_address != None else '🔐'}
+Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
 
-<strong>🧰 {PRESETNETWORK} GENERAL</strong>
+<strong>🛠 {PRESETNETWORK} GENERAL</strong>
 -------------------------------------------
-Tx Max Gas Price: <strong>Default({user_data.max_gas} GWEI) + Delta({user_data.max_delta} GWEI)</strong>
-Swap Slippage: <strong>Default ({Decimal(user_data.slippage)}%)</strong>
-Gas Limit: <strong>Auto</strong>
+Max Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
+Swap Slippage: <strong>Default ({round(user_data.slippage)}%)</strong>
+Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</strong>
 -------------------------------------------
             """
+            context.user_data['config_message'] = configuration_message
             message = await query.edit_message_caption(
                 caption=configuration_message,
                 parse_mode=ParseMode.HTML,
@@ -514,7 +528,9 @@ async def configuration_next_and_back_callback(update: Update, context: Callback
     markup = context.user_data['last_markup']
     context.user_data["last_message_id"] = query.message.message_id
     
+    wallet = user_data.wallet_address if user_data.wallet_address is not None else '<pre>Disconnected</pre>'
     
+    gas_price = await get_default_gas_price_gwei()
 
     match = re.match(r"^presets_(\w+)", command)
     if match:
@@ -526,87 +542,197 @@ async def configuration_next_and_back_callback(update: Update, context: Callback
             new_markup = build_preset_keyboard()
 
             # Edit the message to display the updated keyboard markup
-            
-            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+            configuration_message = f"""
+                <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+Wallet: {wallet}
+
+Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
+
+<strong>🛠 {PRESETNETWORK} GENERAL</strong>
+-------------------------------------------
+Max Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
+Swap Slippage: <strong>Default ({Decimal(user_data.slippage)}%)</strong>
+Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</strong>
+-------------------------------------------
+    """
+            context.user_data['config_message'] = configuration_message
+    
+            message = await query.edit_message_caption(caption=configuration_message, parse_mode=ParseMode.HTML, reply_markup=new_markup)
             back_variable(message, context, text, new_markup, False, True)
         elif button_data == "right":
             SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX + 1) % len(NETWORK_CHAINS)
             # Update the keyboard markup with the new selected chain
             new_markup = build_preset_keyboard()
+            
+            configuration_message = f"""
+                <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+Wallet: {wallet}
+
+Multi-Wallets: {'✅' if user_data.wallet_address != None else '❌'}
+
+<strong>🛠 {PRESETNETWORK} GENERAL</strong>
+-------------------------------------------
+Max Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
+Swap Slippage: <strong>Default ({round(Decimal(user_data.slippage))}%)</strong>
+Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</strong>
+-------------------------------------------
+    """
+            context.user_data['config_message'] = configuration_message
 
             # Edit the message to display the updated keyboard markup
-            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+            message = await query.edit_message_caption(caption=configuration_message, parse_mode=ParseMode.HTML, reply_markup=new_markup)
             back_variable(message, context, text, new_markup, False, True)
         elif button_data == "buy":
-            message = await query.edit_message_reply_markup(reply_markup=buy_markup)
-            back_variable(message, context, text, markup, False, True)
+            configuration_message = context.user_data['config_message']
+            caption = f"""
+            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+Wallet: {wallet}
+
+Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
+
+<strong>🛠 {PRESETNETWORK} Buy</strong>
+-------------------------------------------
+Auto Buy: {'✅' if user_data.auto_buy else '❌'}
+Buy Gas Price: <strong>Default({user_data.max_gas_price if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
+Max Buy Tax: {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
+Max Sell Tax: {user_data.sell_tax if user_data.sell_tax > 0.00 else 'Disabled'}
+-------------------------------------------            
+            """
+            context.user_data['buy_message'] = caption
+            buy_markup = build_buy_keyboard(user_data)
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=buy_markup)
+            back_variable(message, context, configuration_message, markup, False, True)
         elif button_data == "sell":
-            message = await query.edit_message_reply_markup(reply_markup=sell_markup)
-            back_variable(message, context, text, markup, False, True)
+            caption = f"""
+            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+Wallet: {wallet}
+
+Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
+
+<strong>🛠 {PRESETNETWORK} Sell</strong>
+-------------------------------------------
+Auto Sell: {'✅' if user_data.auto_sell else '❌'}
+Sell Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
+Auto Sell (high): {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
+Sell Amount (high): {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
+Auto Sell (low): {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
+Sell Amount (low): {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
+-------------------------------------------            
+            """
+            configuration_message = context.user_data['config_message']
+            context.user_data['sell_message'] = caption
+            sell_markup = build_sell_keyboard(user_data)
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+            back_variable(message, context, configuration_message, markup, False, True)
         elif button_data == "approve":
-            message = await query.edit_message_reply_markup(reply_markup=approve_markup)
-            back_variable(message, context, text, markup, False, True)
-        elif button_data == "maxdelta":
+            caption = f"""
+            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+Wallet: {wallet}
+
+Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
+
+<strong>{'✅' if user_data.auto_approve else '❌'} {PRESETNETWORK} Sell</strong>
+-------------------------------------------
+Auto Approve: {'✅' if user_data.auto_approve else '❌'}
+Approve Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
+-------------------------------------------            
+            """
+            configuration_message = context.user_data['config_message']
+            context.user_data['approve_message'] = caption
+            
+            approve_markup = build_approve_keyboard(user_id)
+
+
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=approve_markup)
+            back_variable(message, context, configuration_message, markup, False, True)
+        elif button_data == "delgas":
+            await update_user_data(user_id, {'max_gas':round(Decimal(0.00), 2)})
+            message = await query.message.reply_text(text="❌ Custom gas limit has been deleted!")
+            back_variable(message, context, text, markup, False, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delgas"
+        elif button_data == "deldelta":
+            await update_user_data(user_id, {'max_delta':round(Decimal(0.00), 2)})
+            message = await query.message.reply_text(text="❌ Max gas delta has been deleted!")
+            back_variable(message, context, text, markup, False, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "deldelta"
+        elif button_data == "delslippage":
+            await update_user_data(user_id, {'slippage':round(Decimal(100.00), 2)})
+            message = await query.message.reply_text(text="❌ Custom slippage has been deleted!")
+            back_variable(message, context, text, markup, False, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delslippage"
+        
+
+async def configuration_button_callback(update: Update, context: CallbackContext):
+    global SELECTED_CHAIN_INDEX
+    
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    user_data = await load_user_data(user_id)
+    text = context.user_data['last_message']
+    markup = context.user_data['last_markup']
+    context.user_data["last_message_id"] = query.message.message_id
+    
+    
+
+    match = re.match(r"^config_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        if button_data == "maxdelta":
             message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
             back_variable(message, context, text, markup, False, True)
             context.user_data['msg_id'] = message.message_id
             context.user_data['preset'] = "delta"
             return REPLYDELTA
         elif button_data == "slippage":
-            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
+            message = await query.message.reply_text(text="Reply to this message with your desired slippage percentage. Minimum is 0.1%. Max is 100%!")
             back_variable(message, context, text, markup, False, True)
             context.user_data['msg_id'] = message.message_id
             context.user_data['preset'] = "slippage"
             return REPLYDELTA
-        elif button_data == "gas":
-            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
+        elif button_data == "maxgas":
+            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas limit. Minimum is 1m, Maximum is 10m!")
             back_variable(message, context, text, markup, False, True)
             context.user_data['msg_id'] = message.message_id
             context.user_data['preset'] = "gas"
             return REPLYDELTA
-        elif button_data == "delgas":
-            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
-            back_variable(message, context, text, markup, False, True)
-            context.user_data['msg_id'] = message.message_id
-            context.user_data['preset'] = "delgas"
-            return REPLYDELTA
-        elif button_data == "deldelta":
-            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
-            back_variable(message, context, text, markup, False, True)
-            context.user_data['msg_id'] = message.message_id
-            context.user_data['preset'] = "deldelta"
-            return REPLYDELTA
-        elif button_data == "delslippage":
-            message = await query.message.reply_text(text="Reply to this message with your desired maximum gas delta (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is 0 GWEI!")
-            back_variable(message, context, text, markup, False, True)
-            context.user_data['msg_id'] = message.message_id
-            context.user_data['preset'] = "delslippage"
-            return REPLYDELTA
 
 
-def reply_preset_response(update: Update, context: CallbackContext):
+async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = context.user_data.get('user_id')   
     preset = context.user_data.get('preset')
     text = update.message.text
-    
+        
     if preset == "delta":
-        update_user_data(user_id, {'max_delta':round(Decimal(text), 2)})
+        f_text = Decimal(text.replace(' GWEI', '')) if 'GWEI' in text else Decimal(text)
+        text = f"""
+        ✅ Max gas delta set to {round(Decimal(f_text))} GWEI. By setting your Max Gas Delta to {round(Decimal(f_text))} GWEI, the bot will no longer frontrun rugs or copytrade transactions that require more than {round(Decimal(f_text))} GWEI in delta.
+        """
+        await update_user_data(user_id, {'max_delta':f_text})
     elif preset == "slippage":
-        update_user_data(user_id, {'slippage':round(Decimal(text), 2)})
+        f_text = text.replace('%', '') if '%' in text else Decimal(text)
+        text = f"""
+        ✅ Slippage percentage set to {f_text}%!        
+        """
+        await update_user_data(user_id, {'slippage':Decimal(f_text)})
     elif preset == "gas":
-        update_user_data(user_id, {'max_gas':round(Decimal(text), 2)})
-    elif preset == "delgas":
-        update_user_data(user_id, {'max_gas':round(Decimal(18.98), 2)})
-    elif preset == "deldelta":
-        update_user_data(user_id, {'max_delta':round(Decimal(0.00), 2)})
-    elif preset == "delslippage":
-        update_user_data(user_id, {'slippage':round(Decimal(100.00), 2)})
+        f_text = int(text.replace('m', '')) if 'm' in text else int(text) * 1000000
+        text = f"""
+        ✅ Max gas limit set to {round(f_text)}!
+        """
+        await update_user_data(user_id, {'max_gas':round(Decimal(f_text), 2)})
+        
         
 
     # Reply to the user and highlight the last sent message
     last_message_id = context.user_data.get('msg_id')
     if last_message_id:
-        update.message.reply_text(
+        await update.message.reply_text(
             text=text,
             reply_to_message_id=last_message_id,  # Highlight the last sent message
         )
@@ -723,7 +849,7 @@ async def wallets_chain_button_callback(update: Update, context: CallbackContext
 Disconnected 😥 
 </pre>
 
-<strong>🧰 GENERAL</strong>
+<strong>🛠 GENERAL</strong>
 -------------------------------------------
 Tx Max Gas Price: <strong>Disabled</strong>
 Swap Slippage: <strong>Default (100%)</strong>
@@ -741,7 +867,7 @@ Gas Limit: <strong>Auto</strong>
 <strong>{NETWORK.upper()} Mnemonic Phrase:</strong>
 <code>{user_data.wallet_phrase}</code>
 
-<strong>🧰 {NETWORK} GENERAL</strong>
+<strong>🛠 {NETWORK} GENERAL</strong>
 -------------------------------------------
 Tx Max Gas Price: <strong>Disabled</strong>
 Swap Slippage: <strong>Default (100%)</strong>
@@ -825,7 +951,7 @@ async def wallets_chain_connect_button_callback(
 <code>{balance}</code>
 
 
-<strong>🧰 {NETWORK} GENERAL</strong>
+<strong>🛠 {NETWORK} GENERAL</strong>
 -------------------------------------------
 Tx Max Gas Price: <strong>Disabled</strong>
 Swap Slippage: <strong>Default (100%)</strong>
@@ -873,7 +999,7 @@ Gas Limit: <strong>Auto</strong>
 Disconnected 😥 
 </pre>
 
-<strong>🧰 GENERAL</strong>
+<strong>🛠 GENERAL</strong>
 -------------------------------------------
 Tx Max Gas Price: <strong>Disabled</strong>
 Swap Slippage: <strong>Default (100%)</strong>
@@ -891,7 +1017,7 @@ Gas Limit: <strong>Auto</strong>
 <strong>{NETWORK.upper()} Mnemonic Phrase:</strong>
 <code>{user_data.wallet_phrase}</code>
 
-<strong>🧰 {NETWORK} GENERAL</strong>
+<strong>🛠 {NETWORK} GENERAL</strong>
 -------------------------------------------
 Tx Max Gas Price: <strong>Disabled</strong>
 Swap Slippage: <strong>Default (100%)</strong>

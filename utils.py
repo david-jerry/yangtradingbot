@@ -43,6 +43,23 @@ def back_variable(message, context, text, markup, caption, markup_reply):
     context.user_data["message_stack"].append(
         {"message": message, "text": text, "markup": markup, "caption": caption, "markup_reply": markup_reply}
     )
+    
+async def get_default_gas_price():
+    # Connect to your Ethereum node
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+
+    # Get the current gas price (in wei)
+    gas_price = w3.eth.gas_price
+    return gas_price
+
+async def get_default_gas_price_gwei():
+    # Connect to your Ethereum node
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+
+    # Get the current gas price (in wei)
+    gas_price = w3.eth.gas_price
+    gas_price_gwei = w3.from_wei(gas_price, 'gwei')
+    return gas_price_gwei
 
 
 async def attach_wallet_function(network, user_id, key):

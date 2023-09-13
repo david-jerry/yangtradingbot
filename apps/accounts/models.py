@@ -74,9 +74,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     agreed_to_terms = models.BooleanField(default=True)
     
-    max_gas = models.DecimalField(default=14.48, decimal_places=2, max_digits=20)
+    max_gas = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
+    max_gas_price = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
     max_delta = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
     slippage = models.DecimalField(default=100.00, decimal_places=2, max_digits=20)
+    
+    buy_tax = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
+    sell_tax = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
     
     sell_hi = models.DecimalField(default=2.0, decimal_places=2, max_digits=20)
     sell_lo = models.DecimalField(default=0.5, decimal_places=2, max_digits=20)

@@ -48,6 +48,7 @@ from commands.start.__buttons import (
     back_button_callback,
     
     configuration_next_and_back_callback,
+    configuration_button_callback,
     reply_preset_response,
     cancel_preset,
     
@@ -202,7 +203,7 @@ def main() -> None:
     # PRESETS HANDLERS
     preset_conv_handler = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(configuration_next_and_back_callback, pattern=r"^presets_*")
+            CallbackQueryHandler(configuration_button_callback, pattern=r"^config_*")
         ],
         states={
             REPLYDELTA: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_preset$")), reply_preset_response)],
