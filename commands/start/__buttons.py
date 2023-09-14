@@ -1277,6 +1277,72 @@ async def token_callback(update: Update, context: CallbackContext):
             token_message = "What token do you want to send?"
             await query.message.reply_text(token_message)
             return ADDRESS
+        elif button_data == "eth":
+            NETWORK = "eth"
+            NETWORKNAME = "Ethereum"
+            BALANCE = await get_wallet_balance('eth', user_id)
+            disconnect_message = f"""
+⚡️ Chain: {NETWORKNAME}
+
+✅ Address: {user_data.address_wallet}
+
+You have {BALANCE} {NETWORK}            
+            """
+            message = await query.edit_message_text(
+                text=disconnect_message,
+                parse_mode=ParseMode.HTML,
+                reply_markup=home_markup,
+            )
+        elif button_data == "bsc":
+            NETWORK = "bsc"
+            NETWORKNAME = "Binance"
+            BALANCE = await get_wallet_balance('bsc', user_id)
+            disconnect_message = f"""
+⚡️ Chain: {NETWORKNAME}
+
+✅ Address: {user_data.address_wallet}
+
+You have {BALANCE} {NETWORK}            
+            """
+            message = await query.edit_message_text(
+                text=disconnect_message,
+                parse_mode=ParseMode.HTML,
+                reply_markup=home_markup,
+            )
+        elif button_data == "arb":
+            NETWORK = "arb"
+            NETWORKNAME = "Avalance"
+            BALANCE = await get_wallet_balance('arb', user_id)
+            disconnect_message = f"""
+⚡️ Chain: {NETWORKNAME}
+
+✅ Address: {user_data.address_wallet}
+
+You have {BALANCE} {NETWORK}            
+            """
+            message = await query.edit_message_text(
+                text=disconnect_message,
+                parse_mode=ParseMode.HTML,
+                reply_markup=home_markup,
+            )
+            message
+        elif button_data == "base":
+            NETWORK = "base"
+            NETWORKNAME = "Coinbase"
+            BALANCE = await get_wallet_balance('base', user_id)
+            disconnect_message = f"""
+⚡️ Chain: {NETWORKNAME}
+
+✅ Address: {user_data.address_wallet}
+
+You have {BALANCE} {NETWORK}            
+            """
+            message = await query.edit_message_text(
+                text=disconnect_message,
+                parse_mode=ParseMode.HTML,
+                reply_markup=home_markup,
+            )
+
             
 async def token_address_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_id = context.user_data['private_reply']
