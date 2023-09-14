@@ -988,7 +988,7 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
     preset = context.user_data.get('preset')
     text = update.message.text
     caption = context.user_data['config_message'] 
-    
+    user_data = await load_user_data(user_id)
     wallet = user_data.wallet_address if user_data.wallet_address is not None else '<pre>Disconnected</pre>'
     
     gas_price = await get_default_gas_price_gwei()
