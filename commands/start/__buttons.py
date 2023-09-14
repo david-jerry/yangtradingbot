@@ -1344,7 +1344,7 @@ You have {BALANCE} {NETWORK}
             )
 
             
-async def token_address_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def token_address_reply(update: Update, context: CallbackContext):
     message_id = context.user_data['private_reply']
     context.user_data['address'] = update.message.text
     user_id = update.message.from_user.id
@@ -1355,7 +1355,7 @@ async def token_address_reply(update: Update, context: ContextTypes.DEFAULT_TYPE
     await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
     return TOADDRESS
 
-async def to_address_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def to_address_reply(update: Update, context: CallbackContext):
     message_id = context.user_data['private_reply']
     context.user_data['to_address'] = update.message.text
     user_id = update.message.from_user.id
@@ -1366,7 +1366,7 @@ async def to_address_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
     return AMOUNT
     
-async def token_amount_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def token_amount_reply(update: Update, context: CallbackContext):
     message_id = context.user_data['private_reply']
     amount = update.message.text
     user_id = update.message.from_user.id
@@ -1384,7 +1384,7 @@ async def token_amount_reply(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
         return ConversationHandler.END
 
-async def cancel_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cancel_transfer(update: Update, context: CallbackContext):
     context.user_data.pop('address', None)
     context.user_data.pop('to_address', None)
     context.user_data.pop("network_chain", None)
