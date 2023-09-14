@@ -1274,7 +1274,7 @@ async def token_callback(update: Update, context: CallbackContext):
         button_data = match.group(1)
         
         if button_data == "token":
-            token_message = "What token do you want to send?"
+            token_message = "What is the token contract address?"
             await query.message.reply_text(token_message)
             return ADDRESS
         elif button_data == "eth":
