@@ -19,11 +19,12 @@ from constants import (
     about_message,
     terms_message,
     language_message,
+    transfer_message,
     welcome_message,
     wallets_message,
     wallets_asset_message,
 )
-from utils import attach_wallet_function, back_variable, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_wallet_balance
+from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_wallet_balance, trasnfer_currency
 from utils_data import load_user_data, save_user_data, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -109,6 +110,18 @@ asset_chain_keyboard = [
 
 asset_chain_markup = InlineKeyboardMarkup(asset_chain_keyboard)
 
+transfer_eth = InlineKeyboardButton("🎫 ETH", callback_data="transfer_chain_eth")
+transfer_bsc = InlineKeyboardButton("🎫 BSC", callback_data="transfer_chain_bsc")
+transfer_arb = InlineKeyboardButton("🎫 ARB", callback_data="transfer_chain_arb")
+transfer_base = InlineKeyboardButton("🎫 BASE", callback_data="transfer_chain_base")
+
+transfer_chain_keyboard = [
+    [home],
+    [transfer_eth, transfer_bsc, transfer_arb, transfer_base],
+]
+
+transfer_chain_markup = InlineKeyboardMarkup(transfer_chain_keyboard)
+
 attach_wallet = InlineKeyboardButton("Attach Wallet", callback_data="connect_attach")
 detach_wallet = InlineKeyboardButton("Detach Wallet", callback_data="connect_detach")
 detach_confirm = InlineKeyboardButton("Confirm Detach", callback_data="connect_confirm")
@@ -158,6 +171,8 @@ configuration = InlineKeyboardButton("Configuration", callback_data="start_confi
 terms = InlineKeyboardButton("Accept Terms", callback_data="start_terms")
 snipe = InlineKeyboardButton("Sniper", callback_data="start_sniper")
 copy_trade = InlineKeyboardButton("Copy Trade", callback_data="start_trade")
+quick = InlineKeyboardButton("Quick Actions", callback_data="start_quick")
+presets = InlineKeyboardButton("Quick Actions", callback_data="start_presets")
 token_transfer = InlineKeyboardButton(
     "Token Transfer", callback_data="start_token_transfer"
 )
@@ -167,7 +182,8 @@ start_keyboard = [
     # [about, help],
     [language],
     [wallets_assets, wallets],
-    [configuration, copy_trade],
+    [configuration, presets],
+    [quick, copy_trade]
     [snipe, token_transfer],
     [ads_1],
     [terms],
@@ -451,6 +467,13 @@ async def start_button_callback(update: Update, context: CallbackContext):
                 reply_markup=asset_chain_markup
             )
             back_variable(message, context, wallets_asset_message, asset_chain_markup, True, False)
+        elif button_data == "token_transfer":
+            message = await query.edit_message_caption(
+                caption=transfer_message, 
+                parse_mode=ParseMode.HTML, 
+                reply_markup=transfer_chain_markup
+            )
+            back_variable(message, context, transfer_message, transfer_chain_markup, True, False)
         elif button_data == "configuration":
             preset_markup = build_preset_keyboard()
             user_data = await load_user_data(user_id)
@@ -870,11 +893,6 @@ Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount
             context.user_data['msg_id'] = message.message_id
             context.user_data['preset'] = "delsellloamount"
 
-
-
-
-
-
 async def configuration_button_callback(update: Update, context: CallbackContext):
     global SELECTED_CHAIN_INDEX
     
@@ -886,9 +904,6 @@ async def configuration_button_callback(update: Update, context: CallbackContext
     text = context.user_data['last_message']
     markup = context.user_data['last_markup']
     context.user_data["last_message_id"] = query.message.message_id
-    wallet = user_data.wallet_address if user_data.wallet_address is not None else '<pre>Disconnected</pre>'
-    
-    gas_price = await get_default_gas_price_gwei()
     
 
     match = re.match(r"^config_(\w+)", command)
@@ -981,14 +996,15 @@ Example: If you want to sell half of your bag, type 50.
             context.user_data['preset'] = "sellloamount"
             return REPLYDELTA
 
-
-
 async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = context.user_data.get('user_id')   
     preset = context.user_data.get('preset')
     text = update.message.text
     caption = context.user_data['config_message'] 
     user_data = await load_user_data(user_id)
+    
+    context.user_data["last_message_id"] = update.message.message_id
+
     wallet = user_data.wallet_address if user_data.wallet_address is not None else '<pre>Disconnected</pre>'
     
     gas_price = await get_default_gas_price_gwei()
@@ -1165,7 +1181,152 @@ async def cancel_preset(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+# ------------------------------------------------------------------------------
+# TRANSFER BUTTON CALLBACK
+# ------------------------------------------------------------------------------
+async def transfer_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    user_data = await load_user_data(user_id)
+    
+    context.user_data["last_message_id"] = query.message.message_id
 
+    match = re.match(r"^transfer_chain_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+
+        # Fetch the bot's profile photo
+        bot = context.bot
+        bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+        bot_profile_photo = (
+            bot_profile_photos.photos[0][0] if bot_profile_photos else None
+        )
+
+        if button_data == "eth":
+            NETWORK = "eth"
+            NETWORKNAME = "Ethereum"
+            BALANCE = await get_wallet_balance('eth', user_id)
+        elif button_data == "bsc":
+            NETWORK = "bsc"
+            NETWORKNAME = "Binance"
+            BALANCE = await get_wallet_balance('bsc', user_id)
+        elif button_data == "arb":
+            NETWORK = "arb"
+            NETWORKNAME = "Avalance"
+            BALANCE = await get_wallet_balance('arb', user_id)
+        elif button_data == "base":
+            NETWORK = "base"
+            NETWORKNAME = "Coinbase"
+            BALANCE = await get_wallet_balance('base', user_id)
+
+        # STORE THE USER CHOICE FOR NETWORK
+        context.user_data["network_chain"] = NETWORK
+        context.user_data["network_name"] = NETWORKNAME
+
+        disconnect_message = f"""
+⚡️ Chain: {NETWORKNAME}
+
+✅ Address: {user_data.address_wallet}
+
+You have {BALANCE} {NETWORK}            
+            """
+        
+        networkchain = InlineKeyboardButton(f"💰 {NETWORK.upper()}", callback_data=f"transfer_{NETWORK.lower()}")
+        token = InlineKeyboardButton(f"💰 TOKEN", callback_data=f"transfer_token")
+
+        transfer_keyboard = [
+            [home], 
+            [back],
+            [networkchain, token],
+        ]
+        transfer_built_markup = InlineKeyboardMarkup(transfer_keyboard)
+
+        
+        
+        message = await query.edit_message_text(
+            text=disconnect_message,
+            parse_mode=ParseMode.HTML,
+            reply_markup=transfer_built_markup,
+        )
+        back_variable(message, context, disconnect_message, asset_chain_markup, True, False)
+        context.user_data["message"] = message
+        context.user_data["text"] = disconnect_message
+        context.user_data["markup"] = connect_markup
+        message
+    else:
+        await query.message.reply_text("I don't understand that command.")
+
+
+ADDRESS, TOADDRESS, AMOUNT = range(3)
+async def token_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    user_data = await load_user_data(user_id)
+    
+    context.user_data["last_message_id"] = query.message.message_id
+
+    match = re.match(r"^transfer_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        if button_data == "token":
+            token_message = "What token do you want to send?"
+            await query.message.reply_text(token_message)
+            return ADDRESS
+            
+async def token_address_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message_id = context.user_data['private_reply']
+    context.user_data['address'] = update.message.text
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+
+    # This message is a reply to the input message, and we can process the user's input here
+    await update.message.reply_text(f"What wallet address do you wish to transfer to?")
+    await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+    return TOADDRESS
+
+async def to_address_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message_id = context.user_data['private_reply']
+    context.user_data['to_address'] = update.message.text
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+
+    # This message is a reply to the input message, and we can process the user's input here
+    await update.message.reply_text(f"How much do you want to transfer eg: 2000 USD?")
+    await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+    return AMOUNT
+    
+async def token_amount_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message_id = context.user_data['private_reply']
+    amount = update.message.text
+    user_id = update.message.from_user.id
+    address = context.user_data['address'] 
+    to_address = context.user_data['to_address']
+    chat_id = update.message.chat_id
+    NETWORK = context.user_data.get("network_chain")
+    user_data = load_user_data(user_id)
+    
+    if message_id and update.message.message_id > message_id:
+        tx_hash = await trasnfer_currency(NETWORK, user_data, amount, to_address, token_address=address)
+        # This message is a reply to the input message, and we can process the user's input here
+        receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
+        await update.message.reply_text(f"Processing transfer... {receipt}")
+        await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+        return ConversationHandler.END
+
+async def cancel_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.pop('address', None)
+    context.user_data.pop('to_address', None)
+    context.user_data.pop("network_chain", None)
+    await update.message.reply_text("Investment Cancelled.")
+    return ConversationHandler.END
+
+
+        
 
 
 

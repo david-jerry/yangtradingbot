@@ -67,6 +67,10 @@ wallets_asset_message = f"""
 Please select a chain for which you would like to view its assets.
 """
 
+transfer_message = f"""
+Please select a chain for which you would like to transfer assets from.
+"""
+
 preference_message = """
 Please select a preset of gas price for transactions.
 """

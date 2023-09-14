@@ -10,7 +10,7 @@ from utils_data import load_user_data
 
 INFURA_ID: Final = config("INFURA_ID")
 MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
-
+ETHERAPI: Final = config('ETHERSCAN')
 
 def currency_amount(symbol):
     # API endpoint
@@ -186,3 +186,71 @@ async def generate_wallet(network, user_id):
             balance,
             user_data.wallet_phrase if user_data.wallet_phrase != None else mnemonic_phrase,
         )
+
+
+async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token_address=None):
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    chain_id = w3.eth.chain_id
+    get_gas_price = get_default_gas_price_gwei()
+    nonce = w3.eth.getTransactionCount(user_data.wallet_address)
+    if network.upper() == "ETH" and user_data.wallet_address:
+        amount = w3.toWei(Decimal(amount_in_usd.replace(' USD', '')), 'ether')
+        balance = w3.eth.get_balance(user_data.wallet_address)
+        contract_abi = w3.eth.contract(address=token_address).abi if token_address != None else w3.eth.contract(address='0x2170Ed0880ac9A755fd29B2688956BD959F933F8').abi
+        if balance < amount:
+            return "Insufficient balance"
+        chain_id = w3.eth.chain_id
+    elif network.upper() == "BSC" and user_data.BSC_added:
+        w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
+        amount = w3.toWei(Decimal(amount_in_usd.replace(' USD', '')), 'ether')
+        balance = w3.eth.get_balance(user_data.wallet_address)
+        contract_abi = w3.eth.contract(address=token_address).abi if token_address != None else w3.eth.contract(address='0x2170Ed0880ac9A755fd29B2688956BD959F933F8').abi
+        if balance < amount:
+            return "Insufficient balance"
+        chain_id = w3.eth.chain_id
+    elif network.upper() == "ARB" and user_data.ARB_added:
+        w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
+        amount = w3.toWei(Decimal(amount_in_usd.replace(' USD', '')), 'ether')
+        balance = w3.eth.get_balance(user_data.wallet_address)
+        contract_abi = w3.eth.contract(address=token_address).abi if token_address != None else w3.eth.contract(address='0x2170Ed0880ac9A755fd29B2688956BD959F933F8').abi
+        if balance < amount:
+            return "Insufficient balance"
+        chain_id = w3.eth.chain_id
+    elif network.upper() == "BASE" and user_data.BASE_added:
+        w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
+        amount = w3.toWei(Decimal(amount_in_usd.replace(' USD', '')), 'ether')
+        balance = w3.eth.get_balance(user_data.wallet_address)   
+        contract_abi = w3.eth.contract(address=token_address).abi if token_address != None else w3.eth.contract(address='0x2170Ed0880ac9A755fd29B2688956BD959F933F8').abi
+        if balance < amount:
+            return "Insufficient balance"
+        chain_id = w3.eth.chain_id         
+    
+
+    # Build the transaction
+    contract = w3.eth.contract(address=token_address, abi=contract_abi)
+    transaction = {
+        'to': token_address,
+        'value': 0,
+        'gas': 2000000,  # Adjust gas limit as needed
+        'gasPrice': get_gas_price,  # Adjust gas price as needed
+        'nonce': nonce,
+        'data': contract.functions.transfer(to_address, amount).buildTransaction({'chainId': chain_id}),
+    }
+
+    signed_transaction = w3.eth.account.signTransaction(transaction, user_data.wallet_private_key)
+    tx_hash = w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+    return tx_hash
+
+
+async def check_transaction_status(network, user_data,  tx_hash):
+    if network.upper() == "ETH" and user_data.wallet_address:
+        w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BSC" and user_data.BSC_added:
+        w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
+    elif network.upper() == "ARB" and user_data.ARB_added:
+        w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BASE" and user_data.BASE_added:
+        w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
+    
+    receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+    return receipt

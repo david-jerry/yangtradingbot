@@ -52,6 +52,13 @@ from commands.start.__buttons import (
     reply_preset_response,
     cancel_preset,
     
+    transfer_callback,
+    token_callback,
+    token_address_reply,
+    to_address_reply,
+    token_amount_reply,
+    cancel_transfer,
+    
     wallets_asset_chain_button_callback,
     wallets_chain_button_callback,
     wallets_chain_connect_button_callback,
@@ -154,7 +161,7 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 PRIVATEKEY = range(1)
 REPLYDELTA = range(1)
-
+ADDRESS, TOADDRESS, AMOUNT = range(3)
 def main() -> None:
     LOGGER.info(TOKEN)
     LOGGER.info(USERNAME)
@@ -185,7 +192,8 @@ def main() -> None:
     app.add_handler(CallbackQueryHandler(home_button_callback, pattern=r"^home$"))
     app.add_handler(CallbackQueryHandler(back_button_callback, pattern=r"^direct_left$"))
     
-    
+    # TRANSFER TOKEN CALLBACK
+    app.add_handler(CallbackQueryHandler(transfer_callback, pattern=r"^transfer_chain_*"))
     
     
     # CONVERSATION HANDLERS
@@ -199,6 +207,21 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_attachment", cancel_attachment)]
     )
     app.add_handler(attach_conv_handler)
+
+    # TRANSFER HANDLERS
+    
+    transfer_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(token_callback, pattern=r"^transfer_*")
+        ],
+        states={
+            ADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_address_reply)],
+            TOADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), to_address_reply)],
+            AMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_amount_reply)],
+        },
+        fallbacks=[CommandHandler("cancel_transfer", cancel_transfer)]
+    )
+    app.add_handler(transfer_conv_handler)
 
     # PRESETS HANDLERS
     preset_conv_handler = ConversationHandler(
