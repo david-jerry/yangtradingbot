@@ -183,7 +183,7 @@ start_keyboard = [
     [language],
     [wallets_assets, wallets],
     [configuration, presets],
-    [quick, copy_trade]
+    [quick, copy_trade],
     [snipe, token_transfer],
     [ads_1],
     [terms],
