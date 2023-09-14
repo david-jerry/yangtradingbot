@@ -1288,8 +1288,8 @@ async def token_callback(update: Update, context: CallbackContext):
 
 You have {BALANCE} {NETWORK}            
             """
-            message = await query.edit_message_text(
-                text=disconnect_message,
+            message = await query.edit_message_caption(
+                caption=disconnect_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=home_markup,
             )
@@ -1304,8 +1304,8 @@ You have {BALANCE} {NETWORK}
 
 You have {BALANCE} {NETWORK}            
             """
-            message = await query.edit_message_text(
-                text=disconnect_message,
+            message = await query.edit_message_caption(
+                caption=disconnect_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=home_markup,
             )
@@ -1320,8 +1320,8 @@ You have {BALANCE} {NETWORK}
 
 You have {BALANCE} {NETWORK}            
             """
-            message = await query.edit_message_text(
-                text=disconnect_message,
+            message = await query.edit_message_caption(
+                caption=disconnect_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=home_markup,
             )
@@ -1337,8 +1337,8 @@ You have {BALANCE} {NETWORK}
 
 You have {BALANCE} {NETWORK}            
             """
-            message = await query.edit_message_text(
-                text=disconnect_message,
+            message = await query.edit_message_caption(
+                caption=disconnect_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=home_markup,
             )
