@@ -65,8 +65,8 @@ SELECTED_CHAIN_INDEX = 0
 # ------------------------------------------------------------------------------
 # BUY BUTTONS
 # ------------------------------------------------------------------------------
-maxbuytax = InlineKeyboardButton("📝 Max Buy Tax", callback_data="buy_maxbuytax")
-maxselltax = InlineKeyboardButton("📝 Max Sell Tax", callback_data="buy_maxselltax")
+maxbuytax = InlineKeyboardButton("📝 Max Buy Tax", callback_data="config_maxbuytax")
+maxselltax = InlineKeyboardButton("📝 Max Sell Tax", callback_data="config_maxselltax")
 delbuytax = InlineKeyboardButton("⌫ Remove Buy Tax", callback_data="presets_delbuytax")
 delselltax = InlineKeyboardButton("⌫ Remove Buy Tax", callback_data="presets_delselltax")
 
@@ -74,20 +74,14 @@ delselltax = InlineKeyboardButton("⌫ Remove Buy Tax", callback_data="presets_d
 # ------------------------------------------------------------------------------
 # SELL BUTTONS
 # ------------------------------------------------------------------------------
-sellhi = InlineKeyboardButton("📝 Sell-Hi Tax", callback_data="sell_sellhi")
-selllo = InlineKeyboardButton("📝 Sell-Lo Tax", callback_data="sell_selllo")
-sellhiamount = InlineKeyboardButton("📝 Sell-Hi Amount", callback_data="sell_sellhiamount")
-sellloamount = InlineKeyboardButton("📝 Sell-Lo Amount", callback_data="sell_sellloamount")
+sellhi = InlineKeyboardButton("📝 Sell-Hi Tax", callback_data="config_sellhi")
+selllo = InlineKeyboardButton("📝 Sell-Lo Tax", callback_data="config_selllo")
+sellhiamount = InlineKeyboardButton("📝 Sell-Hi Amount", callback_data="config_sellhiamount")
+sellloamount = InlineKeyboardButton("📝 Sell-Lo Amount", callback_data="config_sellloamount")
 delsellhi = InlineKeyboardButton("⌫ Remove Sell-Hi", callback_data="presets_delsellhi")
 delselllo = InlineKeyboardButton("⌫ Remove Sell-Lo", callback_data="presets_delselllo")
 delsellhiamount = InlineKeyboardButton("⌫ Remove Sell-Hi Amount", callback_data="presets_delsellhiamount")
 delsellloamount = InlineKeyboardButton("⌫ Remove Sell-Lo Amount", callback_data="presets_delsellloamount")
-
-# ------------------------------------------------------------------------------
-# APPROVE BUTTONS
-# ------------------------------------------------------------------------------
-autoapprove = InlineKeyboardButton("📝 Sell-Hi Tax", callback_data="presets_sellhi")
-delautoapprove = InlineKeyboardButton("📝 Sell-Lo Tax", callback_data="presets_selllo")
 
 # ------------------------------------------------------------------------------
 # WALLET NETWORK CHAIN BUTTONS
@@ -345,13 +339,13 @@ def build_preset_keyboard():
     
 def build_buy_keyboard(user_data):
     
-    deldopebuy = InlineKeyboardButton(f"{'❌' if not user_data.dupe_buy else '✅'} Dope Buy", callback_data="presets_deldopebuy")
+    deldupebuy = InlineKeyboardButton(f"{'❌' if not user_data.dupe_buy else '✅'} Dupe Buy", callback_data="presets_deldupebuy")
     delautobuy = InlineKeyboardButton(f"{'❌' if not user_data.auto_buy else '✅'} Auto Buy", callback_data="presets_delautobuy")
 
     buy_keyboard = [
         [home], 
         [back],
-        [deldopebuy, delautobuy],
+        [deldupebuy, delautobuy],
         [maxbuytax, delbuytax], 
         [maxselltax, delselltax],
         [maxgas, delgas],
@@ -360,12 +354,12 @@ def build_buy_keyboard(user_data):
     return buy_markup
 
 def build_sell_keyboard(user_data):
-    autosell = InlineKeyboardButton(f"{'❌' if not user_data.auto_approve else '✅'} Auto Sell", callback_data="presets_autosell")
+    delautosell = InlineKeyboardButton(f"{'❌' if not user_data.auto_approve else '✅'} Auto Sell", callback_data="presets_delautosell")
 
     sell_keyboard = [
         [home], 
         [back],
-        [autosell],
+        [delautosell],
         [sellhi, delsellhi],
         [selllo, delselllo], 
         [sellhiamount, delsellhiamount],
@@ -377,16 +371,16 @@ def build_sell_keyboard(user_data):
     return sell_markup
 
 def build_approve_keyboard(user_data):
-    autosell = InlineKeyboardButton(f"{'❌' if not user_data.auto_approve else '✅'} Auto Sell", callback_data="presets_autosell")
+    autoapprove = InlineKeyboardButton(f"{'❌' if not user_data.auto_approve else '✅'} Auto Approve", callback_data="presets_autoapprove")
     approve_keyboard = [
         [home], 
         [back],
-        [autosell],
         [autoapprove],
         [maxgas, delgas],
     ]
     approve_markup = InlineKeyboardMarkup(approve_keyboard)
     return approve_markup
+
     
 async def start_button_callback(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -613,10 +607,10 @@ Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_adde
 -------------------------------------------
 Auto Sell: {'✅' if user_data.auto_sell else '❌'}
 Sell Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
-Auto Sell (high): {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
-Sell Amount (high): {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
-Auto Sell (low): {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
-Sell Amount (low): {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
+Auto Sell (high): <strong>{(user_data.sell_hi * 50) if user_data.sell_hi > 0.00 else 'Default(+100%)'}</strong>
+Sell Amount (high): <strong>{user_data.sell_hi_amount if user_data.sell_hi_amount > 0.00 else 'Default(100%)'}</strong>
+Auto Sell (low): <strong>{(user_data.sell_lo * 50) if user_data.sell_lo > 0.00 else '-50%'}</strong>
+Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount > 0.00 else '100%'}</strong>
 -------------------------------------------            
             """
             configuration_message = context.user_data['config_message']
@@ -663,7 +657,87 @@ Approve Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_da
             back_variable(message, context, text, markup, False, False)
             context.user_data['msg_id'] = message.message_id
             context.user_data['preset'] = "delslippage"
-        
+        elif button_data == "delbuytax":
+            await update_user_data(user_id, {'buy_tax':round(Decimal(0.00), 2)})
+            message = await query.message.reply_text(text="❌ Max buy tax threshold has been deleted!")
+            back_variable(message, context, text, markup, False, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delbuytax"
+        elif button_data == "delselltax":
+            await update_user_data(user_id, {'sell_tax':round(Decimal(0.00), 2)})
+            message = await query.message.reply_text(text="❌ Max sell tax threshold has been deleted!")
+            back_variable(message, context, text, markup, False, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delselltax"
+        elif button_data == "delautoapprove":
+            autoapprove = user_data.auto_approve
+            autoapprove = not autoapprove
+            await update_user_data(user_id, {'auto_approve':autoapprove})
+            message = await query.edit_message_caption(caption=context.user_data['approve_message'], parse_mode=ParseMode.HTML, reply_markup=approve_markup)
+            back_variable(message, context, text, markup, True, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delautoapprove"
+        elif button_data == "deldupebuy":
+            dupebuy = user_data.dupe_buy
+            dupebuy = not dupebuy
+            await update_user_data(user_id, {'dupe_buy':dupebuy})
+            message = await query.edit_message_caption(caption=context.user_data['buy_message'], parse_mode=ParseMode.HTML, reply_markup=buy_markup)
+            back_variable(message, context, text, markup, True, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "deldupebuy"
+        elif button_data == "delautobuy":
+            dupebuy = user_data.auto_buy
+            dupebuy = not dupebuy
+            await update_user_data(user_id, {'auto_buy':dupebuy})
+            message = await query.edit_message_caption(caption=context.user_data['buy_message'], parse_mode=ParseMode.HTML, reply_markup=buy_markup)
+            back_variable(message, context, text, markup, True, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delautobuy"
+        elif button_data == "delautosell":
+            dupebuy = user_data.auto_sell
+            dupebuy = not dupebuy
+            await update_user_data(user_id, {'auto_sell':dupebuy})
+            message = await query.edit_message_caption(caption=context.user_data['sell_message'], parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+            back_variable(message, context, text, markup, True, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delautosell"
+        elif button_data == "delsellhi":
+            # multiplied by 50
+            await update_user_data(user_id, {'sell_hi':round(Decimal(2.00), 2)})
+            message = await query.message.reply_text(text="""❌ Auto sell (high) % has been deleted!""")
+            await query.edit_message_caption(caption=context.user_data['sell_message'], parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+            back_variable(message, context, text, markup, False, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delsellhi"
+        elif button_data == "delselllo":
+            # Multiplied by 50
+            await update_user_data(user_id, {'sell_lo':round(Decimal(0.50), 2)})
+            message = await query.message.reply_text(text="""❌ Auto sell (low) % has been deleted!""")
+            await query.edit_message_caption(caption=context.user_data['sell_message'], parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+            back_variable(message, context, text, markup, False, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delselllo"
+        elif button_data == "delsellhiamount":
+            # 50 for half the token owned ie: 50/100
+            await update_user_data(user_id, {'sell_hi_amount':round(Decimal(100.00), 2)})
+            message = await query.message.reply_text(text="""❌ Auto sell (high-amount) % has been deleted!""")
+            await query.edit_message_caption(caption=context.user_data['sell_message'], parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+            back_variable(message, context, text, markup, False, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delsellhiamount"
+        elif button_data == "delsellloamount":
+            # 50 for half the token owned ie: 50/100
+            await update_user_data(user_id, {'sell_lo_amount':round(Decimal(50.00), 2)})
+            message = await query.message.reply_text(text="""❌ Auto sell (low-amount) % has been deleted!""")
+            await query.edit_message_caption(caption=context.user_data['sell_message'], parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+            back_variable(message, context, text, markup, False, False)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "delsellloamount"
+
+
+
+
+
 
 async def configuration_button_callback(update: Update, context: CallbackContext):
     global SELECTED_CHAIN_INDEX
@@ -701,31 +775,154 @@ async def configuration_button_callback(update: Update, context: CallbackContext
             context.user_data['msg_id'] = message.message_id
             context.user_data['preset'] = "gas"
             return REPLYDELTA
+# ----------------------------------------
+        elif button_data == "maxbuytax":
+            msg = """
+Reply to this message with your desired buy tax threshold!
+
+⚠️ If the token's buy tax is higher than your set amount, auto buy will not be triggered.            
+            """
+            message = await query.message.reply_text(text=msg)
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "maxbuytax"
+            return REPLYDELTA
+        elif button_data == "maxselltax":
+            msg = """
+Reply to this message with your desired sell tax threshold!
+
+⚠️ If the token's sell tax is higher than your set amount, auto buy will not be triggered.
+"""
+            message = await query.message.reply_text(text=msg)
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "maxselltax"
+            return REPLYDELTA
+        elif button_data == "sellhi":
+            msg = """
+Reply to this message with your desired sell percentage. This is the HIGH threshold at which you'll auto sell for profits.
+
+Example: 2x would be 100.
+"""
+            message = await query.message.reply_text(text=msg)
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "sellhi"
+            return REPLYDELTA
+        elif button_data == "selllo":
+            msg = """
+Reply to this message with your desired sell tax threshold!
+
+⚠️ If the token's sell tax is higher than your set amount, auto buy will not be triggered.
+"""
+            message = await query.message.reply_text(text=msg)
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "selllo"
+            return REPLYDELTA
+        elif button_data == "sellhiamount":
+            msg = """
+Reply to this message with your desired sell amount %. This represents how much of your holdings you want to sell when sell-high is triggered.
+
+Example: If you want to sell half of your bag, type 50.
+"""
+            message = await query.message.reply_text(text=msg)
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "sellhiamount"
+            return REPLYDELTA
+        elif button_data == "sellloamount":
+            msg = """
+Reply to this message with your desired sell amount %. This represents how much of your holdings you want to sell when sell-low is triggered.
+
+Example: If you want to sell half of your bag, type 50.
+"""
+            message = await query.message.reply_text(text=msg)
+            back_variable(message, context, text, markup, False, True)
+            context.user_data['msg_id'] = message.message_id
+            context.user_data['preset'] = "sellloamount"
+            return REPLYDELTA
+
 
 
 async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = context.user_data.get('user_id')   
     preset = context.user_data.get('preset')
     text = update.message.text
-        
+    new_markup = build_preset_keyboard()
+    caption = context.user_data['config_message'] 
+    user_data = await load_user_data(user_id)
+    sell_markup = build_sell_keyboard(user_data)
+    buy_markup = build_buy_keyboard(user_data)
+    
     if preset == "delta":
         f_text = Decimal(text.replace(' GWEI', '')) if 'GWEI' in text else Decimal(text)
         text = f"""
         ✅ Max gas delta set to {round(Decimal(f_text))} GWEI. By setting your Max Gas Delta to {round(Decimal(f_text))} GWEI, the bot will no longer frontrun rugs or copytrade transactions that require more than {round(Decimal(f_text))} GWEI in delta.
         """
         await update_user_data(user_id, {'max_delta':f_text})
+        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
     elif preset == "slippage":
         f_text = text.replace('%', '') if '%' in text else Decimal(text)
         text = f"""
         ✅ Slippage percentage set to {f_text}%!        
         """
         await update_user_data(user_id, {'slippage':Decimal(f_text)})
+        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
     elif preset == "gas":
         f_text = int(text.replace('m', '')) if 'm' in text else int(text) * 1000000
         text = f"""
         ✅ Max gas limit set to {round(f_text)}!
         """
         await update_user_data(user_id, {'max_gas':round(Decimal(f_text), 2)})
+        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+# --------------------------------------------------------------------------------
+    elif preset == "maxbuytax":
+        f_text = int(text.replace('x', '')) if 'x' in text else int(text)
+        text = f"""
+        ✅ Max Buy Tax set to {round(f_text)}!
+        """
+        await update_user_data(user_id, {'buy_tax':round(Decimal(f_text), 2)})
+        await update.message.edit_caption(caption=context.user_data['buy_message'], parse_mode=ParseMode.HTML, reply_markup=buy_markup)
+    elif preset == "maxselltax":
+        f_text = int(text.replace('x', '')) if 'x' in text else int(text)
+        text = f"""
+        ✅ Max Sell Tax set to {round(f_text)}!
+        """
+        await update_user_data(user_id, {'sell_tax':round(Decimal(f_text), 2)})
+        await update.message.edit_caption(caption=context.user_data['buy_message'], parse_mode=ParseMode.HTML, reply_markup=buy_markup)
+    elif preset == "sellhi":
+        f_text = int(text.replace('x', '')) if 'x' in text else Decimal(text)
+        text = f"""
+        ✅ Sell-Hi set to {round(f_text)}!
+        """
+        await update_user_data(user_id, {'sell_hi':round(Decimal(f_text), 2)})
+        await update.message.edit_caption(caption=context.user_data['sell_message'], parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+    elif preset == "selllo":
+        f_text = int(text.replace('x', '')) if 'x' in text else Decimal(text)
+        text = f"""
+        ✅ Sell-Lo set to {round(f_text)}!
+        """
+        await update_user_data(user_id, {'sell_lo':round(Decimal(f_text), 2)})
+        await update.message.edit_caption(caption=context.user_data['sell_message'], parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+    elif preset == "sellhiamount":
+        f_text = int(text.replace('m', '')) if 'm' in text else int(text)
+        text = f"""
+        ✅ Sell-Hi Amount set to {round(f_text)}!
+        """
+        await update_user_data(user_id, {'sell_hi_amount':round(Decimal(f_text), 2)})
+        await update.message.edit_caption(caption=context.user_data['sell_message'], parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+        
+    elif preset == "sellloamount":
+        f_text = int(text.replace('m', '')) if 'm' in text else int(text)
+        text = f"""
+        ✅ Sell-Lo Amount set to {round(f_text)}!
+        """
+        await update_user_data(user_id, {'sell_lo_amount':round(Decimal(f_text), 2)})
+        await update.message.edit_caption(caption=context.user_data['sell_message'], parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+
+
+
         
         
 
