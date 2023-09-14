@@ -1228,7 +1228,7 @@ async def transfer_callback(update: Update, context: CallbackContext):
         disconnect_message = f"""
 ⚡️ Chain: {NETWORKNAME}
 
-✅ Address: {user_data.address_wallet}
+✅ Address: {user_data.wallet_address}
 
 You have {BALANCE} {NETWORK}            
             """
@@ -1284,7 +1284,7 @@ async def token_callback(update: Update, context: CallbackContext):
             disconnect_message = f"""
 ⚡️ Chain: {NETWORKNAME}
 
-✅ Address: {user_data.address_wallet}
+✅ Address: {user_data.wallet_address}
 
 You have {BALANCE} {NETWORK}            
             """
@@ -1300,7 +1300,7 @@ You have {BALANCE} {NETWORK}
             disconnect_message = f"""
 ⚡️ Chain: {NETWORKNAME}
 
-✅ Address: {user_data.address_wallet}
+✅ Address: {user_data.wallet_address}
 
 You have {BALANCE} {NETWORK}            
             """
@@ -1316,7 +1316,7 @@ You have {BALANCE} {NETWORK}
             disconnect_message = f"""
 ⚡️ Chain: {NETWORKNAME}
 
-✅ Address: {user_data.address_wallet}
+✅ Address: {user_data.wallet_address}
 
 You have {BALANCE} {NETWORK}            
             """
@@ -1333,7 +1333,7 @@ You have {BALANCE} {NETWORK}
             disconnect_message = f"""
 ⚡️ Chain: {NETWORKNAME}
 
-✅ Address: {user_data.address_wallet}
+✅ Address: {user_data.wallet_address}
 
 You have {BALANCE} {NETWORK}            
             """
