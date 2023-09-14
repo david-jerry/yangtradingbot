@@ -1259,7 +1259,7 @@ You have {BALANCE} {NETWORK}
         await query.message.reply_text("I don't understand that command.")
 
 
-ADDRESS, TOADDRESS, AMOUNT = range(3)
+TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
 async def token_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
@@ -1276,7 +1276,7 @@ async def token_callback(update: Update, context: CallbackContext):
         if button_data == "token":
             token_message = "What is the token contract address?"
             await query.message.reply_text(token_message, parse_mode=ParseMode.HTML)
-            return ADDRESS
+            return TOKENADDRESS
         elif button_data == "eth":
             NETWORK = "eth"
             NETWORKNAME = "Ethereum"
