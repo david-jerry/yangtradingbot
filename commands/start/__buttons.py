@@ -1245,8 +1245,8 @@ You have {BALANCE} {NETWORK}
 
         
         
-        message = await query.edit_message_text(
-            text=disconnect_message,
+        message = await query.edit_message_caption(
+            caption=disconnect_message,
             parse_mode=ParseMode.HTML,
             reply_markup=transfer_built_markup,
         )
