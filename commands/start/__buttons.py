@@ -1275,7 +1275,7 @@ async def token_callback(update: Update, context: CallbackContext):
         
         if button_data == "token":
             token_message = "What is the token contract address?"
-            await query.message.reply_text(token_message)
+            await query.message.reply_text(token_message, parse_mode=ParseMode.HTML)
             return ADDRESS
         elif button_data == "eth":
             NETWORK = "eth"
