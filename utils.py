@@ -237,16 +237,16 @@ async def get_contract_abi(contract_address):
         return 
         
         
-async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token_address=None):
+async def trasnfer_currency(network, user_data, percentage, to_address, token_address=None):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
     chain_id = w3.eth.chain_id
-    get_gas_price = await get_default_gas_price_gwei()
     nonce = w3.eth.get_transaction_count(user_data.wallet_address)
-    price = await currency_amount('ethereum')
+    
+    per = percentage.replace(' %', '')
     if network.upper() == "ETH" and user_data.wallet_address:
         LOGGER.info('Checking status here')
-        amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
+        amount = balance * (int(per)/100)
         val = w3.to_wei(amount, 'ether')
         if balance < amount and balance < 0.00000000:
             LOGGER.info('We got here: insufficient funds')
@@ -254,24 +254,24 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         chain_id = w3.eth.chain_id
     elif network.upper() == "BSC" and user_data.BSC_added:
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
-        amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
+        amount = balance * (int(per)/100)
         val = w3.to_wei(amount, 'ether')
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
     elif network.upper() == "ARB" and user_data.ARB_added:
         w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
-        amount = Decimal(amount_in_usd) / Decimal(price)
         val = w3.to_wei(amount, 'ether')
+        amount = balance * (int(per)/100)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
     elif network.upper() == "BASE" and user_data.BASE_added:
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
-        amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')   
+        amount = balance * (int(per)/100)
         val = w3.to_wei(amount, 'ether')
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
@@ -307,24 +307,31 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
             # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
             # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
         }
+        
+        signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+        LOGGER.info(tx_hash.hex())
+        return tx_hash.hex(), value
+
     else:
         abi = await get_contract_abi(token_address)
+        LOGGER.info(abi)
+        
         # Create a contract instance for the USDT token
         token_contract = w3.eth.contract(address=token_address, abi=abi)
 
         # Prepare the transaction to transfer USDT tokens
-        transaction = token_contract.functions.transfer(to_address, w3.to_wei(value)).buildTransaction({
+        transaction = token_contract.functions.transfer(to_address, value).buildTransaction({
             'chainId': 1,  # Mainnet
             'gas': gas_estimate,  # Gas limit (adjust as needed)
             'gasPrice': w3.toWei('20', 'gwei'),  # Gas price in Gwei (adjust as needed)
             'nonce': nonce,
         })
 
-
-    signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
-    tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-    LOGGER.info(tx_hash.hex())
-    return tx_hash.hex(), value
+        signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+        LOGGER.info(tx_hash.hex())
+        return tx_hash.hex(), value
 
 
 async def check_transaction_status(network, user_data,  tx_hash):

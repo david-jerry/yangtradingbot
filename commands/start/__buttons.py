@@ -1541,11 +1541,11 @@ async def to_address_reply(update: Update, context: CallbackContext):
     LOGGER.info(context.user_data)
 
     # This message is a reply to the input message, and we can process the user's input here
-    await update.message.reply_text(f"How much do you want to transfer eg: 2000 USD?")
+    await update.message.reply_text(f"How much do you want to transfer eg: 1 % would be 1 % of your balance?")
     return AMOUNT
     
 async def token_amount_reply(update: Update, context: CallbackContext):
-    amount = update.message.text
+    percentage = update.message.text
     user_id = update.message.from_user.id
     address = context.user_data.get('address') if "address" in context.user_data else None
     to_address = context.user_data['to_address']
@@ -1553,7 +1553,7 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     NETWORK = context.user_data.get("network_chain")
     user_data = await load_user_data(user_id)
     
-    tx_hash, amount = await trasnfer_currency(NETWORK, user_data, amount, to_address, token_address=address)
+    tx_hash, amount = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
     # This message is a reply to the input message, and we can process the user's input here
     if "Insufficient balance" == tx_hash:
         await update.message.reply_text(tx_hash)
