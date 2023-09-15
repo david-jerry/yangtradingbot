@@ -260,7 +260,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         'chainId': int(chain_id),
         'value': w3.to_wei(1, 'ether'),
         'gas': 2000000,
-        # 'gasPrice': w3.to_wei('5', 'gwei')
+        'gasPrice': w3.to_wei('3', 'gwei'),
         'maxFeePerGas': w3.to_wei(2, 'gwei'),
         'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
         # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
