@@ -1560,7 +1560,7 @@ async def token_amount_reply(update: Update, context: CallbackContext):
         return ConversationHandler.END
     else:
         receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
-        
+        LOGGER.info(receipt)
         tf_msg = f"""
 You are transferring {amount} ETH from your wallet {user_data.wallet_address}... 
 -----------------------------
