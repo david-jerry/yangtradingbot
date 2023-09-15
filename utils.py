@@ -249,10 +249,10 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
 
     # Build the transaction
     # contract = w3.eth.contract(address=token_address, abi=contract_abi)
-    gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': 1})
-    LOGGER.info(f"GasEstimate: {gas_estimate}")
-    if balance - amount < w3.from_wei(gas_estimate, 'ether'):
-        return "Insufficient balance"
+    # gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': 1})
+    # LOGGER.info(f"GasEstimate: {gas_estimate}")
+    # if balance - amount < w3.from_wei(gas_estimate, 'ether'):
+    #     return "Insufficient balance"
     transaction = {
         'to': to_address,
         'from': user_data.wallet_address,
@@ -268,6 +268,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
 
     signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
     tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+    LOGGER.info(tx_hash)
     return tx_hash
 
 
