@@ -1286,13 +1286,17 @@ async def token_callback(update: Update, context: CallbackContext):
 
 ✅ Address: {user_data.wallet_address}
 
-You have {BALANCE} {NETWORK}            
+You have {BALANCE} {NETWORK}        
+------------------------------
+What wallet address do you wish to send the token to?    
             """
             message = await query.edit_message_caption(
                 caption=disconnect_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=home_markup,
             )
+            message
+            return TOADDRESS
         elif button_data == "bsc":
             NETWORK = "bsc"
             NETWORKNAME = "Binance"
@@ -1302,13 +1306,17 @@ You have {BALANCE} {NETWORK}
 
 ✅ Address: {user_data.wallet_address}
 
-You have {BALANCE} {NETWORK}            
+You have {BALANCE} {NETWORK}        
+------------------------------
+What wallet address do you wish to send the token to?    
             """
             message = await query.edit_message_caption(
                 caption=disconnect_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=home_markup,
             )
+            message
+            return TOADDRESS
         elif button_data == "arb":
             NETWORK = "arb"
             NETWORKNAME = "Avalance"
@@ -1318,7 +1326,9 @@ You have {BALANCE} {NETWORK}
 
 ✅ Address: {user_data.wallet_address}
 
-You have {BALANCE} {NETWORK}            
+You have {BALANCE} {NETWORK}        
+------------------------------
+What wallet address do you wish to send the token to?    
             """
             message = await query.edit_message_caption(
                 caption=disconnect_message,
@@ -1326,6 +1336,7 @@ You have {BALANCE} {NETWORK}
                 reply_markup=home_markup,
             )
             message
+            return TOADDRESS
         elif button_data == "base":
             NETWORK = "base"
             NETWORKNAME = "Coinbase"
@@ -1335,53 +1346,54 @@ You have {BALANCE} {NETWORK}
 
 ✅ Address: {user_data.wallet_address}
 
-You have {BALANCE} {NETWORK}            
+You have {BALANCE} {NETWORK}        
+------------------------------
+What wallet address do you wish to send the token to?    
             """
             message = await query.edit_message_caption(
                 caption=disconnect_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=home_markup,
             )
+            message
+            return TOADDRESS
 
             
 async def token_address_reply(update: Update, context: CallbackContext):
-    message_id = context.user_data['private_reply']
     context.user_data['address'] = update.message.text
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
 
     # This message is a reply to the input message, and we can process the user's input here
     await update.message.reply_text(f"What wallet address do you wish to transfer to?")
-    await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
     return TOADDRESS
 
 async def to_address_reply(update: Update, context: CallbackContext):
-    message_id = context.user_data['private_reply']
     context.user_data['to_address'] = update.message.text
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
 
     # This message is a reply to the input message, and we can process the user's input here
     await update.message.reply_text(f"How much do you want to transfer eg: 2000 USD?")
-    await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
     return AMOUNT
     
 async def token_amount_reply(update: Update, context: CallbackContext):
-    message_id = context.user_data['private_reply']
     amount = update.message.text
     user_id = update.message.from_user.id
-    address = context.user_data['address'] 
+    address = context.user_data.get('address') if "address" in context.user_data else "0x2170Ed0880ac9A755fd29B2688956BD959F933F8"
     to_address = context.user_data['to_address']
     chat_id = update.message.chat_id
     NETWORK = context.user_data.get("network_chain")
-    user_data = load_user_data(user_id)
+    user_data = await load_user_data(user_id)
     
-    if message_id and update.message.message_id > message_id:
-        tx_hash = await trasnfer_currency(NETWORK, user_data, amount, to_address, token_address=address)
-        # This message is a reply to the input message, and we can process the user's input here
+    tx_hash = await trasnfer_currency(NETWORK, user_data, amount, to_address, token_address=address)
+    # This message is a reply to the input message, and we can process the user's input here
+    if "Insufficient balance" == tx_hash:
+        await update.message.reply_text(tx_hash)
+        return ConversationHandler.END
+    else:
         receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
         await update.message.reply_text(f"Processing transfer... {receipt}")
-        await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
         return ConversationHandler.END
 
 async def cancel_transfer(update: Update, context: CallbackContext):

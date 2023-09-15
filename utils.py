@@ -12,7 +12,7 @@ INFURA_ID: Final = config("INFURA_ID")
 MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
 ETHERAPI: Final = config('ETHERSCAN')
 
-def currency_amount(symbol):
+async def currency_amount(symbol):
     # API endpoint
     url = "https://api.coingecko.com/api/v3/simple/price"
 
@@ -44,12 +44,13 @@ def back_variable(message, context, text, markup, caption, markup_reply):
         {"message": message, "text": text, "markup": markup, "caption": caption, "markup_reply": markup_reply}
     )
     
-async def get_default_gas_price():
+async def get_default_gas_price(unit='ether'):
     # Connect to your Ethereum node
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
 
     # Get the current gas price (in wei)
-    gas_price = w3.eth.gas_price
+    price = w3.eth.gas_price
+    gas_price = w3.from_wei(price, unit)
     return gas_price
 
 async def get_default_gas_price_gwei():
@@ -58,7 +59,7 @@ async def get_default_gas_price_gwei():
 
     # Get the current gas price (in wei)
     gas_price = w3.eth.gas_price
-    gas_price_gwei = w3.from_wei(gas_price, 'gwei')
+    gas_price_gwei = w3.from_wei(int(gas_price), 'gwei')
     return gas_price_gwei
 
 
@@ -100,19 +101,19 @@ async def get_wallet_balance(network, user_id):
     if user_data:
         if network.upper() == "ETH" and user_data.wallet_address:
             balance = w3.eth.get_balance(user_data.wallet_address)
-            return balance
+            return w3.from_wei(balance, 'ether')
         elif network.upper() == "BSC" and user_data.BSC_added:
             w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
             balance = w3.eth.get_balance(user_data.wallet_address)
-            return balance
+            return w3.from_wei(balance, 'ether')
         elif network.upper() == "ARB" and user_data.ARB_added:
             w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
             balance = w3.eth.get_balance(user_data.wallet_address)
-            return balance
+            return w3.from_wei(balance, 'ether')
         elif network.upper() == "BASE" and user_data.BASE_added:
             w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
             balance = w3.eth.get_balance(user_data.wallet_address)            
-            return balance
+            return w3.from_wei(balance, 'ether')
     else:
         return None
 
@@ -187,58 +188,86 @@ async def generate_wallet(network, user_id):
             user_data.wallet_phrase if user_data.wallet_phrase != None else mnemonic_phrase,
         )
 
+async def get_contract_abi(contract_address):
+    api_url = f'https://api.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={ETHERAPI}'
+    LOGGER.info(api_url)
 
+    # Make the API request
+    response = requests.get(api_url)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        res = response.json()
+        LOGGER.info(res)
+        contract_abi = res['result']
+        if contract_abi != '':
+            return contract_abi
+        else:
+            return None
+    else:
+        return 
+        
+        
 async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token_address=None):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
     chain_id = w3.eth.chain_id
-    get_gas_price = get_default_gas_price_gwei()
-    nonce = w3.eth.getTransactionCount(user_data.wallet_address)
+    get_gas_price = await get_default_gas_price(unit='ether')
+    nonce = w3.eth.get_transaction_count(user_data.wallet_address)
+    price = await currency_amount('ethereum')
     if network.upper() == "ETH" and user_data.wallet_address:
-        amount = w3.toWei(Decimal(amount_in_usd.replace(' USD', '')), 'ether')
-        balance = w3.eth.get_balance(user_data.wallet_address)
-        contract_abi = w3.eth.contract(address=token_address).abi if token_address != None else w3.eth.contract(address='0x2170Ed0880ac9A755fd29B2688956BD959F933F8').abi
-        if balance < amount:
+        amount = Decimal(amount_in_usd) / Decimal(price)
+        balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
+        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else get_contract_abi('0x2170Ed0880ac9A755fd29B2688956BD959F933F8')
+        if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
     elif network.upper() == "BSC" and user_data.BSC_added:
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
-        amount = w3.toWei(Decimal(amount_in_usd.replace(' USD', '')), 'ether')
-        balance = w3.eth.get_balance(user_data.wallet_address)
-        contract_abi = w3.eth.contract(address=token_address).abi if token_address != None else w3.eth.contract(address='0x2170Ed0880ac9A755fd29B2688956BD959F933F8').abi
-        if balance < amount:
+        amount = Decimal(amount_in_usd) / Decimal(price)
+        balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
+        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else get_contract_abi('0x2170Ed0880ac9A755fd29B2688956BD959F933F8')
+        if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
     elif network.upper() == "ARB" and user_data.ARB_added:
         w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
-        amount = w3.toWei(Decimal(amount_in_usd.replace(' USD', '')), 'ether')
-        balance = w3.eth.get_balance(user_data.wallet_address)
-        contract_abi = w3.eth.contract(address=token_address).abi if token_address != None else w3.eth.contract(address='0x2170Ed0880ac9A755fd29B2688956BD959F933F8').abi
-        if balance < amount:
+        amount = Decimal(amount_in_usd) / Decimal(price)
+        balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
+        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else get_contract_abi('0x2170Ed0880ac9A755fd29B2688956BD959F933F8')
+        if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
     elif network.upper() == "BASE" and user_data.BASE_added:
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
-        amount = w3.toWei(Decimal(amount_in_usd.replace(' USD', '')), 'ether')
-        balance = w3.eth.get_balance(user_data.wallet_address)   
-        contract_abi = w3.eth.contract(address=token_address).abi if token_address != None else w3.eth.contract(address='0x2170Ed0880ac9A755fd29B2688956BD959F933F8').abi
-        if balance < amount:
+        amount = Decimal(amount_in_usd) / Decimal(price)
+        balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')   
+        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else get_contract_abi('0x2170Ed0880ac9A755fd29B2688956BD959F933F8')
+        if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id         
     
 
     # Build the transaction
-    contract = w3.eth.contract(address=token_address, abi=contract_abi)
+    # contract = w3.eth.contract(address=token_address, abi=contract_abi)
+    gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': 1})
+    LOGGER.info(f"GasEstimate: {gas_estimate}")
+    if balance - amount < w3.from_wei(gas_estimate, 'ether'):
+        return "Insufficient balance"
     transaction = {
-        'to': token_address,
-        'value': 0,
-        'gas': 2000000,  # Adjust gas limit as needed
-        'gasPrice': get_gas_price,  # Adjust gas price as needed
+        'to': to_address,
+        'from': user_data.wallet_address,
         'nonce': nonce,
-        'data': contract.functions.transfer(to_address, amount).buildTransaction({'chainId': chain_id}),
+        'chainId': int(chain_id),
+        'value': w3.to_wei(1, 'ether'),
+        'gas': 2000000,
+        # 'gasPrice': w3.to_wei('5', 'gwei')
+        'maxFeePerGas': w3.to_wei(2, 'gwei'),
+        'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
+        # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
     }
 
-    signed_transaction = w3.eth.account.signTransaction(transaction, user_data.wallet_private_key)
-    tx_hash = w3.eth.sendRawTransaction(signed_transaction.rawTransaction)
+    signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
+    tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
     return tx_hash
 
 
@@ -252,5 +281,5 @@ async def check_transaction_status(network, user_data,  tx_hash):
     elif network.upper() == "BASE" and user_data.BASE_added:
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
-    receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+    receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
     return receipt
