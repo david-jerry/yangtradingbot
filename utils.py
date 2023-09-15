@@ -8,10 +8,43 @@ from asgiref.sync import sync_to_async
 from logger import LOGGER
 from utils_data import load_user_data
 
+from mnemonic import Mnemonic
+from eth_account import Account
+
 INFURA_ID: Final = config("INFURA_ID")
 MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
 ETHERAPI: Final = config('ETHERSCAN')
 
+async def get_contract_abi(contract_address, api_key=ETHERAPI):
+    # Define the Etherscan API URL
+    etherscan_api_url = 'https://api.etherscan.io/api'
+
+    # Define the parameters for the API request
+    params = {
+        'module': 'contract',
+        'action': 'getabi',
+        'address': contract_address,
+        'apikey': api_key,
+    }
+
+    try:
+        # Send a GET request to Etherscan API
+        response = requests.get(etherscan_api_url, params=params)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            data = response.json()
+            if data['status'] == '1':
+                abi = data['result']
+                return abi
+            else:
+                return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
+        else:
+            return f'Failed to retrieve ABI for contract {contract_address}. HTTP Error: {response.status_code}'
+
+    except Exception as e:
+        return f'An error occurred: {str(e)}'
+    
 async def currency_amount(symbol):
     # API endpoint
     url = "https://api.coingecko.com/api/v3/simple/price"
@@ -31,10 +64,6 @@ async def currency_amount(symbol):
     else:
         LOGGER.info(response.json())
         return False
-
-
-from mnemonic import Mnemonic
-from eth_account import Account
 
 def back_variable(message, context, text, markup, caption, markup_reply):
     if "message_stack" not in context.user_data:
@@ -259,34 +288,32 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
     
     # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
     # Build the transaction
-    # if token_address != None:
-    #     contract = w3.eth.contract(address=token_address, abi=contract_abi) if contract_abi != None else None
-    #     transaction = {
-    #         'to': to_address,
-    #         'from': user_data.wallet_address,
-    #         'nonce': nonce,
-    #         'chainId': int(chain_id),
-    #         'value': w3.to_wei(amount, 'wei'),
-    #         'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
-    #         'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
-    #         # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
-    #         # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
-    #         'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
-    #     }
-    # else:
-    transaction = {
-        'to': to_address,
-        'from': user_data.wallet_address,
-        'nonce': nonce,
-        'chainId': int(chain_id),
-        'value': w3.to_wei(amount, 'wei'),
-        'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
-        'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
-        # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
-        # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
-        # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
-    }
-        
+    if token_address == None:
+        transaction = {
+            'to': to_address,
+            'from': user_data.wallet_address,
+            'nonce': nonce,
+            'chainId': int(chain_id),
+            'value': w3.to_wei(amount, 'wei'),
+            'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+            'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
+            # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
+            # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
+            # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
+        }
+    else:
+        abi = await get_contract_abi(token_address)
+        # Create a contract instance for the USDT token
+        token_contract = w3.eth.contract(address=token_address, abi=abi)
+
+        # Prepare the transaction to transfer USDT tokens
+        transaction = token_contract.functions.transfer(to_address, w3.to_wei(amount)).buildTransaction({
+            'chainId': 1,  # Mainnet
+            'gas': gas_estimate,  # Gas limit (adjust as needed)
+            'gasPrice': w3.toWei('20', 'gwei'),  # Gas price in Gwei (adjust as needed)
+            'nonce': nonce,
+        })
+
 
     signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
     tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
