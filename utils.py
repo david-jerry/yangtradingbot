@@ -291,7 +291,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
     signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
     tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
     LOGGER.info(tx_hash.hex())
-    return tx_hash.hex()
+    return tx_hash.hex(), amount
 
 
 async def check_transaction_status(network, user_data,  tx_hash):
@@ -305,8 +305,9 @@ async def check_transaction_status(network, user_data,  tx_hash):
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-    amount_wei = receipt['logs'][0]['data']
+    return receipt
+    # amount_wei = receipt['logs'][0]['data']
 
-    # Convert the amount from Wei to Ether
-    amount_ether = w3.from_wei(int(amount_wei, 16), 'ether')
-    return amount_ether
+    # # Convert the amount from Wei to Ether
+    # amount_ether = w3.from_wei(int(amount_wei, 16), 'ether')
+    # return amount_ether
