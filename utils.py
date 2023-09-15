@@ -294,7 +294,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
             'from': user_data.wallet_address,
             'nonce': nonce,
             'chainId': int(chain_id),
-            'value': w3.to_wei(amount, 'wei'),
+            'value': amount,
             'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
             'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
             # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
