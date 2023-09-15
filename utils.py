@@ -281,6 +281,8 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
     
     gas_price = w3.to_wei('20', 'gwei')
     
+    value = round(amount, 6)
+    
     
     if balance - amount < w3.from_wei(gas_price, 'ether'):
         return "Insufficient balance"
@@ -294,7 +296,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
             'from': user_data.wallet_address,
             'nonce': nonce,
             'chainId': int(chain_id),
-            'value': amount,
+            'value': value,
             'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
             'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
             # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
@@ -318,7 +320,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
     signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
     tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
     LOGGER.info(tx_hash.hex())
-    return tx_hash.hex(), amount
+    return tx_hash.hex(), value
 
 
 async def check_transaction_status(network, user_data,  tx_hash):
