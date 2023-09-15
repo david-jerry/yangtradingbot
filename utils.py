@@ -250,9 +250,10 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
     # Build the transaction
     # contract = w3.eth.contract(address=token_address, abi=contract_abi) if contract_abi != None else None
     gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': w3.to_wei(amount, 'wei')})
-    LOGGER.info(f"GasEstimate: {gas_estimate}")
-    LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate + 10), 'gwei')}")
-    if balance - amount < w3.from_wei(gas_estimate, 'ether'):
+    LOGGER.info(f"GasEstimate: {w3.to_wei(gas_estimate, 'gwei')}")
+    LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
+    gas_price = w3.to_wei('20', 'gwei')
+    if balance - amount < w3.from_wei(gas_price, 'ether'):
         return "Insufficient balance"
     transaction = {
         'to': to_address,
@@ -261,7 +262,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         'chainId': int(chain_id),
         'value': w3.to_wei(amount, 'wei'),
         'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
-        'gasPrice': w3.to_wei((gas_estimate + 10), 'gwei') if user_data.max_gas_price < 14 else w3.to_wei(user_data.max_gas_price, 'gwei'),
+        'gasPrice': w3.to_wei('20', 'gwei') if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
         # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
         # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
         # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),

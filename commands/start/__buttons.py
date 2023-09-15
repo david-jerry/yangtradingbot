@@ -1399,7 +1399,7 @@ Processing transfer...
 -----------------------------
 TXHASH: <code>{tx_hash}</code>
         """
-        await update.message.reply_text(tf_msg)
+        await update.message.reply_text(tf_msg, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
 
 async def cancel_transfer(update: Update, context: CallbackContext):
