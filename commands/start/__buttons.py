@@ -1547,7 +1547,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
 async def token_amount_reply(update: Update, context: CallbackContext):
     amount = update.message.text
     user_id = update.message.from_user.id
-    address = context.user_data.get('address') if "address" in context.user_data else "0x2170Ed0880ac9A755fd29B2688956BD959F933F8"
+    address = context.user_data.get('address') if "address" in context.user_data else None
     to_address = context.user_data['to_address']
     chat_id = update.message.chat_id
     NETWORK = context.user_data.get("network_chain")
