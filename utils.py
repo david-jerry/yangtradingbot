@@ -219,9 +219,6 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
         # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
-        LOGGER.info('checking logic')
-        LOGGER.info(balance < amount)
-        LOGGER.info(balance < 0.00000000)
         if balance < amount and balance < 0.00000000:
             LOGGER.info('We got here: insufficient funds')
             return "Insufficient balance"
