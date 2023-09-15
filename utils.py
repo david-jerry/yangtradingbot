@@ -217,7 +217,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
     if network.upper() == "ETH" and user_data.wallet_address:
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else get_contract_abi('0x2170Ed0880ac9A755fd29B2688956BD959F933F8')
+        contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
@@ -225,7 +225,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else get_contract_abi('0x2170Ed0880ac9A755fd29B2688956BD959F933F8')
+        contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
@@ -233,7 +233,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else get_contract_abi('0x2170Ed0880ac9A755fd29B2688956BD959F933F8')
+        contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
@@ -241,14 +241,14 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')   
-        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else get_contract_abi('0x2170Ed0880ac9A755fd29B2688956BD959F933F8')
+        contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id         
     
 
     # Build the transaction
-    # contract = w3.eth.contract(address=token_address, abi=contract_abi)
+    contract = w3.eth.contract(address=token_address, abi=contract_abi) if contract_abi != None else None
     gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': w3.to_wei(amount, 'wei')})
     LOGGER.info(f"GasEstimate: {gas_estimate}")
     if balance - amount < w3.from_wei(gas_estimate, 'ether'):
@@ -260,7 +260,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         'chainId': int(chain_id),
         'value': w3.to_wei(amount, 'wei'),
         'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
-        'gasPrice': w3.to_wei(get_gas_price + 10, 'gwei') if user_data.max_gas_price < 21 else w3.to_wei(user_data.max_gas_price, 'wei'),
+        'gasPrice': w3.to_wei(1, 'gwei') if user_data.max_gas_price < 14 else w3.to_wei(user_data.max_gas_price, 'gwei'),
         # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
         # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
         # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
