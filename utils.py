@@ -244,7 +244,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     chain_id = w3.eth.chain_id
     nonce = w3.eth.get_transaction_count(user_data.wallet_address)
     
-    per = percentage.replace(' %', '')
+    per = percentage.replace(' %', '').replace('%', '')
     if network.upper() == "ETH" and user_data.wallet_address:
         LOGGER.info('Checking status here')
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')

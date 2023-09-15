@@ -1541,7 +1541,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
     LOGGER.info(context.user_data)
 
     # This message is a reply to the input message, and we can process the user's input here
-    await update.message.reply_text(f"How much do you want to transfer eg: 1 % would be 1 % of your balance?")
+    await update.message.reply_text(f"How much do you want to transfer eg: 1% would be 1% of your balance?")
     return AMOUNT
     
 async def token_amount_reply(update: Update, context: CallbackContext):
