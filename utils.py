@@ -211,7 +211,7 @@ async def get_contract_abi(contract_address):
 async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token_address=None):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
     chain_id = w3.eth.chain_id
-    get_gas_price = await get_default_gas_price(unit='ether')
+    get_gas_price = await get_default_gas_price_gwei()
     nonce = w3.eth.get_transaction_count(user_data.wallet_address)
     price = await currency_amount('ethereum')
     if network.upper() == "ETH" and user_data.wallet_address:
@@ -249,20 +249,20 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
 
     # Build the transaction
     # contract = w3.eth.contract(address=token_address, abi=contract_abi)
-    # gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': 1})
-    # LOGGER.info(f"GasEstimate: {gas_estimate}")
-    # if balance - amount < w3.from_wei(gas_estimate, 'ether'):
-    #     return "Insufficient balance"
+    gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': w3.to_wei(amount, 'wei')})
+    LOGGER.info(f"GasEstimate: {gas_estimate}")
+    if balance - amount < w3.from_wei(gas_estimate, 'ether'):
+        return "Insufficient balance"
     transaction = {
         'to': to_address,
         'from': user_data.wallet_address,
         'nonce': nonce,
         'chainId': int(chain_id),
-        'value': w3.to_wei(1, 'ether'),
-        'gas': 2000000,
-        'gasPrice': w3.to_wei('3', 'gwei'),
-        'maxFeePerGas': w3.to_wei(2, 'gwei'),
-        'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
+        'value': w3.to_wei(amount, 'wei'),
+        'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+        'gasPrice': w3.to_wei(get_gas_price + 10, 'gwei') if user_data.max_gas_price < 21 else w3.to_wei(user_data.max_gas_price, 'wei'),
+        # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
+        # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
         # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
     }
 
