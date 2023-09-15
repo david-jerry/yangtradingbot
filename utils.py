@@ -215,10 +215,12 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
     nonce = w3.eth.get_transaction_count(user_data.wallet_address)
     price = await currency_amount('ethereum')
     if network.upper() == "ETH" and user_data.wallet_address:
+        LOGGER.info('Checking status here')
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
         # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         if balance < amount and balance < 0.00000000:
+            LOGGER.info('We got here: insufficient funds')
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
     elif network.upper() == "BSC" and user_data.BSC_added:
