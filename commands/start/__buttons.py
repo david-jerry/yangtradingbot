@@ -25,7 +25,7 @@ from constants import (
     wallets_asset_message,
 )
 from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_wallet_balance, trasnfer_currency
-from utils_data import load_user_data, save_user_data, update_user_data
+from utils_data import load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
@@ -49,6 +49,8 @@ direction_markup = InlineKeyboardMarkup(direction_keyboard)
 # ------------------------------------------------------------------------------
 pback = InlineKeyboardButton("⏪ ", callback_data="presets_left")
 pforward = InlineKeyboardButton("⏩ ", callback_data="presets_right")
+cback = InlineKeyboardButton("⏪ ", callback_data="copy_left")
+cforward = InlineKeyboardButton("⏩ ", callback_data="copy_right")
 buy = InlineKeyboardButton("🛠 BUY ", callback_data="presets_buy")
 sell = InlineKeyboardButton("🛠 SELL", callback_data="presets_sell")
 approve = InlineKeyboardButton("🛠 APPROVE", callback_data="presets_approve")
@@ -156,6 +158,15 @@ accept_terms_button = InlineKeyboardButton("Accept Conditions", callback_data="t
 decline_terms_button = InlineKeyboardButton("Decline Conditions", callback_data="terms_decline")
 terms_keyboard = [[accept_terms_button, decline_terms_button]]
 terms_markup = InlineKeyboardMarkup(terms_keyboard)
+
+
+
+global PRESETNETWORK
+PRESETNETWORK = NETWORK_CHAINS[SELECTED_CHAIN_INDEX]
+
+
+
+
 
 # ------------------------------------------------------------------------------
 # START BUTTONS
@@ -351,8 +362,33 @@ def build_preset_keyboard():
     preset_markup = InlineKeyboardMarkup(preset_keyboard)
     
     return preset_markup  
+
+def build_copy_trade_keyboard(trades):
+    chain = InlineKeyboardButton(f"🛠 {PRESETNETWORK}", callback_data=f"copy_{PRESETNETWORK}")
+    target_wallet = InlineKeyboardButton(f"Target Wallet or Contract Address", callback_data=f"trade_address")
+    copy_trade_keyboard = [
+        [home],
+        [cback, chain, cforward],
+        [target_wallet]
+    ] 
     
+    # Create buttons for each trade in the trades list
+    if trades != None:
+        for tr in trades:
+            
+            buttons = [
+                InlineKeyboardButton(f"{tr.name.lower()}", callback_data=f"copy_{tr.user.user_id}"),
+                InlineKeyboardButton(f"Rename", callback_data=f"copy_{tr.user.user_id}_rename"),
+                InlineKeyboardButton(f"{'🔴 OFF' if not tr.on else '🔵 ON'}", callback_data=f"copy_{tr.user.user_id}_{'off' if not tr.on else 'on'}"),
+                InlineKeyboardButton("❌", callback_data=f"copy_{tr.user.user_id}_delete")
+            ]
+            copy_trade_keyboard.append(buttons)
     
+        
+    copy_trade_markup = InlineKeyboardMarkup(copy_trade_keyboard)
+    
+    return copy_trade_markup  
+
 def build_buy_keyboard(user_data):
     
     deldupebuy = InlineKeyboardButton(f"{'❌' if not user_data.dupe_buy else '✅'} Dupe Buy", callback_data="presets_deldupebuy")
@@ -468,6 +504,19 @@ async def start_button_callback(update: Update, context: CallbackContext):
                 reply_markup=asset_chain_markup
             )
             back_variable(message, context, wallets_asset_message, asset_chain_markup, True, False)
+        elif button_data == "trade":
+            copy_message = "Add or remove wallets from whihc you'd like to copy trades!"
+            trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
+            copy_trade_markup = build_copy_trade_keyboard(trades)
+            message = await query.edit_message_caption(
+                caption=copy_message, 
+                parse_mode=ParseMode.HTML, 
+                reply_markup=copy_trade_markup
+            )
+            context.user_data['last_message'] = copy_message
+            context.user_data['last_markup'] = copy_trade_markup
+            context.user_data["last_message_id"] = message.message_id
+            back_variable(message, context, copy_message, transfer_chain_markup, True, False)
         elif button_data == "token_transfer":
             message = await query.edit_message_caption(
                 caption=transfer_message, 
@@ -528,7 +577,122 @@ Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</
 
 
 
+# ------------------------------------------------------------------------------
+# COPY TRADE BUTTON CALLBACK
+# ------------------------------------------------------------------------------
+TRADEWALLETNAME, TARGETWALLET = range(2)
+async def copy_trade_next_and_back_callback(update: Update, context: CallbackContext):
+    global SELECTED_CHAIN_INDEX
+    
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    user_data = await load_user_data(user_id)
+    text = context.user_data['last_message']
+    markup = context.user_data['last_markup']
+    context.user_data["last_message_id"] = query.message.message_id
+    
+    match = re.match(r"^copy_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        if button_data == "left":
+            trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
+            SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
+            # Update the keyboard markup with the new selected chain
+            new_markup = build_copy_trade_keyboard(trades)
 
+            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+            back_variable(message, context, text, new_markup, False, True)
+        elif button_data == "right":
+            trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
+            SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
+            # Update the keyboard markup with the new selected chain
+            new_markup = build_copy_trade_keyboard(trades)
+            
+            # Edit the message to display the updated keyboard markup
+            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+            back_variable(message, context, text, new_markup, False, True)
+        elif button_data == f"{user_data.user_id}":
+            trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
+            SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
+            # Update the keyboard markup with the new selected chain
+            new_markup = build_copy_trade_keyboard(trades)
+            
+            # Edit the message to display the updated keyboard markup
+            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+            back_variable(message, context, text, new_markup, False, True)
+
+async def copy_trade_start_callback(update: Update, context: CallbackContext):
+    global SELECTED_CHAIN_INDEX
+    
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    user_data = await load_user_data(user_id)
+    text = context.user_data['last_message']
+    markup = context.user_data['last_markup']
+    context.user_data["last_message_id"] = query.message.message_id
+    
+    match = re.match(r"^trade_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        if button_data == "address":
+            # Edit the message to display the updated keyboard markup
+            message = await query.message.reply_text("What would you like to name this copy trade wallet?")
+            # back_variable(message, context, text, new_markup, False, False)
+            return TRADEWALLETNAME
+
+async def target_token_address_reply(update: Update, context: CallbackContext):
+    context.user_data['address'] = update.message.text.replace(' ', '_')
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+
+    # This message is a reply to the input message, and we can process the user's input here
+    await update.message.reply_text(f"Reply to this message with the desired wallet address you'd like to copy trades from.")
+    return TARGETWALLET
+
+
+async def submit_copy_reply(update: Update, context: CallbackContext):
+    name = context.user_data.get('address')
+    chain = PRESETNETWORK
+    token_address = update.message.text.replace(' ', '')
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    
+    await save_copy_trade_address(user_id, name, token_address, chain, False)
+
+    # This message is a reply to the input message, and we can process the user's input here
+    await update.message.reply_text(f"Copy trade added successfully.")
+    context.user_data.pop('address', None)
+    context.user_data.pop('to_address', None)
+    context.user_data.pop("network_chain", None)
+    trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
+    copy_trade_markup = build_copy_trade_keyboard(trades)
+    copy_message = context.user_data['last_message']
+    # message = await update.message.edit_reply_markup(
+    #     reply_markup=copy_trade_markup
+    # )
+    message_id_to_edit = context.user_data["last_message_id"]
+    message = context.bot.edit_message_reply_markup(
+        chat_id=update.message.chat_id,  # Replace with the chat ID where the message was sent
+        message_id=message_id_to_edit,   # Specify the message ID you want to edit
+        reply_markup=copy_trade_markup    # Set the updated markup
+    )
+    context.user_data.pop("last_message", None)
+    back_variable(message, context, copy_message, transfer_chain_markup, True, False)
+    return ConversationHandler.END
+
+async def cancel_copy(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.pop('address', None)
+    context.user_data.pop('to_address', None)
+    context.user_data.pop("last_message", None)
+    context.user_data.pop("network_chain", None)
+    await update.message.reply_text("Copy Trade Cancelled.")
+    return ConversationHandler.END
 
 # ------------------------------------------------------------------------------
 # CONFIGURATION BUTTON CALLBACK
@@ -1395,11 +1559,16 @@ async def token_amount_reply(update: Update, context: CallbackContext):
         await update.message.reply_text(tx_hash)
         return ConversationHandler.END
     else:
-        receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
+        amount = await check_transaction_status(NETWORK, user_data,  tx_hash)
+        
         tf_msg = f"""
-Processing transfer... 
+You are transferring {amount} ETH from your wallet {user_data.wallet_address}... 
 -----------------------------
+
 TXHASH: <code>{tx_hash}</code>
+-----------------------------
+ETHERSCAN: https://etherscan.io/tx/{tx_hash}
+
         """
         await update.message.reply_text(tf_msg, parse_mode=ParseMode.HTML)
         return ConversationHandler.END

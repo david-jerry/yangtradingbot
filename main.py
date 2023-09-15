@@ -52,6 +52,12 @@ from commands.start.__buttons import (
     reply_preset_response,
     cancel_preset,
     
+    copy_trade_next_and_back_callback,
+    copy_trade_start_callback,
+    target_token_address_reply,
+    submit_copy_reply,
+    cancel_copy,
+    
     transfer_callback,
     token_callback,
     token_address_reply,
@@ -162,6 +168,8 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 PRIVATEKEY = range(1)
 REPLYDELTA = range(1)
 TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
+TRADEWALLETNAME, TARGETWALLET = range(2)
+
 def main() -> None:
     LOGGER.info(TOKEN)
     LOGGER.info(USERNAME)
@@ -195,7 +203,22 @@ def main() -> None:
     # TRANSFER TOKEN CALLBACK
     app.add_handler(CallbackQueryHandler(transfer_callback, pattern=r"^transfer_chain_*"))
     
+    # Copy Trading callback
+    app.add_handler(CallbackQueryHandler(copy_trade_next_and_back_callback, pattern=r"^copy_*"))
     
+    # TRANSFER HANDLERS
+    copytrade_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(copy_trade_start_callback, pattern=r"^trade_address$")
+        ],
+        states={
+            TRADEWALLETNAME: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), target_token_address_reply)],
+            TARGETWALLET: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), submit_copy_reply)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
+    )
+    app.add_handler(copytrade_conv_handler)
+
     # CONVERSATION HANDLERS
     attach_conv_handler = ConversationHandler(
         entry_points=[
@@ -209,7 +232,6 @@ def main() -> None:
     app.add_handler(attach_conv_handler)
 
     # TRANSFER HANDLERS
-    
     transfer_conv_handler = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(token_callback, pattern=r"^transfer_*")

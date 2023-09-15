@@ -218,7 +218,6 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         LOGGER.info('Checking status here')
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         if balance < amount and balance < 0.00000000:
             LOGGER.info('We got here: insufficient funds')
             return "Insufficient balance"
@@ -227,7 +226,6 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
@@ -235,7 +233,6 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
@@ -243,38 +240,58 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')   
-        # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id         
     
 
-    # Build the transaction
-    # contract = w3.eth.contract(address=token_address, abi=contract_abi) if contract_abi != None else None
     gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': w3.to_wei(amount, 'wei')})
     LOGGER.info(f"GasEstimate: {w3.to_wei(gas_estimate, 'gwei')}")
     LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
+    
+    
     gas_price = w3.to_wei('20', 'gwei')
+    
+    
     if balance - amount < w3.from_wei(gas_price, 'ether'):
         return "Insufficient balance"
-    transaction = {
-        'to': to_address,
-        'from': user_data.wallet_address,
-        'nonce': nonce,
-        'chainId': int(chain_id),
-        'value': w3.to_wei(amount, 'wei'),
-        'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
-        'gasPrice': w3.to_wei('20', 'gwei') if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
-        # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
-        # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
-        # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
-    }
     
+    
+    contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
+    # Build the transaction
+    if token_address != None:
+        contract = w3.eth.contract(address=token_address, abi=contract_abi) if contract_abi != None else None
+        transaction = {
+            'to': to_address,
+            'from': user_data.wallet_address,
+            'nonce': nonce,
+            'chainId': int(chain_id),
+            'value': w3.to_wei(amount, 'wei'),
+            'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+            'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
+            # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
+            # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
+            'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
+        }
+    else:
+        transaction = {
+            'to': to_address,
+            'from': user_data.wallet_address,
+            'nonce': nonce,
+            'chainId': int(chain_id),
+            'value': w3.to_wei(amount, 'wei'),
+            'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+            'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
+            # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
+            # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
+            # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
+        }
+        
 
     signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
     tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-    LOGGER.info(tx_hash)
-    return tx_hash
+    LOGGER.info(tx_hash.hex())
+    return tx_hash.hex()
 
 
 async def check_transaction_status(network, user_data,  tx_hash):
@@ -288,4 +305,8 @@ async def check_transaction_status(network, user_data,  tx_hash):
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-    return receipt
+    amount_wei = receipt['logs'][0]['data']
+
+    # Convert the amount from Wei to Ether
+    amount_ether = w3.from_wei(int(amount_wei, 16), 'ether')
+    return amount_ether

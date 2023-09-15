@@ -107,3 +107,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.user_id
+
+
+class CopyTradeAddresses(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="copy_trades", blank=True)
+    chain = models.CharField(max_length=5, blank=True)
+    name = models.CharField(max_length=250, blank=True)
+    contract_address = models.CharField(max_length=500, blank=True)
+    on = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.user.user_id} {self.contract_address}"
+    

@@ -7,7 +7,7 @@ import os
 import django
 
 from asgiref.sync import sync_to_async
-from apps.accounts.models import CustomUser
+from apps.accounts.models import CustomUser, CopyTradeAddresses
 
 from logger import LOGGER
 
@@ -25,6 +25,12 @@ def save_user_data(user_data):
     return user
 
 @sync_to_async
+def save_copy_trade_address(user_id, name, address, chain, on):
+    user = CustomUser.objects.get(user_id=user_id)
+    trade = CopyTradeAddresses.objects.create(user=user, name=name, contract_address=address, chain=chain, on=on)
+    return trade
+
+@sync_to_async
 def load_user_data(user_id):
     try:
         LOGGER.info("Loading user data")
@@ -35,6 +41,13 @@ def load_user_data(user_id):
     except FileNotFoundError:
         user_data = None
         return user_data
+
+@sync_to_async
+def load_copy_trade_addresses(user_id, chain):
+    user = CustomUser.objects.get(user_id=user_id)
+    trades = CopyTradeAddresses.objects.filter(user=user, chain=chain) or None
+    return trades
+
 
 @sync_to_async
 def update_user_data(user_id: str, updated_data):
@@ -48,9 +61,17 @@ def update_user_data(user_id: str, updated_data):
         user_data.save()  # Save the changes to the database
     except CustomUser.DoesNotExist:
         LOGGER.info("User not found")
-    # user_data = CustomUser.objects.filter(user_id=user_id)
-    # if user_data != None:
-    #     CustomUser.objects.filter(user_id=user_id).update(updated_data)
-    # else:
-    #     LOGGER.info("User not found")
-    #     pass
+
+
+@sync_to_async
+def update_copy_trade_addresses(user_id: str, updated_data):
+    try:
+        user = CustomUser.objects.get(user_id=user_id)
+        trades = CopyTradeAddresses.objects.get(user=user)
+        # Update user_data fields based on updated_data dictionary
+        for key, value in updated_data.items():
+            setattr(trades, key, value)
+        
+        trades.save()  # Save the changes to the database
+    except CustomUser.DoesNotExist:
+        LOGGER.info("Copy trade not found")
