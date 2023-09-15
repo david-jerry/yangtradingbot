@@ -260,7 +260,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         'chainId': int(chain_id),
         'value': w3.to_wei(amount, 'wei'),
         'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
-        'gasPrice': w3.to_wei(1, 'gwei') if user_data.max_gas_price < 14 else w3.to_wei(user_data.max_gas_price, 'gwei'),
+        'gasPrice': w3.to_wei(gas_estimate + 3, 'gwei') if user_data.max_gas_price < 14 else w3.to_wei(user_data.max_gas_price, 'gwei'),
         # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
         # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
         # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
