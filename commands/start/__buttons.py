@@ -1394,7 +1394,12 @@ async def token_amount_reply(update: Update, context: CallbackContext):
         return ConversationHandler.END
     else:
         receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
-        await update.message.reply_text(f"Processing transfer... {receipt}")
+        tf_msg = f"""
+Processing transfer... 
+-----------------------------
+TXHASH: <code>{tx_hash}</code>
+        """
+        await update.message.reply_text(tf_msg)
         return ConversationHandler.END
 
 async def cancel_transfer(update: Update, context: CallbackContext):
