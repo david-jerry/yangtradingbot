@@ -309,7 +309,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         token_contract = w3.eth.contract(address=token_address, abi=abi)
 
         # Prepare the transaction to transfer USDT tokens
-        transaction = token_contract.functions.transfer(to_address, w3.to_wei(amount)).buildTransaction({
+        transaction = token_contract.functions.transfer(to_address, w3.to_wei(value)).buildTransaction({
             'chainId': 1,  # Mainnet
             'gas': gas_estimate,  # Gas limit (adjust as needed)
             'gasPrice': w3.toWei('20', 'gwei'),  # Gas price in Gwei (adjust as needed)
