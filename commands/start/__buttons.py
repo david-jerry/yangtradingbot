@@ -403,6 +403,7 @@ async def start_button_callback(update: Update, context: CallbackContext):
     await query.answer()
     command = query.data
     user_id = str(query.from_user.id)
+    context.user_data.clear()
     context.user_data["last_message_id"] = query.message.message_id
     gas_price = await get_default_gas_price_gwei()
 
