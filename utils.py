@@ -257,35 +257,35 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         return "Insufficient balance"
     
     
-    contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
+    # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
     # Build the transaction
-    if token_address != None:
-        contract = w3.eth.contract(address=token_address, abi=contract_abi) if contract_abi != None else None
-        transaction = {
-            'to': to_address,
-            'from': user_data.wallet_address,
-            'nonce': nonce,
-            'chainId': int(chain_id),
-            'value': w3.to_wei(amount, 'wei'),
-            'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
-            'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
-            # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
-            # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
-            'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
-        }
-    else:
-        transaction = {
-            'to': to_address,
-            'from': user_data.wallet_address,
-            'nonce': nonce,
-            'chainId': int(chain_id),
-            'value': w3.to_wei(amount, 'wei'),
-            'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
-            'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
-            # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
-            # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
-            # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
-        }
+    # if token_address != None:
+    #     contract = w3.eth.contract(address=token_address, abi=contract_abi) if contract_abi != None else None
+    #     transaction = {
+    #         'to': to_address,
+    #         'from': user_data.wallet_address,
+    #         'nonce': nonce,
+    #         'chainId': int(chain_id),
+    #         'value': w3.to_wei(amount, 'wei'),
+    #         'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+    #         'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
+    #         # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
+    #         # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
+    #         'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
+    #     }
+    # else:
+    transaction = {
+        'to': to_address,
+        'from': user_data.wallet_address,
+        'nonce': nonce,
+        'chainId': int(chain_id),
+        'value': w3.to_wei(amount, 'wei'),
+        'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+        'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
+        # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
+        # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
+        # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
+    }
         
 
     signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
