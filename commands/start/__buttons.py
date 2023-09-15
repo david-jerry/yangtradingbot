@@ -1373,6 +1373,8 @@ async def to_address_reply(update: Update, context: CallbackContext):
     context.user_data['to_address'] = update.message.text
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
+    LOGGER.info("Chain check::: ")
+    LOGGER.info(context.user_data)
 
     # This message is a reply to the input message, and we can process the user's input here
     await update.message.reply_text(f"How much do you want to transfer eg: 2000 USD?")
