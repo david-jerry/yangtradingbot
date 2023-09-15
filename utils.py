@@ -247,7 +247,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         LOGGER.info('Checking status here')
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        val = w3.to_wei(amount, 'gwei')
+        val = w3.to_wei(amount, 'ether')
         if balance < amount and balance < 0.00000000:
             LOGGER.info('We got here: insufficient funds')
             return "Insufficient balance"
@@ -256,14 +256,14 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        val = w3.to_wei(amount, 'gwei')
+        val = w3.to_wei(amount, 'ether')
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id
     elif network.upper() == "ARB" and user_data.ARB_added:
         w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
         amount = Decimal(amount_in_usd) / Decimal(price)
-        val = w3.to_wei(amount, 'gwei')
+        val = w3.to_wei(amount, 'ether')
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
@@ -272,7 +272,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
         amount = Decimal(amount_in_usd) / Decimal(price)
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')   
-        val = w3.to_wei(amount, 'gwei')
+        val = w3.to_wei(amount, 'ether')
         if balance < amount and balance < 0.00000000:
             return "Insufficient balance"
         chain_id = w3.eth.chain_id         
@@ -285,7 +285,7 @@ async def trasnfer_currency(network, user_data, amount_in_usd, to_address, token
     
     gas_price = w3.to_wei('20', 'gwei')
     
-    value = w3.from_wei(val, 'ether')
+    value = val #w3.from_wei(val, 'ether')
     
     
     if balance - amount < w3.from_wei(gas_price, 'ether'):
