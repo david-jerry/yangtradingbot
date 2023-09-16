@@ -316,6 +316,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         return tx_hash.hex(), value
 
     else:
+        gas_estimate = token_contract.functions.transfer(to_address, w3.to_wei('21', 'gwei')).estimate_gas({"from": user_data.wallet_address})
         
         abi = await get_contract_abi(token_address)
         LOGGER.info(abi)
