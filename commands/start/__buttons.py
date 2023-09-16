@@ -550,6 +550,7 @@ Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</
             
             context.user_data['last_message'] = configuration_message
             context.user_data['last_markup'] = preset_markup
+            context.user_data['caption_id'] = query.message.message_id
             
             back_variable(message, context, configuration_message, preset_markup, True, False)
             return message
@@ -705,7 +706,7 @@ async def cancel_copy(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ------------------------------------------------------------------------------
 # CONFIGURATION BUTTON CALLBACK
 # ------------------------------------------------------------------------------
-def build_caption(PRESETNETWORK, user_data, wallet):
+def build_caption(PRESETNETWORK, user_data, wallet, gas_price):
     caption = f"""
             <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
 Wallet: {wallet}
@@ -1196,7 +1197,6 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
     caption = context.user_data['config_message'] 
     user_data = await load_user_data(user_id)
     
-    context.user_data["last_message_id"] = update.message.message_id
 
     wallet = user_data.wallet_address if user_data is not None and user_data.wallet_address is not None else '<pre>Disconnected</pre>'
     
@@ -1211,6 +1211,7 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         user_data = await load_user_data(user_id)
         new_markup = build_preset_keyboard()
         await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        message_id = context.user_data['caption_id']
         await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
     elif preset == "slippage":
         f_text = text.replace('%', '') if '%' in text else Decimal(text)
@@ -1220,9 +1221,8 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         await update_user_data(user_id, {'slippage':Decimal(f_text)})
         user_data = await load_user_data(user_id)
         new_markup = build_preset_keyboard()
-        caption = build_caption(PRESETNETWORK, user_data, wallet)
+        caption = build_caption(PRESETNETWORK, user_data, wallet, gas_price)
         await update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=new_markup)
-        await context.bot.edit_message_caption(chat_id=chat_id, message_id=previous_message_id, caption=new_caption, parse_mode=ParseMode.HTML)
     elif preset == "gas":
         f_text = int(text.replace('m', '')) if 'm' in text else int(text) * 1000000
         text = f"""
