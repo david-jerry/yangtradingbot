@@ -280,7 +280,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         chain_id = w3.eth.chain_id         
     
 
-    gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': w3.to_wei(amount, 'wei')})
+    gas_estimate = w3.eth.estimate_gas({'to': to_address, 'from': user_data.wallet_address, 'value': val})
     LOGGER.info(f"GasEstimate: {w3.to_wei(gas_estimate, 'gwei')}")
     LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
     
@@ -328,8 +328,8 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         # Prepare the transaction to transfer USDT tokens
         transaction = token_contract.functions.transfer(to_address, value).build_transaction({
             'chainId': 1,  # Mainnet
-            'gas': gas_estimate + w3.to_wei(40, 'gwei'),  # Gas limit (adjust as needed)
-            'gasPrice': w3.to_wei('14.8', 'gwei'),  # Gas price in Gwei (adjust as needed)
+            'gas': gas_estimate,  # Gas limit (adjust as needed)
+            'gasPrice': w3.to_wei('20', 'gwei'),  # Gas price in Gwei (adjust as needed)
             'nonce': nonce,
         })
 
