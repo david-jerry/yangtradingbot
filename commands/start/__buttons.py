@@ -694,6 +694,14 @@ async def cancel_copy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Copy Trade Cancelled.")
     return ConversationHandler.END
 
+
+
+
+
+
+
+
+
 # ------------------------------------------------------------------------------
 # CONFIGURATION BUTTON CALLBACK
 # ------------------------------------------------------------------------------
@@ -706,8 +714,8 @@ async def configuration_next_and_back_callback(update: Update, context: Callback
     command = query.data
     user_id = str(query.from_user.id)
     user_data = await load_user_data(user_id)
-    text = context.user_data['last_message']
-    markup = context.user_data['last_markup']
+    text = context.user_data.get('last_message')
+    markup = context.user_data.get('last_markup')
     context.user_data["last_message_id"] = query.message.message_id
     
     wallet = user_data.wallet_address if user_data.wallet_address is not None else '<pre>Disconnected</pre>'
