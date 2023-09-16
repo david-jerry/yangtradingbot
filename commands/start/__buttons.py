@@ -1580,39 +1580,6 @@ async def token_amount_reply(update: Update, context: CallbackContext):
         await update.message.reply_text(error_msg, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
 
-# async def token_amount_reply(update: Update, context: CallbackContext):
-#     percentage = update.message.text
-#     user_id = update.message.from_user.id
-#     address = context.user_data.get('address') if "address" in context.user_data else None
-#     to_address = context.user_data['to_address']
-#     chat_id = update.message.chat_id
-#     NETWORK = context.user_data.get("network_chain")
-#     user_data = await load_user_data(user_id)
-    
-#     try:
-#         tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
-#         # This message is a reply to the input message, and we can process the user's input here
-#         if "Insufficient balance" == tx_hash:
-#             await update.message.reply_text(tx_hash)
-#             return ConversationHandler.END
-#         else:
-#             receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
-#             LOGGER.info(receipt)
-#             tf_msg = f"""
-#     You are transferring {amount} {symbol.upper()} from your wallet {user_data.wallet_address}... 
-#     -----------------------------
-
-#     TXHASH: <code>{tx_hash}</code>
-#     -----------------------------
-#     ETHERSCAN: https://etherscan.io/tx/{tx_hash}
-
-#             """
-#             await update.message.reply_text(tf_msg, parse_mode=ParseMode.HTML)
-#             return ConversationHandler.END
-#     except:
-#         await update.message.reply_text("There was an error transferring", parse_mode=ParseMode.HTML)
-#         return ConversationHandler.END
-
 async def cancel_transfer(update: Update, context: CallbackContext):
     context.user_data.pop('address', None)
     context.user_data.pop('to_address', None)
@@ -1947,7 +1914,7 @@ What's the private key of this wallet? You may also use a 12-word mnemonic phras
 
 
 
-async def reply_wallet_attach(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def reply_wallet_attach(update: Update, context: CallbackContext):
     message_id = context.user_data['private_reply']
     text = update.message.text
     user_id = update.message.from_user.id
@@ -1959,17 +1926,18 @@ async def reply_wallet_attach(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     if message_id and update.message.message_id > message_id:
         phrase, wallet_address = await attach_wallet_function(NETWORK, user_id, text)
-        data = {
-            "wallet_address": wallet_address,
-            "wallet_private_key": text.replace(" ", ""),
-            "wallet_phrase": phrase,
-            f"{NETWORK.upper()}_added": True,
-        }
-        await update_user_data(str(user_id), data)
-        # This message is a reply to the input message, and we can process the user's input here
-        await update.message.reply_text(f"Wallet Attached")
-        await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
-        return ConversationHandler.END
+        if phrase != None and wallet_address != None:
+            data = {
+                "wallet_address": wallet_address,
+                "wallet_private_key": text.replace(" ", ""),
+                "wallet_phrase": phrase,
+                f"{NETWORK.upper()}_added": True,
+            }
+            await update_user_data(str(user_id), data)
+            # This message is a reply to the input message, and we can process the user's input here
+            await update.message.reply_text(f"Wallet Attached")
+            await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
+            return ConversationHandler.END
 
 async def cancel_attachment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()

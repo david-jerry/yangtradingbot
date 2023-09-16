@@ -133,27 +133,27 @@ async def attach_wallet_function(network, user_id, key):
             wallet_address = w3.eth.account.from_key(key)
             mnemonic_phrase = wallet_address._get_mnemonic()
             LOGGER.info(mnemonic_phrase)
-            return (mnemonic_phrase, wallet_address)
+            return mnemonic_phrase, wallet_address
         elif network.upper() == "BSC" and user_data.BSC_added:
             w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
             balance = w3.eth.get_balance(user_data.wallet_address)
             wallet_address = w3.eth.account.from_key(key)
             mnemonic_phrase = wallet_address._get_mnemonic()
-            return (mnemonic_phrase, wallet_address)
+            return mnemonic_phrase, wallet_address
         elif network.upper() == "ARB" and user_data.ARB_added:
             w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
             balance = w3.eth.get_balance(user_data.wallet_address)
             wallet_address = w3.eth.account.from_key(key)
             mnemonic_phrase = wallet_address._get_mnemonic()
-            return (mnemonic_phrase, wallet_address)
+            return mnemonic_phrase, wallet_address
         elif network.upper() == "BASE" and user_data.BASE_added:
             w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
             balance = w3.eth.get_balance(user_data.wallet_address)    
             wallet_address = w3.eth.account.from_key(key)
             mnemonic_phrase = wallet_address._get_mnemonic()
-            return (mnemonic_phrase, wallet_address)
+            return mnemonic_phrase, wallet_address
     else:
-        return None
+        return None, None
 
 
 async def get_wallet_balance(network, user_id):
