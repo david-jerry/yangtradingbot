@@ -36,9 +36,39 @@ async def get_contract_abi(contract_address, api_key=ETHERAPI):
             data = response.json()
             if data['status'] == '1':
                 abi = data['result']
-                token_name = abi['name']
-                token_symbol = abi['symbol']
                 return abi
+            else:
+                return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
+        else:
+            return f'Failed to retrieve ABI for contract {contract_address}. HTTP Error: {response.status_code}'
+
+    except Exception as e:
+        return f'An error occurred: {str(e)}'
+    
+async def get_token_info(contract_address, api_key=ETHERAPI):
+    # Define the Etherscan API URL
+    etherscan_api_url = 'https://api.etherscan.io/api'
+
+    # Define the parameters for the API request
+    params = {
+        'module': 'token',
+        'action': 'getTokenInfo',
+        'address': contract_address,
+        'apikey': api_key,
+    }
+
+    try:
+        # Send a GET request to Etherscan API
+        response = requests.get(etherscan_api_url, params=params)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            data = response.json()
+            if data['status'] == '1':
+                info = data['result']
+                token_name = info['name']
+                token_symbol = info['symbol']
+                return token_name, token_symbol
             else:
                 return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
         else:
@@ -313,7 +343,9 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
         tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
         LOGGER.info(tx_hash.hex())
-        return tx_hash.hex(), value
+        contract_token = '0xD76b5c2A23ef78368d8E34288B5b65D616B746aE'
+        symbol, symbol_name = await get_token_info(contract_token)
+        return tx_hash.hex(), value, symbol, symbol_name
 
     else:
         
@@ -336,8 +368,8 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
         tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
         LOGGER.info(tx_hash.hex())
-        symbol = abi['symbol']
-        return tx_hash.hex(), value, symbol
+        symbol, symbol_name = await get_token_info(token_address)
+        return tx_hash.hex(), value, symbol, symbol_name
 
 
 async def check_transaction_status(network, user_data,  tx_hash):

@@ -1553,7 +1553,8 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     NETWORK = context.user_data.get("network_chain")
     user_data = await load_user_data(user_id)
     
-    tx_hash, amount, symbol = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
+    
+    tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
     # This message is a reply to the input message, and we can process the user's input here
     if "Insufficient balance" == tx_hash:
         await update.message.reply_text(tx_hash)
@@ -1562,7 +1563,7 @@ async def token_amount_reply(update: Update, context: CallbackContext):
         receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
         LOGGER.info(receipt)
         tf_msg = f"""
-You are transferring {amount} {symbol.upper() if symbol else 'ETH'} from your wallet {user_data.wallet_address}... 
+You are transferring {amount} {symbol.upper()} from your wallet {user_data.wallet_address}... 
 -----------------------------
 
 TXHASH: <code>{tx_hash}</code>
