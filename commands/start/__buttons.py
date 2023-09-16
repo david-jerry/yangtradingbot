@@ -1574,8 +1574,9 @@ async def token_amount_reply(update: Update, context: CallbackContext):
         return ConversationHandler.END
     
     except Exception as e:
+        LOGGER.error(e)
         # Handle the error gracefully
-        error_msg = "There was an error transferring."
+        error_msg = f"There was an error transferring."
         await update.message.reply_text(error_msg, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
 
