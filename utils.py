@@ -316,7 +316,6 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         return tx_hash.hex(), value
 
     else:
-        gas_estimate = token_contract.functions.transfer(to_address, w3.to_wei('21', 'gwei')).estimate_gas({"from": user_data.wallet_address})
         
         abi = await get_contract_abi(token_address)
         LOGGER.info(abi)
@@ -325,7 +324,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         
         # Create a contract instance for the USDT token
         token_contract = w3.eth.contract(address=checksum_address, abi=abi)
-
+        gas_estimate = token_contract.functions.transfer(to_address, val).estimate_gas({"from": user_data.wallet_address})
         # Prepare the transaction to transfer USDT tokens
         transaction = token_contract.functions.transfer(to_address, value).build_transaction({
             'chainId': 1,  # Mainnet
