@@ -343,9 +343,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
         tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
         LOGGER.info(tx_hash.hex())
-        contract_token = '0xD76b5c2A23ef78368d8E34288B5b65D616B746aE'
-        symbol, symbol_name = await get_token_info(contract_token)
-        return tx_hash.hex(), value, symbol, symbol_name
+        return tx_hash.hex(), value, "ETH", "ETHEREUM"
 
     else:
         
