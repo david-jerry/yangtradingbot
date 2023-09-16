@@ -92,6 +92,8 @@ async def about_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def start_command(update: Update, context: CallbackContext):
+    context.user_data.clear()
+    ConversationHandler.END
     user = update.message.from_user
     bot = context.bot
     user_id = str(user.id)
