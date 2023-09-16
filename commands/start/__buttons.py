@@ -705,6 +705,25 @@ async def cancel_copy(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ------------------------------------------------------------------------------
 # CONFIGURATION BUTTON CALLBACK
 # ------------------------------------------------------------------------------
+def build_caption(PRESETNETWORK, user_data, wallet):
+    caption = f"""
+            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+Wallet: {wallet}
+
+Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
+
+<strong>🛠 {PRESETNETWORK} Sell</strong>
+-------------------------------------------
+Auto Sell: {'✅' if user_data.auto_sell else '❌'}
+Sell Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
+Auto Sell (high): <strong>{(user_data.sell_hi * 50) if user_data.sell_hi > 0.00 else 'Default(+100%)'}</strong>
+Sell Amount (high): <strong>{user_data.sell_hi_amount if user_data.sell_hi_amount > 0.00 else 'Default(100%)'}</strong>
+Auto Sell (low): <strong>{(user_data.sell_lo * 50) if user_data.sell_lo > 0.00 else '-50%'}</strong>
+Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount > 0.00 else '100%'}</strong>
+-------------------------------------------            
+    """
+    return caption
+
 REPLYDELTA = range(1)
 async def configuration_next_and_back_callback(update: Update, context: CallbackContext):
     global SELECTED_CHAIN_INDEX
@@ -1171,6 +1190,7 @@ Example: If you want to sell half of your bag, type 50.
 
 async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.message.from_user.id)
+    chat_id = update.message.chat_id
     preset = context.user_data.get('preset')
     text = update.message.text
     caption = context.user_data['config_message'] 
@@ -1190,7 +1210,8 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         await update_user_data(user_id, {'max_delta':f_text})
         user_data = await load_user_data(user_id)
         new_markup = build_preset_keyboard()
-        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
     elif preset == "slippage":
         f_text = text.replace('%', '') if '%' in text else Decimal(text)
         text = f"""
@@ -1199,7 +1220,9 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         await update_user_data(user_id, {'slippage':Decimal(f_text)})
         user_data = await load_user_data(user_id)
         new_markup = build_preset_keyboard()
-        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+        caption = build_caption(PRESETNETWORK, user_data, wallet)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=previous_message_id, caption=new_caption, parse_mode=ParseMode.HTML)
     elif preset == "gas":
         f_text = int(text.replace('m', '')) if 'm' in text else int(text) * 1000000
         text = f"""
@@ -1561,32 +1584,32 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     NETWORK = context.user_data.get("network_chain")
     user_data = await load_user_data(user_id)
         
-    try:
-        tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
-        
-        if "Insufficient balance" == tx_hash:
-            await update.message.reply_text(tx_hash)
-            return ConversationHandler.END
-        
-        receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
-        
-        tf_msg = f"""
-        You are transferring {amount} {symbol.upper()} from your wallet {user_data.wallet_address}... 
-        -----------------------------
-        
-        TXHASH: <code>{tx_hash}</code>
-        -----------------------------
-        ETHERSCAN: https://etherscan.io/tx/{tx_hash}
-        """
-        await update.message.reply_text(tf_msg, parse_mode=ParseMode.HTML)
+    # try:
+    tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
+    
+    if "Insufficient balance" == tx_hash:
+        await update.message.reply_text(tx_hash)
         return ConversationHandler.END
     
-    except Exception as e:
-        LOGGER.error(e)
-        # Handle the error gracefully
-        error_msg = f"Error: {e}."
-        await update.message.reply_text(error_msg, parse_mode=ParseMode.HTML)
-        return ConversationHandler.END
+    receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
+    
+    tf_msg = f"""
+    You are transferring {amount} {symbol.upper()} from your wallet {user_data.wallet_address}... 
+    -----------------------------
+    
+    TXHASH: <code>{tx_hash}</code>
+    -----------------------------
+    ETHERSCAN: https://etherscan.io/tx/{tx_hash}
+    """
+    await update.message.reply_text(tf_msg, parse_mode=ParseMode.HTML)
+    return ConversationHandler.END
+
+    # except Exception as e:
+    #     LOGGER.error(e)
+    #     # Handle the error gracefully
+    #     error_msg = f"Error: {e}."
+    #     await update.message.reply_text(error_msg, parse_mode=ParseMode.HTML)
+    #     return ConversationHandler.END
 
 async def cancel_transfer(update: Update, context: CallbackContext):
     context.user_data.pop('address', None)
