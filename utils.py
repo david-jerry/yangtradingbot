@@ -329,7 +329,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         transaction = token_contract.functions.transfer(to_address, value).build_transaction({
             'chainId': 1,  # Mainnet
             'gas': gas_estimate,  # Gas limit (adjust as needed)
-            'gasPrice': w3.to_wei('35', 'gwei'),  # Gas price in Gwei (adjust as needed)
+            'gasPrice': w3.to_wei('45', 'gwei'),  # Gas price in Gwei (adjust as needed)
             'nonce': nonce,
         })
 
