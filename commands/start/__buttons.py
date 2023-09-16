@@ -1170,7 +1170,7 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
     
     context.user_data["last_message_id"] = update.message.message_id
 
-    wallet = user_data.wallet_address if user_data.wallet_address is not None else '<pre>Disconnected</pre>'
+    wallet = user_data.wallet_address if user_data is not None or user_data.wallet_address is not None else '<pre>Disconnected</pre>'
     
     gas_price = await get_default_gas_price_gwei()
     
