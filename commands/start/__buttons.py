@@ -1545,34 +1545,72 @@ async def to_address_reply(update: Update, context: CallbackContext):
     return AMOUNT
     
 async def token_amount_reply(update: Update, context: CallbackContext):
-    percentage = update.message.text
-    user_id = update.message.from_user.id
-    address = context.user_data.get('address') if "address" in context.user_data else None
-    to_address = context.user_data['to_address']
-    chat_id = update.message.chat_id
-    NETWORK = context.user_data.get("network_chain")
-    user_data = await load_user_data(user_id)
-    
-    
-    tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
-    # This message is a reply to the input message, and we can process the user's input here
-    if "Insufficient balance" == tx_hash:
-        await update.message.reply_text(tx_hash)
-        return ConversationHandler.END
-    else:
+    try:
+        percentage = update.message.text
+        user_id = update.message.from_user.id
+        address = context.user_data.get('address')
+        to_address = context.user_data['to_address']
+        chat_id = update.message.chat_id
+        NETWORK = context.user_data.get("network_chain")
+        user_data = await load_user_data(user_id)
+        
+        tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
+        
+        if "Insufficient balance" == tx_hash:
+            await update.message.reply_text(tx_hash)
+            return ConversationHandler.END
+        
         receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
-        LOGGER.info(receipt)
+        
         tf_msg = f"""
-You are transferring {amount} {symbol.upper()} from your wallet {user_data.wallet_address}... 
------------------------------
-
-TXHASH: <code>{tx_hash}</code>
------------------------------
-ETHERSCAN: https://etherscan.io/tx/{tx_hash}
-
+        You are transferring {amount} {symbol.upper()} from your wallet {user_data.wallet_address}... 
+        -----------------------------
+        
+        TXHASH: <code>{tx_hash}</code>
+        -----------------------------
+        ETHERSCAN: https://etherscan.io/tx/{tx_hash}
         """
         await update.message.reply_text(tf_msg, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
+    
+    except Exception as e:
+        # Handle the error gracefully
+        error_msg = "There was an error transferring."
+        await update.message.reply_text(error_msg, parse_mode=ParseMode.HTML)
+        return ConversationHandler.END
+
+# async def token_amount_reply(update: Update, context: CallbackContext):
+#     percentage = update.message.text
+#     user_id = update.message.from_user.id
+#     address = context.user_data.get('address') if "address" in context.user_data else None
+#     to_address = context.user_data['to_address']
+#     chat_id = update.message.chat_id
+#     NETWORK = context.user_data.get("network_chain")
+#     user_data = await load_user_data(user_id)
+    
+#     try:
+#         tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
+#         # This message is a reply to the input message, and we can process the user's input here
+#         if "Insufficient balance" == tx_hash:
+#             await update.message.reply_text(tx_hash)
+#             return ConversationHandler.END
+#         else:
+#             receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
+#             LOGGER.info(receipt)
+#             tf_msg = f"""
+#     You are transferring {amount} {symbol.upper()} from your wallet {user_data.wallet_address}... 
+#     -----------------------------
+
+#     TXHASH: <code>{tx_hash}</code>
+#     -----------------------------
+#     ETHERSCAN: https://etherscan.io/tx/{tx_hash}
+
+#             """
+#             await update.message.reply_text(tf_msg, parse_mode=ParseMode.HTML)
+#             return ConversationHandler.END
+#     except:
+#         await update.message.reply_text("There was an error transferring", parse_mode=ParseMode.HTML)
+#         return ConversationHandler.END
 
 async def cancel_transfer(update: Update, context: CallbackContext):
     context.user_data.pop('address', None)
