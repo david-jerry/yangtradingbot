@@ -2015,6 +2015,7 @@ async def home_button_callback(update: Update, context: CallbackContext):
         await context.bot.delete_message(chat_id=chat_id, message_id=last_message_id)
     else:
         context.user_data.clear()
+        ConversationHandler.END
 
     # Fetch the bot's profile photo
     bot = context.bot
