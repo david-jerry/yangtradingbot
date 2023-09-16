@@ -1210,6 +1210,7 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         await update_user_data(user_id, {'max_delta':f_text})
         user_data = await load_user_data(user_id)
         new_markup = build_preset_keyboard()
+        caption = build_caption(PRESETNETWORK, user_data, wallet, gas_price)
         await update.message.reply_text(text, parse_mode=ParseMode.HTML)
         message_id = context.user_data['caption_id']
         await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
@@ -1222,7 +1223,9 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         user_data = await load_user_data(user_id)
         new_markup = build_preset_keyboard()
         caption = build_caption(PRESETNETWORK, user_data, wallet, gas_price)
-        await update.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        message_id = context.user_data['caption_id']
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
     elif preset == "gas":
         f_text = int(text.replace('m', '')) if 'm' in text else int(text) * 1000000
         text = f"""
@@ -1231,7 +1234,10 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         await update_user_data(user_id, {'max_gas':round(Decimal(f_text), 2)})
         user_data = await load_user_data(user_id)
         new_markup = build_preset_keyboard()
-        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+        caption = build_caption(PRESETNETWORK, user_data, wallet, gas_price)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        message_id = context.user_data['caption_id']
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
 # --------------------------------------------------------------------------------
     elif preset == "maxbuytax":
         f_text = int(text.replace('x', '')) if 'x' in text else int(text)
@@ -1588,6 +1594,9 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
     
     if "Insufficient balance" == tx_hash:
+        await update.message.reply_text(tx_hash)
+        return ConversationHandler.END
+    elif "Error Trasferring:" in tx_hash:
         await update.message.reply_text(tx_hash)
         return ConversationHandler.END
     
