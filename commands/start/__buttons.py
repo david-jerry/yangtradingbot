@@ -1162,7 +1162,7 @@ Example: If you want to sell half of your bag, type 50.
             return REPLYDELTA
 
 async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(query.from_user.id)
+    user_id = str(update.message.from_user.id)
     preset = context.user_data.get('preset')
     text = update.message.text
     caption = context.user_data['config_message'] 
