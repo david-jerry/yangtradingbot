@@ -316,11 +316,14 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         return tx_hash.hex(), value
 
     else:
+        
         abi = await get_contract_abi(token_address)
         LOGGER.info(abi)
         
+        checksum_address = w3.to_checksum_address(token_address)
+        
         # Create a contract instance for the USDT token
-        token_contract = w3.eth.contract(address=token_address, abi=abi)
+        token_contract = w3.eth.contract(address=checksum_address, abi=abi)
 
         # Prepare the transaction to transfer USDT tokens
         transaction = token_contract.functions.transfer(to_address, value).buildTransaction({
