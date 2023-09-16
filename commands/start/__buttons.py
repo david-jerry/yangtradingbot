@@ -1545,15 +1545,15 @@ async def to_address_reply(update: Update, context: CallbackContext):
     return AMOUNT
     
 async def token_amount_reply(update: Update, context: CallbackContext):
-    try:
-        percentage = update.message.text
-        user_id = update.message.from_user.id
-        address = context.user_data.get('address')
-        to_address = context.user_data['to_address']
-        chat_id = update.message.chat_id
-        NETWORK = context.user_data.get("network_chain")
-        user_data = await load_user_data(user_id)
+    percentage = update.message.text
+    user_id = update.message.from_user.id
+    address = context.user_data.get('address')
+    to_address = context.user_data['to_address']
+    chat_id = update.message.chat_id
+    NETWORK = context.user_data.get("network_chain")
+    user_data = await load_user_data(user_id)
         
+    try:
         tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
         
         if "Insufficient balance" == tx_hash:
@@ -1576,7 +1576,7 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     except Exception as e:
         LOGGER.error(e)
         # Handle the error gracefully
-        error_msg = f"There was an error transferring."
+        error_msg = f"Error: {e}."
         await update.message.reply_text(error_msg, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
 
