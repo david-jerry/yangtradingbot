@@ -1560,16 +1560,19 @@ async def token_address_reply(update: Update, context: CallbackContext):
     user_data = await load_user_data(str(user_id))
     
     token_name, token_symbol, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+    if not token_name.startswith('An error occurred:'):
+        token_info = f"""
+        🪙 CA: {contract_add}
+        
+    Please input wallet address to transfer <strong>{token_name}</strong> to
+        """
 
-    token_info = f"""
-    🪙 CA: {contract_add}
-    
-Please input wallet address to transfer <strong>{token_name}</strong> to
-    """
-
-    # This message is a reply to the input message, and we can process the user's input here
-    await update.message.reply_text(token_info, parse_mode=ParseMode.HTML)
-    return TOADDRESS
+        # This message is a reply to the input message, and we can process the user's input here
+        await update.message.reply_text(token_info, parse_mode=ParseMode.HTML)
+        return TOADDRESS
+    else:
+        await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
+        return ConversationHandler.END
 
 async def to_address_reply(update: Update, context: CallbackContext):
     context.user_data['to_address'] = update.message.text
@@ -1581,19 +1584,23 @@ async def to_address_reply(update: Update, context: CallbackContext):
     
     token_name, token_symbol, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
 
-    text = f"""
-    🪙 CA: {contract_add}
-    
-How many token do you want to send?
+    if not token_name.startswith('An error occurred:'):
+        text = f"""
+        🪙 CA: {contract_add}
+        
+    How many token do you want to send?
 
-If you type 100%, it will transfer the entire balance.
+    If you type 100%, it will transfer the entire balance.
 
-You currently have <strong>{balance} {token_symbol}    </strong>
-    """
+    You currently have <strong>{balance} {token_symbol}    </strong>
+        """
 
-    # This message is a reply to the input message, and we can process the user's input here
-    await update.message.reply_text(text, parse_mode=ParseMode.HTML)
-    return AMOUNT
+        # This message is a reply to the input message, and we can process the user's input here
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        return AMOUNT
+    else:
+        await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
+        return ConversationHandler.END
     
 async def token_amount_reply(update: Update, context: CallbackContext):
     percentage = update.message.text
