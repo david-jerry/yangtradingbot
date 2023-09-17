@@ -114,7 +114,7 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         return token_name, token_symbol, val, checksum_address
     except Exception as e:
         LOGGER.info(e)
-        return f'An error occurred: {e}', "", ""
+        return f'An error occurred: {e}', "", "", ""
     
 async def currency_amount(symbol):
     # API endpoint
