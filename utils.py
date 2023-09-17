@@ -350,6 +350,8 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 amount = w3.to_wei(val * per / 100, 'ether')
                 LOGGER.info(token_balance_wei)
                 LOGGER.info(amount)
+                LOGGER.info(token_balance_wei - amount)
+                LOGGER.info(w3.to_wei(w3.from_wei(gas_price, 'ether'), 'ether'))
                 
                 
                 if val - amount < w3.to_wei(w3.from_wei(gas_price, 'ether'), 'ether'):
