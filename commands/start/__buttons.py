@@ -1581,7 +1581,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
     
     token_name, token_symbol, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
 
-    f"""
+    text = f"""
     🪙 CA: {contract_add}
     
 How many token do you want to send?
@@ -1592,7 +1592,7 @@ You currently have <strong>{balance} {token_symbol}    </strong>
     """
 
     # This message is a reply to the input message, and we can process the user's input here
-    await update.message.reply_text()
+    await update.message.reply_text(text)
     return AMOUNT
     
 async def token_amount_reply(update: Update, context: CallbackContext):
