@@ -1231,7 +1231,7 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
     chat_id = update.message.chat_id
     preset = context.user_data.get('preset')
     text = update.message.text
-    caption = context.user_data['config_message'] 
+    # caption = context.user_data['config_message'] 
     user_data = await load_user_data(user_id)
     
 
