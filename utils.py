@@ -346,13 +346,13 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 # Create a contract instance for the USDT token
                 token_contract = w3.eth.contract(address=checksum_address, abi=abi)
                 token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
-                val = float(w3.from_wei(token_balance_wei, 'ether'))
-                amount = val * per / 100
+                val = w3.to_wei(w3.from_wei(token_balance_wei, 'ether'), 'ether')
+                amount = w3.to_wei(val * per / 100, 'ether')
                 LOGGER.info(token_balance_wei)
                 LOGGER.info(amount)
                 
                 
-                if val - amount < w3.from_wei(gas_price, 'ether'):
+                if val - amount < w3.to_wei(w3.from_wei(gas_price, 'ether'), 'ether'):
                     return "Insufficient balance", amount, "ETH", "ETHEREUM"
 
                 gas_estimate = token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address})
