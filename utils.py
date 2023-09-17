@@ -308,16 +308,12 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     gas_price = w3.to_wei('20', 'gwei')
     
     try:
-        balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        amount = float(balance) * per/100
+        balance = float(w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether'))
+        amount = balance * per/100
 
         if balance - amount < w3.from_wei(gas_price, 'ether'):
             LOGGER.info('We got here: insufficient funds')
             return "Insufficient balance", amount, "ETH", "ETHEREUM"
-        
-        if float(balance) - float(amount) < w3.from_wei(gas_price, 'ether'):
-            return "Insufficient balance", amount, "ETH", "ETHEREUM"
-        
         
         # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         # Build the transaction
@@ -349,7 +345,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             # Create a contract instance for the USDT token
             token_contract = w3.eth.contract(address=checksum_address, abi=abi)
             token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
-            val = w3.from_wei(token_balance_wei, 'ether')
+            val = float(w3.from_wei(token_balance_wei, 'ether'))
             amount = val * per / 100
             
             if val - amount < w3.from_wei(gas_price, 'ether'):
