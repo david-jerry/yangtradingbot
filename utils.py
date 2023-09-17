@@ -324,8 +324,8 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     LOGGER.info(val)
 
     # gas_estimate = w3.eth.estimate_gas({'to': fmt_address, 'from': user_data.wallet_address, 'value': w3.to_int(val)})
-    LOGGER.info(f"GasEstimate: {w3.to_wei(gas_estimate, 'gwei')}")
-    LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
+    # LOGGER.info(f"GasEstimate: {w3.to_wei(gas_estimate, 'gwei')}")
+    # LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
     
     
     gas_price = w3.to_wei('20', 'gwei')
