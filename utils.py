@@ -52,8 +52,8 @@ async def get_token_info(contract_address, api_key=ETHERAPI):
     # Define the parameters for the API request
     params = {
         'module': 'token',
-        'action': 'getTokenInfo',
-        'address': contract_address,
+        'action': 'tokeninfo',
+        'contractaddress': contract_address,
         'apikey': api_key,
     }
 
