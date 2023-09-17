@@ -278,7 +278,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     if network.upper() == "ETH" and user_data.wallet_address:
         LOGGER.info('Checking status here')
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        amount = balance * float(per)/100
+        amount = float(balance) * float(per)/100
         val = w3.to_wei(amount, 'ether')
         if balance < amount and balance < 0.00001000:
             LOGGER.info('We got here: insufficient funds')
@@ -287,7 +287,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     elif network.upper() == "BSC" and user_data.BSC_added:
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        amount = balance * float(per)/100
+        amount = float(balance) * float(per)/100
         val = w3.to_wei(amount, 'ether')
         if balance < amount and balance < 0.00001000:
             return "Insufficient balance", value, "ETH", "ETHEREUM"
@@ -295,7 +295,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     elif network.upper() == "ARB" and user_data.ARB_added:
         w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        amount = balance * float(per)/100
+        amount = float(balance) * float(per)/100
         val = w3.to_wei(amount, 'ether')
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
         if balance < amount and balance < 0.00001000:
@@ -304,7 +304,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     elif network.upper() == "BASE" and user_data.BASE_added:
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        amount = balance * float(per)/100
+        amount = float(balance) * float(per)/100
         val = w3.to_wei(amount, 'ether')
         if balance < amount and balance < 0.00001000:
             return "Insufficient balance", value, "ETH", "ETHEREUM"
