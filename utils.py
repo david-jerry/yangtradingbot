@@ -354,8 +354,9 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(user_data.wallet_address)
             
             # Create a contract instance for the USDT token
+            token_contract = w3.eth.contract(address=checksum_address, abi=abi)
+            LOGGER.info(token_contract)
             try:
-                token_contract = w3.eth.contract(address=checksum_address, abi=abi)
                 token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
