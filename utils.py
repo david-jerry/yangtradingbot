@@ -355,7 +355,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 LOGGER.info(w3.to_wei(w3.from_wei(gas_price, 'ether'), 'ether'))
                 
                 
-                if val - amount < w3.to_wei(w3.from_wei(gas_price, 'ether'), 'ether'):
+                if val - amount < w3.from_wei(gas_price, 'ether'):
                     return "Insufficient balance", amount, "ETH", "ETHEREUM"
 
                 gas_estimate = token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address})

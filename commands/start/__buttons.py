@@ -1553,6 +1553,7 @@ What wallet address do you wish to send the token to?
             
 async def token_address_reply(update: Update, context: CallbackContext):
     context.user_data['address'] = update.message.text
+    
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
 
