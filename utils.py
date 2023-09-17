@@ -280,17 +280,17 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
         amount = balance * float(per)/100
         val = w3.to_wei(amount, 'ether')
-        if balance < amount and balance < 0.00000000:
+        if balance < amount and balance < 0.00001000:
             LOGGER.info('We got here: insufficient funds')
-            return "Insufficient balance"
+            return "Insufficient balance", value, "ETH", "ETHEREUM"
         chain_id = w3.eth.chain_id
     elif network.upper() == "BSC" and user_data.BSC_added:
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
         amount = balance * float(per)/100
         val = w3.to_wei(amount, 'ether')
-        if balance < amount and balance < 0.00000000:
-            return "Insufficient balance"
+        if balance < amount and balance < 0.00001000:
+            return "Insufficient balance", value, "ETH", "ETHEREUM"
         chain_id = w3.eth.chain_id
     elif network.upper() == "ARB" and user_data.ARB_added:
         w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
@@ -298,16 +298,16 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         amount = balance * float(per)/100
         val = w3.to_wei(amount, 'ether')
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
-        if balance < amount and balance < 0.00000000:
-            return "Insufficient balance"
+        if balance < amount and balance < 0.00001000:
+            return "Insufficient balance", value, "ETH", "ETHEREUM"
         chain_id = w3.eth.chain_id
     elif network.upper() == "BASE" and user_data.BASE_added:
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
         balance = w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether')
         amount = balance * float(per)/100
         val = w3.to_wei(amount, 'ether')
-        if balance < amount and balance < 0.00000000:
-            return "Insufficient balance"
+        if balance < amount and balance < 0.00001000:
+            return "Insufficient balance", value, "ETH", "ETHEREUM"
         chain_id = w3.eth.chain_id         
     
     if not w3.is_address(to_address):
@@ -350,7 +350,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 'gas': 21000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
                 # 'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
                 'maxFeePerGas': w3.to_wei(25, 'gwei'),
-                'maxPriorityFeePerGas': w3.to_wei(21, 'gwei'),
+                'maxPriorityFeePerGas': w3.to_wei(20, 'gwei'),
                 # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
             }
             
