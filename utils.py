@@ -288,14 +288,14 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
         chain_id = w3.eth.chain_id         
     
-    if not w3.is_address(to_address):
+    if not w3.is_address(to_address.to_lower()):
         return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
-    elif w3.is_address(to_address):
+    elif w3.is_address(to_address.to_lower()):
         fmt_address = to_address
-    elif not w3.is_checksum_address(to_address):
+    elif not w3.is_checksum_address(to_address.to_lower()):
         return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
     elif w3.is_checksum_address(to_address):
-        fmt_address = w3.to_checksum_address(to_address)
+        fmt_address = w3.to_checksum_address(to_address.to_lower())
 
     LOGGER.info(fmt_address)
     LOGGER.info(user_data.wallet_address)
@@ -341,13 +341,13 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             abi = await get_contract_abi(token_address)
             LOGGER.info(abi)
             
-            if not w3.is_address(token_address):
+            if not w3.is_address(token_address.lower()):
                 return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
-            elif w3.is_checksum_address(token_address):
+            elif w3.is_checksum_address(token_address.lower()):
                 checksum_address = w3.to_checksum_address(to_address).lower()
-            elif not w3.is_checksum_address(token_address):
+            elif not w3.is_checksum_address(token_address.lower()):
                 return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
-            elif w3.is_address(token_address):
+            elif w3.is_address(token_address.lower()):
                 checksum_address = token_address.lower()
 
             LOGGER.info(checksum_address)
