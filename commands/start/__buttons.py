@@ -1558,8 +1558,9 @@ async def token_address_reply(update: Update, context: CallbackContext):
     
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
+    user_data = await load_user_data(str(user_id))
     
-    token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(context.user_data['address'])
+    token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
 
     token_info = f"""
     🪙 CA: {contract_add}
@@ -1579,7 +1580,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
     
-    token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(context.user_data['address'])
+    token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
     balance = await get_token_balance(context.user_data["network_chain"], context.user_data['address'], user_data)
     f"""
     🪙 CA: {contract_add}

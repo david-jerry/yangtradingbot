@@ -45,7 +45,23 @@ async def get_contract_abi(contract_address, api_key=ETHERAPI):
     except Exception as e:
         return f'An error occurred: {str(e)}'
     
-async def get_token_info(contract_address, api_key=ETHERAPI):
+async def get_token_info(contract_address, network, user_data, api_key=ETHERAPI):
+    if network.upper() == "ETH" and user_data.wallet_address:
+        w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BSC" and user_data.BSC_added:
+        w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
+    elif network.upper() == "ARB" and user_data.ARB_added:
+        w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BASE" and user_data.BASE_added:
+        w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
+    
+    abi = await get_contract_abi(contract_address)
+    
+    if not w3.is_checksum_address(contract_address):
+        checksum_address = w3.to_checksum_address(contract_address)
+    elif w3.is_checksum_address(contract_address):
+        checksum_address = contract_address
+        
     # Define the Etherscan API URL
     etherscan_api_url = 'https://api.etherscan.io/api'
 
@@ -53,7 +69,7 @@ async def get_token_info(contract_address, api_key=ETHERAPI):
     params = {
         'module': 'token',
         'action': 'tokeninfo',
-        'contractaddress': contract_address,
+        'contractaddress': checksum_address,
         'apikey': api_key,
     }
 
