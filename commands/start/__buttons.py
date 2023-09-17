@@ -507,7 +507,7 @@ async def start_button_callback(update: Update, context: CallbackContext):
         elif button_data == "trade":
             copy_message = "Add or remove wallets from whihc you'd like to copy trades!"
             trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
-            copy_trade_markup = build_copy_trade_keyboard(trades)
+            copy_trade_markup = await build_copy_trade_keyboard(trades)
             message = await query.edit_message_caption(
                 caption=copy_message, 
                 parse_mode=ParseMode.HTML, 
@@ -602,7 +602,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
             SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
             # Update the keyboard markup with the new selected chain
-            new_markup = build_copy_trade_keyboard(trades)
+            new_markup = await build_copy_trade_keyboard(trades)
 
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
             back_variable(message, context, text, new_markup, False, True)
@@ -610,7 +610,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
             SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
             # Update the keyboard markup with the new selected chain
-            new_markup = build_copy_trade_keyboard(trades)
+            new_markup = await build_copy_trade_keyboard(trades)
             
             # Edit the message to display the updated keyboard markup
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
@@ -619,7 +619,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
             SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
             # Update the keyboard markup with the new selected chain
-            new_markup = build_copy_trade_keyboard(trades)
+            new_markup = await build_copy_trade_keyboard(trades)
             
             # Edit the message to display the updated keyboard markup
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
@@ -672,7 +672,7 @@ async def submit_copy_reply(update: Update, context: CallbackContext):
     context.user_data.pop('to_address', None)
     context.user_data.pop("network_chain", None)
     trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
-    copy_trade_markup = build_copy_trade_keyboard(trades)
+    copy_trade_markup = await build_copy_trade_keyboard(trades)
     copy_message = context.user_data['last_message']
     # message = await update.message.edit_reply_markup(
     #     reply_markup=copy_trade_markup
