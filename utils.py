@@ -290,10 +290,10 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     
     if not w3.is_address(to_address.lower()):
         return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
-    elif not w3.is_checksum_address(to_address.lower()):
-        return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
     elif w3.is_address(to_address.lower()):
         fmt_address = to_address.lower()
+    elif not w3.is_checksum_address(to_address.lower()):
+        return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
     elif w3.is_checksum_address(to_address.lower()):
         fmt_address = w3.to_checksum_address(to_address.lower())
 
@@ -343,10 +343,10 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             
             if not w3.is_address(token_address.lower()):
                 return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
-            elif not w3.is_checksum_address(token_address.lower()):
-                return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
             elif w3.is_address(token_address.lower()):
                 checksum_address = token_address.lower()
+            elif not w3.is_checksum_address(token_address.lower()):
+                return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
             elif w3.is_checksum_address(token_address.lower()):
                 checksum_address = w3.to_checksum_address(token_address.lower())
 
