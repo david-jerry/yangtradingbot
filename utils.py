@@ -349,10 +349,10 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
                 val = w3.to_wei(w3.from_wei(token_balance_wei, 'ether'), 'ether')
                 amount = w3.to_wei(val * per / 100, 'ether')
-                LOGGER.info(token_balance_wei)
-                LOGGER.info(amount)
-                LOGGER.info(token_balance_wei - amount)
-                LOGGER.info(w3.from_wei(gas_price, 'ether'))
+                LOGGER.info(f"Token Bal: {token_balance_wei}")
+                LOGGER.info(f"Transfer Amount: {amount}")
+                LOGGER.info(f"Bal Left{token_balance_wei - amount}")
+                LOGGER.info(f"Gas Price: {w3.from_wei(gas_price, 'ether')}")
                 
                 
                 if val - amount < w3.from_wei(gas_price, 'ether'):
