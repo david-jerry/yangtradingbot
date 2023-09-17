@@ -335,7 +335,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     
         
         if balance - amount < w3.from_wei(gas_price, 'ether'):
-            return "Insufficient balance"
+            return "Insufficient balance", value, "ETH", "ETHEREUM"
         
         
         # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
