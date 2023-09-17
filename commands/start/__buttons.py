@@ -1555,17 +1555,16 @@ What wallet address do you wish to send the token to?
             
 async def token_address_reply(update: Update, context: CallbackContext):
     context.user_data['address'] = update.message.text
-    
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     user_data = await load_user_data(str(user_id))
     
-    token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+    token_name, token_symbol, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
 
     token_info = f"""
     🪙 CA: {contract_add}
     
-Please input wallet address to transfer {token_name} to
+Please input wallet address to transfer <strong>{token_name}</strong> to
     """
 
     # This message is a reply to the input message, and we can process the user's input here
@@ -1580,8 +1579,8 @@ async def to_address_reply(update: Update, context: CallbackContext):
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
     
-    token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
-    balance = await get_token_balance(context.user_data["network_chain"], context.user_data['address'], user_data)
+    token_name, token_symbol, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+
     f"""
     🪙 CA: {contract_add}
     
@@ -1589,7 +1588,7 @@ How many token do you want to send?
 
 If you type 100%, it will transfer the entire balance.
 
-You currently have {balance} {token_symbol}    
+You currently have <strong>{balance} {token_symbol}    </strong>
     """
 
     # This message is a reply to the input message, and we can process the user's input here
