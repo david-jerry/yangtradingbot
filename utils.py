@@ -323,7 +323,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     LOGGER.info(user_data.wallet_address)
     LOGGER.info(val)
 
-    gas_estimate = w3.eth.estimate_gas({'to': fmt_address, 'from': user_data.wallet_address, 'value': w3.to_int(val)})
+    # gas_estimate = w3.eth.estimate_gas({'to': fmt_address, 'from': user_data.wallet_address, 'value': w3.to_int(val)})
     LOGGER.info(f"GasEstimate: {w3.to_wei(gas_estimate, 'gwei')}")
     LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
     
@@ -346,8 +346,8 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 'from': user_data.wallet_address,
                 'nonce': nonce,
                 'chainId': int(chain_id),
-                'value': w3.to_int(value),
-                'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+                'value': value,
+                'gas': 21000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
                 # 'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
                 'maxFeePerGas': w3.to_wei(25, 'gwei'),
                 'maxPriorityFeePerGas': w3.to_wei(21, 'gwei'),
