@@ -341,7 +341,17 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             abi = await get_contract_abi(token_address)
             LOGGER.info(abi)
             
-            checksum_address = w3.to_checksum_address(token_address)
+            if not w3.is_address(token_address):
+                return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
+            elif not w3.is_checksum_address(token_address):
+                return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
+            elif w3.is_address(token_address):
+                checksum_address = token_address
+            elif w3.is_checksum_address(token_address):
+                checksum_address = w3.to_checksum_address(to_address)
+
+            LOGGER.info(checksum_address)
+            LOGGER.info(user_data.wallet_address)
             
             # Create a contract instance for the USDT token
             token_contract = w3.eth.contract(address=checksum_address, abi=abi)
