@@ -325,7 +325,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 'nonce': nonce,
                 'chainId': int(chain_id),
                 'value': w3.to_wei(amount, 'ether'),
-                'gas': 21000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+                'gas': gas_price, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
                 # 'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
                 'maxFeePerGas': w3.to_wei(25, 'gwei'),
                 'maxPriorityFeePerGas': w3.to_wei(20, 'gwei'),
@@ -375,7 +375,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 symbol, symbol_name = await get_token_info(token_address)
                 return tx_hash.hex(), amount, symbol, symbol_name
             except Exception as e:
-                return e, 0.00, "ETH", "ETHEREUM"
+                return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
     except Exception as e:
         LOGGER.error(2)
         if token_address == None:
