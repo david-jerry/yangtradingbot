@@ -55,7 +55,6 @@ async def get_token_info(contract_address, network, user_data, api_key=ETHERAPI)
     elif network.upper() == "BASE" and user_data.BASE_added:
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
-    abi = await get_contract_abi(contract_address)
     
     if not w3.is_checksum_address(contract_address):
         checksum_address = w3.to_checksum_address(contract_address)
@@ -91,12 +90,15 @@ async def get_token_info(contract_address, network, user_data, api_key=ETHERAPI)
                 description = info['description']
                 return token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description
             else:
+                LOGGER.info(data["message"])
                 return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
         else:
+            LOGGER.info(response.status_code)
             return f'Failed to retrieve ABI for contract {contract_address}. HTTP Error: {response.status_code}'
 
     except Exception as e:
-        return f'An error occurred: {str(e)}'
+        LOGGER.info(e)
+        return f'An error occurred: {e}'
     
 async def currency_amount(symbol):
     # API endpoint
