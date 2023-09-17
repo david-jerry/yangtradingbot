@@ -725,6 +725,43 @@ Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount
     """
     return caption
 
+def build_buy_caption(wallet, user_data, PRESETNETWORK, gas_price):
+    caption = f"""
+            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+Wallet: {wallet}
+
+Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
+
+<strong>🛠 {PRESETNETWORK} Buy</strong>
+-------------------------------------------
+Auto Buy: {'✅' if user_data.auto_buy else '❌'}
+Buy Gas Price: <strong>Default({user_data.max_gas_price if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
+Max Buy Tax: {user_data.buy_tax if user_data.buy_tax > 0.00 else 'Disabled'}
+Max Sell Tax: {user_data.sell_tax if user_data.sell_tax > 0.00 else 'Disabled'}
+-------------------------------------------            
+            """
+    return caption
+
+def build_sell_caption(wallet, user_data, PRESETNETWORK, gas_price):
+    caption = f"""
+            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
+Wallet: {wallet}
+
+Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
+
+<strong>🛠 {PRESETNETWORK} Sell</strong>
+-------------------------------------------
+Auto Sell: {'✅' if user_data.auto_sell else '❌'}
+Sell Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
+Auto Sell (high): <strong>{(user_data.sell_hi * 50) if user_data.sell_hi > 0.00 else 'Default(+100%)'}</strong>
+Sell Amount (high): <strong>{user_data.sell_hi_amount if user_data.sell_hi_amount > 0.00 else 'Default(100%)'}</strong>
+Auto Sell (low): <strong>{(user_data.sell_lo * 50) if user_data.sell_lo > 0.00 else '-50%'}</strong>
+Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount > 0.00 else '100%'}</strong>
+-------------------------------------------            
+            """
+    return caption
+
+
 REPLYDELTA = range(1)
 async def configuration_next_and_back_callback(update: Update, context: CallbackContext):
     global SELECTED_CHAIN_INDEX
@@ -1247,7 +1284,10 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         user_data = await load_user_data(user_id)
         await update_user_data(user_id, {'buy_tax':round(Decimal(f_text), 2)})
         buy_markup = build_buy_keyboard(user_data)
-        await update.message.edit_caption(caption=context.user_data['buy_message'], parse_mode=ParseMode.HTML, reply_markup=buy_markup)
+        caption = build_buy_caption(wallet, user_data, PRESETNETWORK, gas_price)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        message_id = context.user_data['caption_id']
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=buy_markup)        
     elif preset == "maxselltax":
         f_text = int(text.replace('x', '')) if 'x' in text else int(text)
         text = f"""
@@ -1256,7 +1296,10 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         await update_user_data(user_id, {'sell_tax':round(Decimal(f_text), 2)})
         user_data = await load_user_data(user_id)
         buy_markup = build_buy_keyboard(user_data)
-        await update.message.edit_caption(caption=context.user_data['buy_message'], parse_mode=ParseMode.HTML, reply_markup=buy_markup)
+        caption = build_buy_caption(wallet, user_data, PRESETNETWORK, gas_price)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        message_id = context.user_data['caption_id']
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=buy_markup)        
     elif preset == "sellhi":
         f_text = int(text.replace('x', '')) if 'x' in text else Decimal(text)
         text = f"""
@@ -1265,23 +1308,10 @@ async def reply_preset_response(update: Update, context: ContextTypes.DEFAULT_TY
         await update_user_data(user_id, {'sell_hi':round(Decimal(f_text), 2)})
         user_data = await load_user_data(user_id)
         sell_markup = build_sell_keyboard(user_data)
-        caption = f"""
-            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
-Wallet: {wallet}
-
-Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
-
-<strong>🛠 {PRESETNETWORK} Sell</strong>
--------------------------------------------
-Auto Sell: {'✅' if user_data.auto_sell else '❌'}
-Sell Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
-Auto Sell (high): <strong>{(user_data.sell_hi * 50) if user_data.sell_hi > 0.00 else 'Default(+100%)'}</strong>
-Sell Amount (high): <strong>{user_data.sell_hi_amount if user_data.sell_hi_amount > 0.00 else 'Default(100%)'}</strong>
-Auto Sell (low): <strong>{(user_data.sell_lo * 50) if user_data.sell_lo > 0.00 else '-50%'}</strong>
-Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount > 0.00 else '100%'}</strong>
--------------------------------------------            
-            """
-        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+        caption = build_sell_caption(wallet, user_data, PRESETNETWORK, gas_price)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        message_id = context.user_data['caption_id']
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=sell_markup)        
     elif preset == "selllo":
         f_text = int(text.replace('x', '')) if 'x' in text else Decimal(text)
         text = f"""
@@ -1290,23 +1320,10 @@ Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount
         await update_user_data(user_id, {'sell_lo':round(Decimal(f_text), 2)})
         user_data = await load_user_data(user_id)
         sell_markup = build_sell_keyboard(user_data)
-        caption = f"""
-            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
-Wallet: {wallet}
-
-Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
-
-<strong>🛠 {PRESETNETWORK} Sell</strong>
--------------------------------------------
-Auto Sell: {'✅' if user_data.auto_sell else '❌'}
-Sell Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
-Auto Sell (high): <strong>{(user_data.sell_hi * 50) if user_data.sell_hi > 0.00 else 'Default(+100%)'}</strong>
-Sell Amount (high): <strong>{user_data.sell_hi_amount if user_data.sell_hi_amount > 0.00 else 'Default(100%)'}</strong>
-Auto Sell (low): <strong>{(user_data.sell_lo * 50) if user_data.sell_lo > 0.00 else '-50%'}</strong>
-Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount > 0.00 else '100%'}</strong>
--------------------------------------------            
-            """
-        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+        caption = build_sell_caption(wallet, user_data, PRESETNETWORK, gas_price)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        message_id = context.user_data['caption_id']
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=sell_markup)        
     elif preset == "sellhiamount":
         f_text = int(text.replace('m', '')) if 'm' in text else int(text)
         text = f"""
@@ -1315,24 +1332,10 @@ Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount
         await update_user_data(user_id, {'sell_hi_amount':round(Decimal(f_text), 2)})
         user_data = await load_user_data(user_id)
         sell_markup = build_sell_keyboard(user_data)
-        caption = f"""
-            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
-Wallet: {wallet}
-
-Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
-
-<strong>🛠 {PRESETNETWORK} Sell</strong>
--------------------------------------------
-Auto Sell: {'✅' if user_data.auto_sell else '❌'}
-Sell Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
-Auto Sell (high): <strong>{(user_data.sell_hi * 50) if user_data.sell_hi > 0.00 else 'Default(+100%)'}</strong>
-Sell Amount (high): <strong>{user_data.sell_hi_amount if user_data.sell_hi_amount > 0.00 else 'Default(100%)'}</strong>
-Auto Sell (low): <strong>{(user_data.sell_lo * 50) if user_data.sell_lo > 0.00 else '-50%'}</strong>
-Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount > 0.00 else '100%'}</strong>
--------------------------------------------            
-            """
-        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=sell_markup)
-        
+        caption = build_sell_caption(wallet, user_data, PRESETNETWORK, gas_price)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        message_id = context.user_data['caption_id']
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=sell_markup)        
     elif preset == "sellloamount":
         f_text = int(text.replace('m', '')) if 'm' in text else int(text)
         text = f"""
@@ -1341,23 +1344,10 @@ Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount
         await update_user_data(user_id, {'sell_lo_amount':round(Decimal(f_text), 2)})
         user_data = await load_user_data(user_id)
         sell_markup = build_sell_keyboard(user_data)
-        caption = f"""
-            <strong>{PRESETNETWORK} CONFIGURATIONS</strong>
-Wallet: {wallet}
-
-Multi-Wallets: {'✅' if user_data.wallet_address != None and user_data.BSC_added or user_data.wallet_address != None and user_data.ARB_added or user_data.wallet_address != None and user_data.BASE_added  else '❌'}
-
-<strong>🛠 {PRESETNETWORK} Sell</strong>
--------------------------------------------
-Auto Sell: {'✅' if user_data.auto_sell else '❌'}
-Sell Gas Price: <strong>Default({round(user_data.max_gas_price, 2) if user_data.max_gas_price > 1 else gas_price} GWEI) + Delta({round(user_data.max_delta)} GWEI)</strong>
-Auto Sell (high): <strong>{(user_data.sell_hi * 50) if user_data.sell_hi > 0.00 else 'Default(+100%)'}</strong>
-Sell Amount (high): <strong>{user_data.sell_hi_amount if user_data.sell_hi_amount > 0.00 else 'Default(100%)'}</strong>
-Auto Sell (low): <strong>{(user_data.sell_lo * 50) if user_data.sell_lo > 0.00 else '-50%'}</strong>
-Sell Amount (low): <strong>{user_data.sell_lo_amount if user_data.sell_lo_amount > 0.00 else '100%'}</strong>
--------------------------------------------            
-            """
-        await update.message.edit_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=sell_markup)
+        caption = build_sell_caption(wallet, user_data, PRESETNETWORK, gas_price)
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        message_id = context.user_data['caption_id']
+        await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=sell_markup)        
 
 
 
