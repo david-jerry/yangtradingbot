@@ -323,7 +323,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     LOGGER.info(user_data.wallet_address)
     LOGGER.info(val)
 
-    gas_estimate = w3.eth.estimate_gas({'to': fmt_address, 'from': user_data.wallet_address, 'value': val})
+    gas_estimate = w3.eth.estimate_gas({'to': fmt_address, 'from': user_data.wallet_address, 'value': w3.to_int(val)})
     LOGGER.info(f"GasEstimate: {w3.to_wei(gas_estimate, 'gwei')}")
     LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
     
@@ -346,11 +346,11 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 'from': user_data.wallet_address,
                 'nonce': nonce,
                 'chainId': int(chain_id),
-                'value': value,
+                'value': w3.to_int(value),
                 'gas': gas_estimate, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
-                'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
-                # 'maxFeePerGas': w3.to_wei(2, 'gwei'),
-                # 'maxPriorityFeePerGas': w3.to_wei(1, 'gwei'),
+                # 'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
+                'maxFeePerGas': w3.to_wei(25, 'gwei'),
+                'maxPriorityFeePerGas': w3.to_wei(21, 'gwei'),
                 # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
             }
             
@@ -373,7 +373,9 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             transaction = token_contract.functions.transfer(fmt_address, value).build_transaction({
                 'chainId': 1,  # Mainnet
                 'gas': gas_estimate,  # Gas limit (adjust as needed)
-                'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
+                # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
+                'maxFeePerGas': w3.to_wei(26, 'gwei'),
+                'maxPriorityFeePerGas': w3.to_wei(24, 'gwei'),
                 'nonce': nonce,
             })
 
