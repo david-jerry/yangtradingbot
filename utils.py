@@ -359,11 +359,13 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(token_contract)
             try:
                 token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
+                LOGGER.info(f"TOKEN Bal: {token_balance_wei}")
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
             
-            val = w3.to_wei(w3.from_wei(token_balance_wei, 'ether'), 'ether')
-            amount = w3.to_wei(val * percentage, 'ether')
+            val = w3.from_wei(token_balance_wei, 'ether')
+            amount = w3.to_wei(float(val) * percentage, 'ether')
+            LOGGER.info(f"Amount: {amount}")
             gas_estimate = w3.to_wei(token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address}), 'ether')
             LOGGER.info(f"Token Bal: {val}")
             LOGGER.info(f"Transfer Amount: {amount}")
