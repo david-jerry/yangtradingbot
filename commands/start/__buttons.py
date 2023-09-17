@@ -1592,7 +1592,7 @@ You currently have <strong>{balance} {token_symbol}    </strong>
     """
 
     # This message is a reply to the input message, and we can process the user's input here
-    await update.message.reply_text(text)
+    await update.message.reply_text(text, parse_mode=ParseMode.HTML)
     return AMOUNT
     
 async def token_amount_reply(update: Update, context: CallbackContext):
