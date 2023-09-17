@@ -317,6 +317,10 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     elif w3.is_address(to_address):
         fmt_address = to_address
 
+    LOGGER.info(fmt_address)
+    LOGGER.info(user_data.wallet_address)
+    LOGGER.info(val)
+
     gas_estimate = w3.eth.estimate_gas({'to': fmt_address, 'from': user_data.wallet_address, 'value': val})
     LOGGER.info(f"GasEstimate: {w3.to_wei(gas_estimate, 'gwei')}")
     LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
