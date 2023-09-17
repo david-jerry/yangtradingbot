@@ -391,7 +391,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
                 tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
                 LOGGER.info(tx_hash.hex())
-                symbol, symbol_name = await get_token_info(token_address.lower())
+                symbol, symbol_name = await get_token_info(checksum_address)
                 return tx_hash.hex(), amount, symbol, symbol_name
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
