@@ -25,7 +25,7 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_wallet_balance, trasnfer_currency
+from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_info, get_wallet_balance, trasnfer_currency
 from utils_data import load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -1559,27 +1559,40 @@ async def token_address_reply(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     
-    
+    token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(context.user_data['address'])
 
     token_info = f"""
+    🪙 CA: {contract_add}
     
-    
-What wallet address do you wish to transfer to?
+Please input wallet address to transfer {token_name} to
     """
 
     # This message is a reply to the input message, and we can process the user's input here
-    await update.message.reply_text(token_info)
+    await update.message.reply_text(token_info, parse_mode=ParseMode.HTML)
     return TOADDRESS
 
 async def to_address_reply(update: Update, context: CallbackContext):
     context.user_data['to_address'] = update.message.text
     user_id = update.message.from_user.id
+    user_data = await load_user_data(str(user_id))
     chat_id = update.message.chat_id
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
+    
+    token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(context.user_data['address'])
+    balance = await get_token_balance(context.user_data["network_chain"], context.user_data['address'], user_data)
+    f"""
+    🪙 CA: {contract_add}
+    
+How many token do you want to send?
+
+If you type 100%, it will transfer the entire balance.
+
+You currently have {balance} {token_symbol}    
+    """
 
     # This message is a reply to the input message, and we can process the user's input here
-    await update.message.reply_text(f"How much do you want to transfer eg: 1% would be 1% of your balance?")
+    await update.message.reply_text()
     return AMOUNT
     
 async def token_amount_reply(update: Update, context: CallbackContext):

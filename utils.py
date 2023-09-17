@@ -68,7 +68,12 @@ async def get_token_info(contract_address, api_key=ETHERAPI):
                 info = data['result']
                 token_name = info['tokenName']
                 token_symbol = info['symbol']
-                return token_name, token_symbol
+                contract_add = info['contractAddress']
+                total_supply = info['totalSupply']
+                token_type = info['tokenType']
+                prince_usd = info['tokenPriceUSD']
+                description = info['description']
+                return token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description
             else:
                 return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
         else:
@@ -268,7 +273,34 @@ async def get_contract_abi(contract_address):
     else:
         return 
         
+async def get_token_balance(network, token_address, user_data):
+    if network.upper() == "ETH" and user_data.wallet_address:
+        w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BSC" and user_data.BSC_added:
+        w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
+    elif network.upper() == "ARB" and user_data.ARB_added:
+        w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BASE" and user_data.BASE_added:
+        w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
+    
+    abi = await get_contract_abi(token_address)
+    
+    if not w3.is_checksum_address(token_address):
+        checksum_address = w3.to_checksum_address(token_address)
+    elif w3.is_checksum_address(token_address):
+        checksum_address = token_address
         
+    token_contract = w3.eth.contract(address=checksum_address, abi=abi)
+    LOGGER.info(token_contract)
+    try:
+        token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
+        LOGGER.info(f"TOKEN Bal: {token_balance_wei}")
+    except Exception as e:
+        return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
+    
+    balance = w3.from_wei(token_balance_wei, 'ether')
+    return balance
+            
 async def trasnfer_currency(network, user_data, percentage, to_address, token_address=None):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
     chain_id = w3.eth.chain_id
@@ -339,7 +371,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             return tx_hash.hex(), amount, "ETH", "ETHEREUM"
         else:
             
-            abi = await get_contract_abi(token_address.lower())
+            abi = await get_contract_abi(token_address)
             LOGGER.info(abi)
             
             if not w3.is_checksum_address(token_address):
@@ -391,8 +423,8 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
                 tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
                 LOGGER.info(tx_hash.hex())
-                symbol, symbol_name = await get_token_info(checksum_address)
-                return tx_hash.hex(), amount, symbol, symbol_name
+                token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(checksum_address)
+                return tx_hash.hex(), amount, token_symbol, token_name
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
     except Exception as e:
