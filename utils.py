@@ -334,7 +334,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         value = val #w3.from_wei(val, 'ether')
     
         
-        if balance - amount < w3.from_wei(gas_price, 'ether'):
+        if float(balance) - float(amount) < w3.from_wei(gas_price, 'ether'):
             return "Insufficient balance", value, "ETH", "ETHEREUM"
         
         
