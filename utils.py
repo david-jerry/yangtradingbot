@@ -291,11 +291,11 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     if not w3.is_address(to_address.lower()):
         return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
     elif w3.is_address(to_address.lower()):
-        fmt_address = to_address
+        fmt_address = to_address.lower()
     elif not w3.is_checksum_address(to_address.lower()):
         return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
     elif w3.is_checksum_address(to_address.lower()):
-        fmt_address = w3.to_checksum_address(to_address)
+        fmt_address = w3.to_checksum_address(to_address.lower())
 
     LOGGER.info(fmt_address)
     LOGGER.info(user_data.wallet_address)
@@ -338,13 +338,13 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             return tx_hash.hex(), amount, "ETH", "ETHEREUM"
         else:
             
-            abi = await get_contract_abi(token_address)
+            abi = await get_contract_abi(token_address.lower())
             LOGGER.info(abi)
             
             if not w3.is_address(token_address.lower()):
                 return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
             elif w3.is_checksum_address(token_address.lower()):
-                checksum_address = w3.to_checksum_address(to_address).lower()
+                checksum_address = w3.to_checksum_address(token_address.lower())
             elif not w3.is_checksum_address(token_address.lower()):
                 return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
             elif w3.is_address(token_address.lower()):
@@ -386,7 +386,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
                 tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
                 LOGGER.info(tx_hash.hex())
-                symbol, symbol_name = await get_token_info(token_address)
+                symbol, symbol_name = await get_token_info(token_address.lower())
                 return tx_hash.hex(), amount, symbol, symbol_name
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
