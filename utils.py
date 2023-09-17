@@ -275,6 +275,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     nonce = w3.eth.get_transaction_count(user_data.wallet_address)
     
     per = float(percentage.replace(' %', '').replace('%', ''))
+    percentage = float(per / 100)
     if network.upper() == "ETH" and user_data.wallet_address:
         LOGGER.info('Checking status here')
         chain_id = w3.eth.chain_id
@@ -313,7 +314,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         # Build the transaction
         if token_address == None:
             balance = float(w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether'))
-            amount = balance * per/100
+            amount = balance * percentage
 
             if balance - amount < w3.from_wei(gas_price, 'ether'):
                 LOGGER.info('We got here: insufficient funds')
@@ -362,7 +363,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
             
             val = w3.to_wei(w3.from_wei(token_balance_wei, 'ether'), 'ether')
-            amount = w3.to_wei(val * (per / 100), 'ether')
+            amount = w3.to_wei(val * percentage, 'ether')
             gas_estimate = w3.to_wei(token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address}), 'ether')
             LOGGER.info(f"Token Bal: {val}")
             LOGGER.info(f"Transfer Amount: {amount}")

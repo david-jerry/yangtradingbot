@@ -1558,9 +1558,17 @@ async def token_address_reply(update: Update, context: CallbackContext):
     
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
+    
+    
+
+    token_info = f"""
+    
+    
+What wallet address do you wish to transfer to?
+    """
 
     # This message is a reply to the input message, and we can process the user's input here
-    await update.message.reply_text(f"What wallet address do you wish to transfer to?")
+    await update.message.reply_text(token_info)
     return TOADDRESS
 
 async def to_address_reply(update: Update, context: CallbackContext):
