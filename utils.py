@@ -56,12 +56,12 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
     
-    # if w3.is_address(token_address):
-    #     checksum_address = token_address
-    # elif not w3.is_checksum_address(token_address):
-    #     checksum_address = w3.to_checksum_address(token_address)
-    # elif w3.is_checksum_address(token_address):
-    checksum_address = token_address
+    if w3.is_address(token_address):
+        checksum_address = token_address
+    elif not w3.is_checksum_address(token_address):
+        checksum_address = w3.to_checksum_address(token_address)
+    elif w3.is_checksum_address(token_address):
+        checksum_address = token_address
     # # Define the Etherscan API URL
     # etherscan_api_url = 'https://api.etherscan.io/api'
 
