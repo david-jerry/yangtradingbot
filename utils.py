@@ -295,7 +295,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     elif not w3.is_checksum_address(to_address.lower()):
         return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
     elif w3.is_checksum_address(to_address.lower()):
-        fmt_address = w3.to_checksum_address(to_address.lower())
+        fmt_address = w3.to_checksum_address(to_address)
 
     LOGGER.info(fmt_address)
     LOGGER.info(user_data.wallet_address)
