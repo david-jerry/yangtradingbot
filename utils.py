@@ -66,7 +66,7 @@ async def get_token_info(contract_address, api_key=ETHERAPI):
             data = response.json()
             if data['status'] == '1':
                 info = data['result']
-                token_name = info['name']
+                token_name = info['tokenName']
                 token_symbol = info['symbol']
                 return token_name, token_symbol
             else:
@@ -342,31 +342,37 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             
             checksum_address = w3.to_checksum_address(token_address)
             
-            # Create a contract instance for the USDT token
-            token_contract = w3.eth.contract(address=checksum_address, abi=abi)
-            token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
-            val = float(w3.from_wei(token_balance_wei, 'ether'))
-            amount = val * per / 100
-            
-            if val - amount < w3.from_wei(gas_price, 'ether'):
-                return "Insufficient balance", amount, "ETH", "ETHEREUM"
+            try:
+                # Create a contract instance for the USDT token
+                token_contract = w3.eth.contract(address=checksum_address, abi=abi)
+                token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
+                val = float(w3.from_wei(token_balance_wei, 'ether'))
+                amount = val * per / 100
+                LOGGER.info(token_balance_wei)
+                LOGGER.info(amount)
+                
+                
+                if val - amount < w3.from_wei(gas_price, 'ether'):
+                    return "Insufficient balance", amount, "ETH", "ETHEREUM"
 
-            gas_estimate = token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address})
-            # Prepare the transaction to transfer USDT tokens
-            transaction = token_contract.functions.transfer(fmt_address, amount).build_transaction({
-                'chainId': 1,  # Mainnet
-                'gas': gas_estimate,  # Gas limit (adjust as needed)
-                # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
-                'maxFeePerGas': w3.to_wei(26, 'gwei'),
-                'maxPriorityFeePerGas': w3.to_wei(24, 'gwei'),
-                'nonce': nonce,
-            })
+                gas_estimate = token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address})
+                # Prepare the transaction to transfer USDT tokens
+                transaction = token_contract.functions.transfer(fmt_address, amount).build_transaction({
+                    'chainId': 1,  # Mainnet
+                    'gas': gas_estimate,  # Gas limit (adjust as needed)
+                    # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
+                    'maxFeePerGas': w3.to_wei(26, 'gwei'),
+                    'maxPriorityFeePerGas': w3.to_wei(24, 'gwei'),
+                    'nonce': nonce,
+                })
 
-            signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
-            tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-            LOGGER.info(tx_hash.hex())
-            symbol, symbol_name = await get_token_info(token_address)
-            return tx_hash.hex(), amount, symbol, symbol_name
+                signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
+                tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+                LOGGER.info(tx_hash.hex())
+                symbol, symbol_name = await get_token_info(token_address)
+                return tx_hash.hex(), amount, symbol, symbol_name
+            except Exception as e:
+                return e, 0.00, "ETH", "ETHEREUM"
     except Exception as e:
         LOGGER.error(2)
         if token_address == None:
