@@ -359,6 +359,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
+            
             val = w3.to_wei(w3.from_wei(token_balance_wei, 'ether'), 'ether')
             amount = w3.to_wei(val * (per / 100), 'ether')
             gas_estimate = w3.to_wei(token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address}), 'ether')
@@ -375,10 +376,10 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 # Prepare the transaction to transfer USDT tokens
                 transaction = token_contract.functions.transfer(fmt_address, amount).build_transaction({
                     'chainId': 1,  # Mainnet
-                    'gas': 21000,  # Gas limit (adjust as needed)
+                    'gas': 100000,  # Gas limit (adjust as needed)
                     # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
-                    'maxFeePerGas': w3.to_wei(26, 'gwei'),
-                    'maxPriorityFeePerGas': w3.to_wei(24, 'gwei'),
+                    'maxFeePerGas': w3.to_wei(53, 'gwei'),
+                    'maxPriorityFeePerGas': w3.to_wei(50, 'gwei'),
                     'nonce': nonce,
                 })
 
@@ -390,21 +391,8 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
     except Exception as e:
-        LOGGER.error(2)
-        if token_address == None:
-            return f"Error Trasferring: {e}", 0.00000000, "ETH", "ETHEREUM"
-        else:
-            if not w3.is_address(token_address):
-                return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
-            elif w3.is_address(token_address):
-                checksum_address = token_address
-            elif not w3.is_checksum_address(token_address):
-                return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
-            elif w3.is_checksum_address(token_address):
-                checksum_address = w3.to_checksum_address(to_address)
-
-            symbol, symbol_name = await get_token_info(checksum_address)
-            return f"Error Trasferring: {e}", 0.00000000, symbol, symbol_name
+        LOGGER.error(e)
+        return f"Error Trasferring: {e}", 0.00000000, 'ETH', 'ETHEREUM'
 
 async def check_transaction_status(network, user_data,  tx_hash):
     if network.upper() == "ETH" and user_data.wallet_address:
