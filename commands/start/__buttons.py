@@ -714,7 +714,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             back_variable(message, context, text, markup, False, True)
         elif any(button_data.startswith(trade_name) for trade_name in trade_names):
             for trade_name in trade_names:
-                if button_data.startswith(trade_name):
+                if button_data.startswith(trade_name) and '_' not in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
                 
