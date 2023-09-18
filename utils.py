@@ -396,10 +396,10 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             val = w3.from_wei(token_balance_wei, 'ether')
             amount = w3.to_wei(float(val) * percentage, 'ether')
             fmt_gas_est = token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address})
-            gas_estimate = w3.to_wei(fmt_gas_est, 'ether')
+            gas_estimate = fmt_gas_est
             LOGGER.info(f"Token Bal: {val}")
-            LOGGER.info(f"Transfer Amount: {amount}")
-            LOGGER.info(f"Bal Left{val - amount}")
+            LOGGER.info(f"Transfer Amount: {w3.from_wei(amount, 'ether')}")
+            LOGGER.info(f"Bal Left{val - w3.from_wei(amount, 'ether')}")
             LOGGER.info(f"Gas Price: {gas_estimate}")
             
             
