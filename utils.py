@@ -404,7 +404,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             
             bal = val - w3.from_wei(amount, 'ether')
             gas =  '{:.6f}'.format(gas_estimate)
-            if Decimal(bal < gas):
+            if Decimal(bal) < Decimal(gas):
                 return "Insufficient balance", w3.from_wei(amount, 'ether'), "ETH", "ETHEREUM"
 
             try:
