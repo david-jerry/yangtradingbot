@@ -698,7 +698,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             new_markup = await build_copy_trade_keyboard(trades)
 
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
-            back_variable(message, context, text, new_markup, False, True)
+            back_variable(message, context, text, markup, False, True)
         elif button_data == "right":
             COPYSELECTED_CHAIN_INDEX = (COPYSELECTED_CHAIN_INDEX - 1) % len(COPYNETWORK_CHAINS)
             COPYPRESETNETWORK = COPYNETWORK_CHAINS[COPYSELECTED_CHAIN_INDEX]
@@ -709,7 +709,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             
             # Edit the message to display the updated keyboard markup
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
-            back_variable(message, context, text, new_markup, False, True)
+            back_variable(message, context, text, markup, False, True)
         elif button_data in trade_names:
             index = trade_names.index(button_data)
             matched_trade = trades[index]
@@ -721,7 +721,8 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             
             # Edit the message to display the updated keyboard markup
             message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
-            back_variable(message, context, text, new_markup, True, False)
+            back_variable(message, context, text, markup, True, False)
+            
 
 async def copy_trade_start_callback(update: Update, context: CallbackContext):
     global COPYSELECTED_CHAIN_INDEX
