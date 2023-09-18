@@ -56,46 +56,13 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
     checksum_address = token_address
-    if not w3.is_address(checksum_address):
+    if not w3.is_address(checksum_address.strip().lower()):
         return f"An error occurred: Invalid address format\n\n{e}", '', "", ""
     
-    if not w3.is_checksum_address(checksum_address):
-        checksum_address = w3.to_checksum_address(token_address)
+    if not w3.is_checksum_address(checksum_address.strip().lower()):
+        checksum_address = w3.to_checksum_address(token_address.strip().lower())
+        
 
-    # # Define the Etherscan API URL
-    # etherscan_api_url = 'https://api.etherscan.io/api'
-
-    # # Define the parameters for the API request
-    # params = {
-    #     'module': 'token',
-    #     'action': 'tokeninfo',
-    #     'contractaddress': contract_address,
-    #     'apikey': api_key,
-    # }
-
-    # try:
-    #     # Send a GET request to Etherscan API
-    #     response = requests.get(etherscan_api_url, params=params)
-
-    #     # Check if the request was successful
-    #     if response.status_code == 200:
-    #         data = response.json()
-    #         if data['status'] == '1':
-    #             info = data['result']
-    #             token_name = info['tokenName']
-    #             token_symbol = info['symbol']
-    #             contract_add = info['contractAddress']
-    #             total_supply = info['totalSupply']
-    #             token_type = info['tokenType']
-    #             prince_usd = info['tokenPriceUSD']
-    #             description = info['description']
-    #             return token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description
-    #         else:
-    #             LOGGER.info(data["message"])
-    #             return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
-    #     else:
-    #         LOGGER.info(response.status_code)
-    #         return f'Failed to retrieve ABI for contract {contract_address}. HTTP Error: {response.status_code}'
     try:
         abi = await get_contract_abi(checksum_address)
         LOGGER.info(abi)
