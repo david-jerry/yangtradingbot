@@ -393,9 +393,8 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
             
-            val = w3.to_wei(token_balance_wei, 'ether')
-            fmt_amount = w3.from_wei(val, 'ether')
-            amount = w3.to_wei(float(fmt_amount) * percentage, 'ether')
+            val = w3.from_wei(token_balance_wei, 'ether')
+            amount = w3.to_wei(float(val) * percentage, 'ether')
             fmt_gas_est = token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address})
             gas_estimate = w3.to_wei(fmt_gas_est, 'ether')
             LOGGER.info(f"Token Bal: {val}")
@@ -404,7 +403,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(f"Gas Price: {gas_estimate}")
             
             
-            if val - amount < gas_estimate:
+            if token_balance_wei - amount < gas_estimate:
                 return "Insufficient balance", amount, "ETH", "ETHEREUM"
 
             try:
@@ -412,7 +411,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 # Prepare the transaction to transfer USDT tokens
                 transaction = token_contract.functions.transfer(fmt_address, amount).build_transaction({
                     'chainId': 1,  # Mainnet
-                    'gas': w3.to_wei(float(gas_estimate), 'gwei'),  # Gas limit (adjust as needed)
+                    'gas': gas_estimate,  # Gas limit (adjust as needed)
                     # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
                     'maxFeePerGas': w3.to_wei(53, 'gwei'),
                     'maxPriorityFeePerGas': w3.to_wei(50, 'gwei'),
