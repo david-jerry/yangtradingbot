@@ -513,11 +513,13 @@ async def start_button_callback(update: Update, context: CallbackContext):
     context.user_data.clear()
     context.user_data["last_message_id"] = query.message.message_id
     gas_price = await get_default_gas_price_gwei()
+    
 
     match = re.match(r"^start_(\w+)", command)
     if match:
         button_data = match.group(1)
 
+        LOGGER.info(f"Button Data: {button_data}")
         # Fetch the bot's profile photo
         bot = context.bot
         bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
