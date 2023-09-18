@@ -400,10 +400,11 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(f"Token Bal: {val}")
             LOGGER.info(f"Transfer Amount: {w3.from_wei(amount, 'ether')}")
             LOGGER.info(f"Bal Left: {val - w3.from_wei(amount, 'ether')}")
-            LOGGER.info(f"Gas Price: {w3.from_wei(gas_estimate, 'ether')}")
+            LOGGER.info(f"Gas Price: {w3.from_wei(gas_estimate, 'ether') / 1000000}")
             
             bal = val - w3.from_wei(amount, 'ether')
-            gas =  '{:.6f}'.format(gas_estimate)
+            exp_gas = w3.from_wei(gas_estimate, 'ether')
+            gas =  "{:.6f}".format(exp_gas)
             if Decimal(bal) < Decimal(gas):
                 return "Insufficient balance", w3.from_wei(amount, 'ether'), "ETH", "ETHEREUM"
 
