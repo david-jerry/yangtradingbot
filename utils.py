@@ -66,7 +66,7 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     try:
         abi = await get_contract_abi(checksum_address)
         LOGGER.info(abi)
-        token_contract = w3.eth.contract(address=token_address, abi=abi)
+        token_contract = w3.eth.contract(address=checksum_address, abi=abi)
         
         
 
