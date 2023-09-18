@@ -349,7 +349,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
 
             if balance - amount < float(w3.from_wei(gas_price, 'ether')):
                 LOGGER.info('We got here: insufficient funds')
-                return "Insufficient balance", amount, "ETH", "ETHEREUM"
+                return f"Insufficient balance\n\nBal: {balance - amount}\nGas Required: {float(w3.from_wei(gas_price, 'ether'))}", amount, "ETH", "ETHEREUM"
 
             transaction = {
                 'to': fmt_address,
@@ -400,13 +400,15 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(f"Token Bal: {val}")
             LOGGER.info(f"Transfer Amount: {w3.from_wei(amount, 'ether')}")
             LOGGER.info(f"Bal Left: {val - w3.from_wei(amount, 'ether')}")
+            LOGGER.info(f"ETH Balance: {w3.from_wei(eth_balance, 'ether')}")
+            LOGGER.info(f"Gas Fee in ETH: {w3.from_wei(fmt_gas_est, 'ether')}")
             exp_gas = w3.from_wei(gas_estimate, 'ether')
             gas =  exp_gas 
             LOGGER.info(f"Gas Price: {gas}")
             
             
             if eth_balance < fmt_gas_est:
-                return "Insufficient balance", w3.from_wei(amount, 'ether'), "ETH", "ETHEREUM"
+                return f"Insufficient balance\n\nETH Bal: {w3.from_wei(eth_balance, 'ether')}\nGas Required: {w3.from_wei(fmt_gas_est, 'ether')}", w3.from_wei(amount, 'ether'), "ETH", "ETHEREUM"
 
             try:
                 fmt_amount = w3.from_wei(amount, 'ether')
@@ -426,10 +428,10 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 token_name, token_symbol, balance, contract_add = await get_token_info(checksum_address, network, user_data)
                 return tx_hash.hex(), fmt_amount, token_symbol, token_name
             except Exception as e:
-                return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
+                return f"Error Transferring: {e}", 0.00, "ETH", "ETHEREUM"
     except Exception as e:
         LOGGER.error(e)
-        return f"Error Trasferring: {e}", 0.00000000, 'ETH', 'ETHEREUM'
+        return f"Error Transferring: {e}", 0.00000000, 'ETH', 'ETHEREUM'
 
 async def check_transaction_status(network, user_data,  tx_hash):
     if network.upper() == "ETH" and user_data.wallet_address:
