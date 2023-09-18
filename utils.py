@@ -55,12 +55,10 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     elif network.upper() == "BASE" and user_data.BASE_added:
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
-    checksum_address = token_address
-    if not w3.is_address(checksum_address):
-        return f"An error occurred: Invalid address format\n\n{e}", '', "", ""
-    
-    if not w3.is_checksum_address(token_address):
-        checksum_address = w3.to_checksum_address(token_address)
+    try:
+        checksum_address = validate_address(token_address, w3)
+    except ValueError as err:
+        return err
 
     # # Define the Etherscan API URL
     # etherscan_api_url = 'https://api.etherscan.io/api'
@@ -99,7 +97,7 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     try:
         abi = await get_contract_abi(checksum_address)
         LOGGER.info(abi)
-        token_contract = w3.eth.contract(address=token_address, abi=abi)
+        token_contract = w3.eth.contract(address=checksum_address, abi=abi)
         
         
 
@@ -306,6 +304,17 @@ async def get_contract_abi(contract_address):
             return None
     else:
         return 
+
+def validate_address(address: str, w3: Web3) -> str:
+    formatted_address = address.strip().lower()
+
+    if not w3.is_address(formatted_address):
+        raise ValueError("Error Transferring: Invalid address format")
+
+    if not w3.is_checksum_address(formatted_address):
+        formatted_address = w3.to_checksum_address(formatted_address)
+    
+    return formatted_address
         
 async def get_token_balance(network, token_address, user_data):
     if network.upper() == "ETH" and user_data.wallet_address:
@@ -317,12 +326,13 @@ async def get_token_balance(network, token_address, user_data):
     elif network.upper() == "BASE" and user_data.BASE_added:
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
-    abi = await get_contract_abi(token_address)
-    
-    if not w3.is_checksum_address(token_address):
-        checksum_address = w3.to_checksum_address(token_address)
-    elif w3.is_checksum_address(token_address):
-        checksum_address = token_address
+    try:
+        checksum_address = validate_address(token_address, w3)
+    except ValueError as err:
+        return err
+
+    abi = await get_contract_abi(checksum_address)
+
         
     token_contract = w3.eth.contract(address=checksum_address, abi=abi)
     LOGGER.info(token_contract)
@@ -355,12 +365,10 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
         chain_id = w3.eth.chain_id         
     
-    fmt_address = to_address
-    if not w3.is_address(fmt_address):
-        return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
-    
-    if not w3.is_checksum_address(fmt_address):
-        fmt_address = w3.to_checksum_address(to_address)
+    try:
+        fmt_address = validate_address(to_address, w3)
+    except ValueError as err:
+        return err
 
     LOGGER.info(fmt_address)
     LOGGER.info(user_data.wallet_address)
@@ -402,17 +410,14 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(tx_hash.hex())
             return tx_hash.hex(), amount, "ETH", "ETHEREUM"
         else:
-            
-            abi = await get_contract_abi(token_address)
-            LOGGER.info(abi)
-            
-            checksum_address = token_address
-            if not w3.is_address(checksum_address):
-                return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
 
-            if not w3.is_checksum_address(checksum_address):
-                checksum_address = w3.to_checksum_address(token_address)
+            try:
+                checksum_address = validate_address(token_address, w3)
+            except ValueError as err:
+                return err
             
+            abi = await get_contract_abi(checksum_address)
+            LOGGER.info(abi)
 
             LOGGER.info(checksum_address)
             LOGGER.info(user_data.wallet_address)
