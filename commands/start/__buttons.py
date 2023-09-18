@@ -374,7 +374,7 @@ Target Wallet: {matched_trade.contract_address}
 🤷‍♀️ Auto Buy
 Multi: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.multi else '✅ Enabled'}
 Auto Buy: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.auto_buy else '✅ Enabled'}
-Amount: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.amout > 0.000000 else matched_trade.amout}
+Amount: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.amount > 0.000000 else matched_trade.amout}
 Slippage: {'Default (100%)' if matched_trade.slippage >= 100.000000 else matched_trade.slippage} 
 Smart Slippage: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.smart_slippage else '✅ Enabled'}
 Gas Delta: Default (33.191 GWEI) + Delta ({matched_trade.gas_delta} GWEI)
