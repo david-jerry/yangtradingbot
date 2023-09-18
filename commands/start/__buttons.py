@@ -713,41 +713,43 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
             back_variable(message, context, text, markup, False, True)
         elif any(button_data.startswith(trade_name) for trade_name in trade_names):
-            index = trade_names.index(button_data)
-            matched_trade = trades[index]
+            for trade_name in trade_names:
+                if button_data.startswith(trade_name):
+                    index = trade_names.index(trade_name)
+                    matched_trade = trades[index]
                 
-            if button_data == f"{matched_trade.name}":
-                # Update the keyboard markup with the new selected chain
-                new_markup = await build_copy_name_keyboard(matched_trade)
-                
-                caption = await build_copy_name_caption(matched_trade)
-                
-                # Edit the message to display the updated keyboard markup
-                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
-                back_variable(message, context, text, markup, True, False)
-            elif button_data != f"{matched_trade.name}_off":
-                await update_copy_trade_addresses(user_id, context.user_data['selected_chain'], {'on': False})
-                trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
-                # Update the keyboard markup with the new selected chain
-                new_markup = await build_copy_trade_keyboard(trades)
+                    if button_data == f"{matched_trade.name}":
+                        # Update the keyboard markup with the new selected chain
+                        new_markup = await build_copy_name_keyboard(matched_trade)
+                        
+                        caption = await build_copy_name_caption(matched_trade)
+                        
+                        # Edit the message to display the updated keyboard markup
+                        message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+                        back_variable(message, context, text, markup, True, False)
+                    elif button_data != f"{matched_trade.name}_off":
+                        await update_copy_trade_addresses(user_id, context.user_data['selected_chain'], {'on': False})
+                        trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
+                        # Update the keyboard markup with the new selected chain
+                        new_markup = await build_copy_trade_keyboard(trades)
 
-                message = await query.edit_message_reply_markup(reply_markup=new_markup)
-                back_variable(message, context, text, markup, False, True)
-            elif button_data != f"{matched_trade.name}_on":
-                await update_copy_trade_addresses(user_id, context.user_data['selected_chain'], {'on': True})
-                trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
-                # Update the keyboard markup with the new selected chain
-                new_markup = await build_copy_trade_keyboard(trades)
+                        message = await query.edit_message_reply_markup(reply_markup=new_markup)
+                        back_variable(message, context, text, markup, False, True)
+                    elif button_data != f"{matched_trade.name}_on":
+                        await update_copy_trade_addresses(user_id, context.user_data['selected_chain'], {'on': True})
+                        trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
+                        # Update the keyboard markup with the new selected chain
+                        new_markup = await build_copy_trade_keyboard(trades)
 
-                message = await query.edit_message_reply_markup(reply_markup=new_markup)
-                back_variable(message, context, text, markup, False, True)
-            elif button_data != f"{matched_trade.name}_delete":
-                trades = await delete_copy_trade_addresses(user_id, context.user_data['selected_chain'])
-                # Update the keyboard markup with the new selected chain
-                new_markup = await build_copy_trade_keyboard(trades)
+                        message = await query.edit_message_reply_markup(reply_markup=new_markup)
+                        back_variable(message, context, text, markup, False, True)
+                    elif button_data != f"{matched_trade.name}_delete":
+                        trades = await delete_copy_trade_addresses(user_id, context.user_data['selected_chain'])
+                        # Update the keyboard markup with the new selected chain
+                        new_markup = await build_copy_trade_keyboard(trades)
 
-                message = await query.edit_message_reply_markup(reply_markup=new_markup)
-                back_variable(message, context, text, markup, False, True)
+                        message = await query.edit_message_reply_markup(reply_markup=new_markup)
+                        back_variable(message, context, text, markup, False, True)
 
 
 async def copy_trade_start_callback(update: Update, context: CallbackContext):
