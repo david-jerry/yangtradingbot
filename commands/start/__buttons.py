@@ -736,6 +736,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
 
                     message = await query.edit_message_reply_markup(reply_markup=new_markup)
                     back_variable(message, context, text, markup, False, True)
+                    return
                 elif button_data.startswith(trade_name) and '_on' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
@@ -746,6 +747,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
 
                     message = await query.edit_message_reply_markup(reply_markup=new_markup)
                     back_variable(message, context, text, markup, False, True)
+                    return
                 elif button_data.startswith(trade_name) and '_delete' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
