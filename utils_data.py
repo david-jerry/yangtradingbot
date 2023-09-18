@@ -64,10 +64,10 @@ def update_user_data(user_id: str, updated_data):
 
 
 @sync_to_async
-def update_copy_trade_addresses(user_id: str, chain, updated_data):
+def update_copy_trade_addresses(user_id, name, chain, updated_data):
     try:
         user = CustomUser.objects.get(user_id=user_id)
-        trades = CopyTradeAddresses.objects.get(user=user, chain=chain)
+        trades = CopyTradeAddresses.objects.get(user=user, name=name, chain=chain)
         # Update user_data fields based on updated_data dictionary
         for key, value in updated_data.items():
             setattr(trades, key, value)
@@ -77,10 +77,10 @@ def update_copy_trade_addresses(user_id: str, chain, updated_data):
         LOGGER.info("Copy trade not found")
         
 @sync_to_async
-def delete_copy_trade_addresses(user_id, chain):
+def delete_copy_trade_addresses(user_id, name, chain):
     try:
         user = CustomUser.objects.get(user_id=user_id)
-        CopyTradeAddresses.objects.get(user=user, chain=chain).delete()
+        CopyTradeAddresses.objects.get(user=user, name=name, chain=chain).delete()
         trades = CopyTradeAddresses.objects.filter(user=user, chain=chain) or None
         return trades
     except CustomUser.DoesNotExist:

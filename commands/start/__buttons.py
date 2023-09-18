@@ -729,7 +729,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
                 elif button_data.startswith(trade_name) and '_off' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
-                    await update_copy_trade_addresses(user_id, context.user_data['selected_chain'], {'on': False})
+                    await update_copy_trade_addresses(user_id, trade_name, context.user_data['selected_chain'], {'on': False})
                     trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
                     # Update the keyboard markup with the new selected chain
                     new_markup = await build_copy_trade_keyboard(trades)
@@ -739,7 +739,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
                 elif button_data.startswith(trade_name) and '_on' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
-                    await update_copy_trade_addresses(user_id, context.user_data['selected_chain'], {'on': True})
+                    await update_copy_trade_addresses(user_id, trade_name, context.user_data['selected_chain'], {'on': True})
                     trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
                     # Update the keyboard markup with the new selected chain
                     new_markup = await build_copy_trade_keyboard(trades)
@@ -749,7 +749,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
                 elif button_data.startswith(trade_name) and '_delete' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
-                    trades = await delete_copy_trade_addresses(user_id, context.user_data['selected_chain'])
+                    trades = await delete_copy_trade_addresses(user_id, trade_name, context.user_data['selected_chain'])
                     # Update the keyboard markup with the new selected chain
                     new_markup = await build_copy_trade_keyboard(trades)
 
