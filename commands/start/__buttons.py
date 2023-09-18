@@ -363,6 +363,75 @@ def build_preset_keyboard():
     
     return preset_markup  
 
+
+@sync_to_async
+def build_copy_name_caption(matched_trade):
+    caption = f"""
+⚡️ ethereum
+Name: {matched_trade.name.title()}
+Target Wallet: {matched_trade.contract_address}
+
+🤷‍♀️ Auto Buy
+Multi: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.multi else '✅ Enabled'}
+Auto Buy: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.auto_buy else '✅ Enabled'}
+Amount: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.amout > 0.000000 else matched_trade.amout}
+Slippage: {'Default (100%)' if matched_trade.slippage >= 100.000000 else matched_trade.slippage} 
+Smart Slippage: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.smart_slippage else '✅ Enabled'}
+Gas Delta: Default (33.191 GWEI) + Delta ({matched_trade.gas_delta} GWEI)
+Max Buy Tax: {'❌ Disabled - Wallet Disabled ⚠️' if matched_trade.max_buy_tax < 0.00000000 else matched_trade.max_buy_tax}
+Max Sell Tax: {'❌ Disabled - Wallet Disabled ⚠️' if matched_trade.max_sell_tax < 0.00000000 else matched_trade.max_sell_tax}
+
+🤷‍♂️ Sell
+Auto Sell: Global (❌ Disabled)
+Auto Sell (high): Default (+100%)
+Sell Amount (high): Default (100%)
+Auto Sell (low): Default(-50%)
+Sell Amount (low): Default (100%)            
+            """
+    return caption
+        
+@sync_to_async
+def build_copy_name_keyboard(matched_trade):
+    multi = InlineKeyboardButton(f"{'❌' if not matched_trade.multi else '✅'} Multi", callback_data=f"copyname_multi")
+    copyautobuy = InlineKeyboardButton(f"{'❌' if not matched_trade.auto_buy else '✅'} Auto Buy", callback_data=f"copyname_autobuy")
+    copysmartslippage = InlineKeyboardButton(f"{'❌' if not matched_trade.smart_slippage else '✅'} Smart Slippage", callback_data=f"copyname_smartslippage")
+    copybuyamount = InlineKeyboardButton(f"📝 Buy Amount", callback_data=f"copyname_buyamount")
+    copyslippage = InlineKeyboardButton(f"📝 Slippage", callback_data=f"copyname_slippage")
+    delcopyslippage = InlineKeyboardButton(f"⌫ Slippage", callback_data=f"copyname_delslippage")
+    copygasdelta = InlineKeyboardButton(f"📝 Gas Delta", callback_data=f"copyname_gasdelta")
+    delcopygasdelta = InlineKeyboardButton(f"⌫ Gas Delta", callback_data=f"copyname_delgasdelta")
+    copysell = InlineKeyboardButton(f"{'❌' if not matched_trade.copy_sell else '✅'} Copy Sell", callback_data=f"copyname_copysell")
+    copysellhi = InlineKeyboardButton(f"📝 Sell-Hi", callback_data=f"copyname_sellhi")
+    copyselllo = InlineKeyboardButton(f"📝 Sell-Lo", callback_data=f"copyname_selllo")
+    copysellhiamount = InlineKeyboardButton(f"📝 Sell-Hi Amount", callback_data=f"copyname_sellhiamount")
+    copysellloamount = InlineKeyboardButton(f"📝 Sell-Lo Amount", callback_data=f"copyname_sellloamount")
+    copymaxbuytax = InlineKeyboardButton(f"📝 Max Buy Tax", callback_data=f"copyname_buytax")
+    copymaxselltax = InlineKeyboardButton(f"📝 Max Sell Tax", callback_data=f"copyname_selltax")
+    delcopysellhi = InlineKeyboardButton(f"⌫ Sell-Hi", callback_data=f"copyname_delsellhi")
+    delcopyselllo = InlineKeyboardButton(f"⌫ Sell-Lo", callback_data=f"copyname_delselllo")
+    delcopysellhiamount = InlineKeyboardButton(f"⌫ Sell-Hi Amount", callback_data=f"copyname_delsellhiamoun")
+    delcopysellloamount = InlineKeyboardButton(f"⌫ Sell-Lo Amount", callback_data=f"copyname_delsellloamount")
+    delcopymaxbuytax = InlineKeyboardButton(f"⌫ Max Buy Tax", callback_data=f"copyname_delbuytax")
+    delcopymaxselltax = InlineKeyboardButton(f"⌫ Max Sell Tax", callback_data=f"copyname_delselltax")
+    copyname_keyboard = [
+        [home, back],
+        [multi],
+        [copyautobuy],
+        [copysmartslippage, copybuyamount],
+        [copyslippage, delcopyslippage],
+        [copygasdelta, delcopygasdelta],
+        [copysell],
+        [copysellhi, delcopysellhi],
+        [copyselllo, delcopyselllo],
+        [copysellhiamount, delcopysellhiamount],
+        [copysellloamount, delcopysellloamount],
+        [copymaxbuytax, delcopymaxbuytax],
+        [copymaxselltax, delcopymaxselltax],
+    ] 
+    copyname_markup = InlineKeyboardMarkup(copyname_keyboard)
+    
+    return copyname_markup 
+
 @sync_to_async
 def build_copy_trade_keyboard(trades):
     COPYPRESETNETWORK = COPYNETWORK_CHAINS[COPYSELECTED_CHAIN_INDEX]
@@ -379,10 +448,10 @@ def build_copy_trade_keyboard(trades):
         for tr in trades:
             
             buttons = [
-                InlineKeyboardButton(f"{tr.name.lower()}", callback_data=f"copy_{tr.user.user_id}"),
-                InlineKeyboardButton(f"Rename", callback_data=f"copy_{tr.user.user_id}_rename"),
-                InlineKeyboardButton(f"{'🔴 OFF' if not tr.on else '🔵 ON'}", callback_data=f"copy_{tr.user.user_id}_{'off' if not tr.on else 'on'}"),
-                InlineKeyboardButton("❌", callback_data=f"copy_{tr.user.user_id}_delete")
+                InlineKeyboardButton(f"{tr.name.lower()}", callback_data=f"copy_{tr.name.replace(' ', '_')}"),
+                InlineKeyboardButton(f"Rename", callback_data=f"copy_{tr.name.replace(' ', '_')}_rename"),
+                InlineKeyboardButton(f"{'🔴 OFF' if not tr.on else '🔵 ON'}", callback_data=f"copy_{tr.name.replace(' ', '_')}_{'off' if not tr.on else 'on'}"),
+                InlineKeyboardButton("❌", callback_data=f"copy_{tr.name.replace(' ', '_')}_delete")
             ]
             copy_trade_keyboard.append(buttons)
     
@@ -604,10 +673,21 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
     markup = context.user_data['last_markup']
     context.user_data["last_message_id"] = query.message.message_id
     context.user_data["copy_trade_message_id"] = query.message.message_id
+    COPYPRESETNETWORK = context.user_data['selected_chain']
+    trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
     
+    
+    if trades is not None:
+        # Extract the names from the trade data
+        trade_names = [trade.name for trade in trades]
+    else:
+        # Handle the case where no trade data was loaded
+        pass
+
     match = re.match(r"^copy_(\w+)", command)
     if match:
         button_data = match.group(1)
+        
         
         if button_data == "left":
             COPYSELECTED_CHAIN_INDEX = (COPYSELECTED_CHAIN_INDEX - 1) % len(COPYNETWORK_CHAINS)
@@ -630,15 +710,18 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             # Edit the message to display the updated keyboard markup
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
             back_variable(message, context, text, new_markup, False, True)
-        elif button_data == f"{user_data.user_id}":
-            trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
-            COPYSELECTED_CHAIN_INDEX = (COPYSELECTED_CHAIN_INDEX - 1) % len(COPYNETWORK_CHAINS)
+        elif button_data in trade_names:
+            index = trade_names.index(button_data)
+            matched_trade = trades[index]
+                
             # Update the keyboard markup with the new selected chain
-            new_markup = await build_copy_trade_keyboard(trades)
+            new_markup = await build_copy_name_keyboard(matched_trade)
+            
+            caption = await build_copy_name_caption(matched_trade)
             
             # Edit the message to display the updated keyboard markup
-            message = await query.edit_message_reply_markup(reply_markup=new_markup)
-            back_variable(message, context, text, new_markup, False, True)
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+            back_variable(message, context, text, new_markup, True, False)
 
 async def copy_trade_start_callback(update: Update, context: CallbackContext):
     global COPYSELECTED_CHAIN_INDEX

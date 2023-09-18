@@ -116,6 +116,22 @@ class CopyTradeAddresses(models.Model):
     contract_address = models.CharField(max_length=500, blank=True)
     on = models.BooleanField(default=False)
     
+    multi = models.BooleanField(default=False)
+    auto_buy = models.BooleanField(default=False)
+    copy_sell = models.BooleanField(default=False)
+    smart_slippage = models.BooleanField(default=True)
+    
+    amount = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+    slippage = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+    gas_delta = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+    sell_hi_amount = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+    sell_lo_amount = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+    sell_hi = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+    sell_lo = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+    max_buy_tax = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+    max_sell_tax = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+    
+    
     def __str__(self):
         return f"{self.user.user_id} {self.contract_address}"
     
