@@ -369,7 +369,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(tx_hash.hex())
             return tx_hash.hex(), amount, "ETH", "ETHEREUM"
         else:
-            
+            eth_balance = w3.eth.get_balance(user_data.wallet_address)
             checksum_address = token_address
             if not w3.is_address(checksum_address.strip().lower()):
                 return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
@@ -401,11 +401,11 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(f"Transfer Amount: {w3.from_wei(amount, 'ether')}")
             LOGGER.info(f"Bal Left: {val - w3.from_wei(amount, 'ether')}")
             exp_gas = w3.from_wei(gas_estimate, 'ether')
-            gas =  exp_gas / 1000000
+            gas =  exp_gas 
             LOGGER.info(f"Gas Price: {gas}")
             
-            bal = val - w3.from_wei(amount, 'ether')
-            if Decimal(bal) < Decimal(gas):
+            
+            if eth_balance < fmt_gas_est:
                 return "Insufficient balance", w3.from_wei(amount, 'ether'), "ETH", "ETHEREUM"
 
             try:
