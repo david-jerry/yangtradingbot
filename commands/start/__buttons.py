@@ -62,9 +62,6 @@ delslippage = InlineKeyboardButton("⌫ Remove Slippage", callback_data="presets
 maxgas = InlineKeyboardButton("📝  Max Gas Limit", callback_data="config_maxgas")
 delgas = InlineKeyboardButton("⌫ Remove Gas Limit", callback_data="presets_delgas")
 
-NETWORK_CHAINS = ["ETH", "BSC", "ARP", "BASE"]
-SELECTED_CHAIN_INDEX = 0
-
 
 # ------------------------------------------------------------------------------
 # BUY BUTTONS
@@ -162,11 +159,6 @@ terms_markup = InlineKeyboardMarkup(terms_keyboard)
 
 
 
-global PRESETNETWORK
-PRESETNETWORK = NETWORK_CHAINS[SELECTED_CHAIN_INDEX]
-
-
-
 
 
 # ------------------------------------------------------------------------------
@@ -217,6 +209,14 @@ start_button_markup2 = InlineKeyboardMarkup(start_keyboard2)
 #                                BUTTONS CALLBACKS                             #
 # ------------------------------------------------------------------------------#
 # ------------------------------------------------------------------------------#
+PRESETNETWORK = 'ETH'
+COPYPRESETNETWORK = 'ETH'
+
+NETWORK_CHAINS = ["ETH", "BSC", "ARP", "BASE"]
+SELECTED_CHAIN_INDEX = 0
+
+COPYNETWORK_CHAINS = ["ETH", "BSC", "ARP", "BASE"]
+COPYSELECTED_CHAIN_INDEX = 0
 
 
 # ------------------------------------------------------------------------------
@@ -349,7 +349,6 @@ async def language_button_callback(update: Update, context: ContextTypes.DEFAULT
 # ------------------------------------------------------------------------------
 
 def build_preset_keyboard():
-    global PRESETNETWORK
     PRESETNETWORK = NETWORK_CHAINS[SELECTED_CHAIN_INDEX]
     chain = InlineKeyboardButton(f"🛠 {PRESETNETWORK}", callback_data=f"presets_{PRESETNETWORK}")
     preset_keyboard = [
@@ -366,7 +365,8 @@ def build_preset_keyboard():
 
 @sync_to_async
 def build_copy_trade_keyboard(trades):
-    chain = InlineKeyboardButton(f"🛠 {PRESETNETWORK}", callback_data=f"copy_{PRESETNETWORK}")
+    COPYPRESETNETWORK = COPYNETWORK_CHAINS[COPYSELECTED_CHAIN_INDEX]
+    chain = InlineKeyboardButton(f"🛠 {COPYPRESETNETWORK}", callback_data=f"copy_{COPYPRESETNETWORK}")
     target_wallet = InlineKeyboardButton(f"Target Wallet or Contract Address", callback_data=f"trade_address")
     copy_trade_keyboard = [
         [home],
@@ -507,18 +507,19 @@ async def start_button_callback(update: Update, context: CallbackContext):
             )
             back_variable(message, context, wallets_asset_message, asset_chain_markup, True, False)
         elif button_data == "trade":
-            copy_message = "Add or remove wallets from whihc you'd like to copy trades!"
-            trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
+            copy_message = "Add or remove wallets from which you'd like to copy trades!"
+            trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
             copy_trade_markup = await build_copy_trade_keyboard(trades)
             message = await query.edit_message_caption(
                 caption=copy_message, 
                 parse_mode=ParseMode.HTML, 
                 reply_markup=copy_trade_markup
             )
+            context.user_data['selected_chain'] = 'ETH'
             context.user_data['last_message'] = copy_message
             context.user_data['last_markup'] = copy_trade_markup
             context.user_data["last_message_id"] = message.message_id
-            back_variable(message, context, copy_message, transfer_chain_markup, True, False)
+            back_variable(message, context, copy_message, copy_trade_markup, True, False)
         elif button_data == "token_transfer":
             message = await query.edit_message_caption(
                 caption=transfer_message, 
@@ -580,13 +581,20 @@ Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</
 
 
 
+
+
+
+
+
+
+
 # ------------------------------------------------------------------------------
 # COPY TRADE BUTTON CALLBACK
 # ------------------------------------------------------------------------------
 TRADEWALLETNAME, TARGETWALLET = range(2)
-async def copy_trade_next_and_back_callback(update: Update, context: CallbackContext):
-    global SELECTED_CHAIN_INDEX
-    
+async def copy_trade_next_and_back_callback(update: Update, context: CallbackContext):    
+    global COPYSELECTED_CHAIN_INDEX
+
     query = update.callback_query
     await query.answer()
     command = query.data
@@ -595,22 +603,27 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
     text = context.user_data['last_message']
     markup = context.user_data['last_markup']
     context.user_data["last_message_id"] = query.message.message_id
+    context.user_data["copy_trade_message_id"] = query.message.message_id
     
     match = re.match(r"^copy_(\w+)", command)
     if match:
         button_data = match.group(1)
         
         if button_data == "left":
-            trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
-            SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
+            COPYSELECTED_CHAIN_INDEX = (COPYSELECTED_CHAIN_INDEX - 1) % len(COPYNETWORK_CHAINS)
+            COPYPRESETNETWORK = COPYNETWORK_CHAINS[COPYSELECTED_CHAIN_INDEX]
+            context.user_data['selected_chain'] = COPYPRESETNETWORK
+            trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
             # Update the keyboard markup with the new selected chain
             new_markup = await build_copy_trade_keyboard(trades)
 
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
             back_variable(message, context, text, new_markup, False, True)
         elif button_data == "right":
-            trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
-            SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
+            COPYSELECTED_CHAIN_INDEX = (COPYSELECTED_CHAIN_INDEX - 1) % len(COPYNETWORK_CHAINS)
+            COPYPRESETNETWORK = COPYNETWORK_CHAINS[COPYSELECTED_CHAIN_INDEX]
+            context.user_data['selected_chain'] = COPYPRESETNETWORK
+            trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
             # Update the keyboard markup with the new selected chain
             new_markup = await build_copy_trade_keyboard(trades)
             
@@ -618,8 +631,8 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
             back_variable(message, context, text, new_markup, False, True)
         elif button_data == f"{user_data.user_id}":
-            trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
-            SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX - 1) % len(NETWORK_CHAINS)
+            trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
+            COPYSELECTED_CHAIN_INDEX = (COPYSELECTED_CHAIN_INDEX - 1) % len(COPYNETWORK_CHAINS)
             # Update the keyboard markup with the new selected chain
             new_markup = await build_copy_trade_keyboard(trades)
             
@@ -628,7 +641,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             back_variable(message, context, text, new_markup, False, True)
 
 async def copy_trade_start_callback(update: Update, context: CallbackContext):
-    global SELECTED_CHAIN_INDEX
+    global COPYSELECTED_CHAIN_INDEX
     
     query = update.callback_query
     await query.answer()
@@ -661,10 +674,11 @@ async def target_token_address_reply(update: Update, context: CallbackContext):
 
 async def submit_copy_reply(update: Update, context: CallbackContext):
     name = context.user_data.get('address')
-    chain = PRESETNETWORK
+    chain = context.user_data['selected_chain']
     token_address = update.message.text.replace(' ', '')
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
+    copy_trade_main_id = context.user_data["copy_trade_message_id"]
     
     await save_copy_trade_address(user_id, name, token_address, chain, False)
 
@@ -673,20 +687,20 @@ async def submit_copy_reply(update: Update, context: CallbackContext):
     context.user_data.pop('address', None)
     context.user_data.pop('to_address', None)
     context.user_data.pop("network_chain", None)
-    trades = await load_copy_trade_addresses(user_id, PRESETNETWORK)
+    trades = await load_copy_trade_addresses(user_id, chain)
     copy_trade_markup = await build_copy_trade_keyboard(trades)
     copy_message = context.user_data['last_message']
     # message = await update.message.edit_reply_markup(
     #     reply_markup=copy_trade_markup
     # )
-    message_id_to_edit = context.user_data["last_message_id"]
+    message_id_to_edit = copy_trade_main_id
     message = context.bot.edit_message_reply_markup(
         chat_id=update.message.chat_id,  # Replace with the chat ID where the message was sent
         message_id=message_id_to_edit,   # Specify the message ID you want to edit
         reply_markup=copy_trade_markup    # Set the updated markup
     )
     context.user_data.pop("last_message", None)
-    back_variable(message, context, copy_message, transfer_chain_markup, True, False)
+    back_variable(message, context, copy_message, copy_trade_markup, True, False)
     return ConversationHandler.END
 
 async def cancel_copy(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -807,7 +821,7 @@ Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</
             context.user_data['config_message'] = configuration_message
     
             message = await query.edit_message_caption(caption=configuration_message, parse_mode=ParseMode.HTML, reply_markup=new_markup)
-            back_variable(message, context, text, new_markup, False, True)
+            back_variable(message, context, text, new_markup, True, False)
         elif button_data == "right":
             SELECTED_CHAIN_INDEX = (SELECTED_CHAIN_INDEX + 1) % len(NETWORK_CHAINS)
             # Update the keyboard markup with the new selected chain
@@ -1375,6 +1389,16 @@ async def cancel_preset(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+
+
+
+
+
+
+
+
+
+
 # ------------------------------------------------------------------------------
 # TRANSFER BUTTON CALLBACK
 # ------------------------------------------------------------------------------
@@ -1650,6 +1674,12 @@ async def cancel_transfer(update: Update, context: CallbackContext):
 
 
         
+
+
+
+
+
+
 
 
 

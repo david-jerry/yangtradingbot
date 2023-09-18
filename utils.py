@@ -55,13 +55,13 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     elif network.upper() == "BASE" and user_data.BASE_added:
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
+    checksum_address = token_address
+    if not w3.is_address(checksum_address):
+        return f"An error occurred: Invalid address format\n\n{e}", '', "", ""
     
-    if w3.is_address(token_address):
-        checksum_address = token_address
-    elif not w3.is_checksum_address(token_address):
+    if not w3.is_checksum_address(token_address):
         checksum_address = w3.to_checksum_address(token_address)
-    elif w3.is_checksum_address(token_address):
-        checksum_address = token_address
+
     # # Define the Etherscan API URL
     # etherscan_api_url = 'https://api.etherscan.io/api'
 
@@ -355,13 +355,11 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
         chain_id = w3.eth.chain_id         
     
-    if not w3.is_address(to_address):
+    fmt_address = to_address
+    if not w3.is_address(fmt_address):
         return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
-    elif w3.is_address(to_address):
-        fmt_address = to_address
-    elif not w3.is_checksum_address(to_address):
-        return f"Error Trasferring: Invalid checksum address format", 0.00, "ETH", "ETHEREUM"
-    elif w3.is_checksum_address(to_address):
+    
+    if not w3.is_checksum_address(fmt_address):
         fmt_address = w3.to_checksum_address(to_address)
 
     LOGGER.info(fmt_address)
@@ -408,14 +406,13 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             abi = await get_contract_abi(token_address)
             LOGGER.info(abi)
             
-            if not w3.is_checksum_address(token_address):
-                checksum_address = w3.to_checksum_address(token_address)
-            elif w3.is_checksum_address(token_address):
-                checksum_address = token_address
-            elif not w3.is_address(token_address):
+            checksum_address = token_address
+            if not w3.is_address(checksum_address):
                 return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
-            elif w3.is_address(token_address):
-                checksum_address = token_address
+
+            if not w3.is_checksum_address(checksum_address):
+                checksum_address = w3.to_checksum_address(token_address)
+            
 
             LOGGER.info(checksum_address)
             LOGGER.info(user_data.wallet_address)
@@ -457,7 +454,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
                 tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
                 LOGGER.info(tx_hash.hex())
-                token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description = await get_token_info(checksum_address)
+                token_name, token_symbol, balance, contract_add = await get_token_info(checksum_address, network, user_data)
                 return tx_hash.hex(), amount, token_symbol, token_name
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
