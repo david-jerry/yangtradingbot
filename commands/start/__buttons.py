@@ -712,7 +712,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             # Edit the message to display the updated keyboard markup
             message = await query.edit_message_reply_markup(reply_markup=new_markup)
             back_variable(message, context, text, markup, False, True)
-        elif any(trade_name in button_data for trade_name in trade_names):
+        elif any(button_data.startswith(trade_name) for trade_name in trade_names):
             index = trade_names.index(button_data)
             matched_trade = trades[index]
                 
