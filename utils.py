@@ -399,7 +399,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             gas_estimate = fmt_gas_est
             LOGGER.info(f"Token Bal: {val}")
             LOGGER.info(f"Transfer Amount: {w3.from_wei(amount, 'ether')}")
-            LOGGER.info(f"Bal Left{val - w3.from_wei(amount, 'ether')}")
+            LOGGER.info(f"Bal Left: {val - w3.from_wei(amount, 'ether')}")
             LOGGER.info(f"Gas Price: {gas_estimate}")
             
             
