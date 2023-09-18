@@ -339,7 +339,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     
     
     try:
-        gas_price = w3.to_wei('20', 'gwei')
+        gas_price = w3.to_wei('20', 'wei')
         
         # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         # Build the transaction
@@ -347,7 +347,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             balance = float(w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether'))
             amount = balance * percentage
 
-            if balance - amount < w3.from_wei(gas_price, 'ether'):
+            if balance - amount < float(w3.from_wei(gas_price, 'ether')):
                 LOGGER.info('We got here: insufficient funds')
                 return "Insufficient balance", amount, "ETH", "ETHEREUM"
 
