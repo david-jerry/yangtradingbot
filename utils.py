@@ -323,11 +323,11 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         chain_id = w3.eth.chain_id         
     
     fmt_address = to_address
-    if not w3.is_address(fmt_address):
+    if not w3.is_address(fmt_address.strip().lower()):
         return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
     
-    if not w3.is_checksum_address(fmt_address):
-        fmt_address = w3.to_checksum_address(to_address)
+    if not w3.is_checksum_address(fmt_address.strip().lower()):
+        fmt_address = w3.to_checksum_address(to_address.strip().lower())
 
     LOGGER.info(fmt_address)
     LOGGER.info(user_data.wallet_address)
@@ -337,9 +337,9 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     # LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
     
     
-    gas_price = w3.to_wei('20', 'gwei')
     
     try:
+        gas_price = w3.to_wei('20', 'gwei')
         
         # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         # Build the transaction
@@ -370,15 +370,15 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             return tx_hash.hex(), amount, "ETH", "ETHEREUM"
         else:
             
-            abi = await get_contract_abi(token_address)
-            LOGGER.info(abi)
-            
             checksum_address = token_address
-            if not w3.is_address(checksum_address):
+            if not w3.is_address(checksum_address.strip().lower()):
                 return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
 
-            if not w3.is_checksum_address(checksum_address):
+            if not w3.is_checksum_address(checksum_address.strip().lower()):
                 checksum_address = w3.to_checksum_address(token_address)
+            
+            abi = await get_contract_abi(checksum_address)
+            LOGGER.info(abi)
             
 
             LOGGER.info(checksum_address)
