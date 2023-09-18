@@ -393,22 +393,23 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
             
-            val = w3.from_wei(token_balance_wei, 'ether')
-            amount = float(val) * percentage
-            gas_estimate = w3.from_wei(token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address}), 'ether')
-            LOGGER.info(f"Token Bal: {w3.to_wei(float(val), 'ether')}")
+            val = w3.to_wei(token_balance_wei, 'ether')
+            amount = w3.to_wei(val * percentage, 'ether')
+            fmt_gas_est = token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address})
+            gas_estimate = w3.to_wei(fmt_gas_est, 'ether')
+            LOGGER.info(f"Token Bal: {val}")
             LOGGER.info(f"Transfer Amount: {amount}")
-            LOGGER.info(f"Bal Left{float(val) - amount}")
-            LOGGER.info(f"Gas Price: {float(gas_estimate)}")
+            LOGGER.info(f"Bal Left{val - amount}")
+            LOGGER.info(f"Gas Price: {gas_estimate}")
             
             
-            if float(val) - amount < float(gas_estimate):
+            if val - amount < gas_estimate:
                 return "Insufficient balance", amount, "ETH", "ETHEREUM"
 
             try:
-                fmt_amount = w3.to_wei(amount, 'ether')
+                fmt_amount = w3.from_wei(amount, 'ether')
                 # Prepare the transaction to transfer USDT tokens
-                transaction = token_contract.functions.transfer(fmt_address, fmt_amount).build_transaction({
+                transaction = token_contract.functions.transfer(fmt_address, amount).build_transaction({
                     'chainId': 1,  # Mainnet
                     'gas': w3.to_wei(float(gas_estimate), 'gwei'),  # Gas limit (adjust as needed)
                     # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
@@ -421,7 +422,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
                 LOGGER.info(tx_hash.hex())
                 token_name, token_symbol, balance, contract_add = await get_token_info(checksum_address, network, user_data)
-                return tx_hash.hex(), amount, token_symbol, token_name
+                return tx_hash.hex(), fmt_amount, token_symbol, token_name
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
     except Exception as e:
