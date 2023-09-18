@@ -403,7 +403,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(f"Gas Price: {w3.from_wei(gas_estimate, 'ether')}")
             
             bal = val - w3.from_wei(amount, 'ether')
-            gas =  w3.from_wei(gas_estimate, 'ether')
+            gas =  round(w3.from_wei(gas_estimate, 'ether'), 8)
             if bal < gas:
                 return "Insufficient balance", w3.from_wei(amount, 'ether'), "ETH", "ETHEREUM"
 
