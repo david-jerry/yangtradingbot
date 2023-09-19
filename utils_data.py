@@ -67,7 +67,7 @@ def update_user_data(user_id: str, updated_data):
 def update_copy_trade_addresses(user_id, name, chain, updated_data):
     try:
         user = CustomUser.objects.get(user_id=user_id)
-        trades = CopyTradeAddresses.objects.filter(user=user, name=name, chain=chain).first()
+        trades = CopyTradeAddresses.objects.get(user=user, name=name, chain=chain)
         # Update user_data fields based on updated_data dictionary
         for key, value in updated_data.items():
             setattr(trades, key, value)

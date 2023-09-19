@@ -53,6 +53,9 @@ from commands.start.__buttons import (
     cancel_preset,
     
     copy_trade_next_and_back_callback,
+    copy_trade_rename,
+    answer_rename,
+    cancel_rename,
     copy_trade_start_callback,
     target_token_address_reply,
     submit_copy_reply,
@@ -169,6 +172,7 @@ PRIVATEKEY = range(1)
 REPLYDELTA = range(1)
 TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
 TRADEWALLETNAME, TARGETWALLET = range(2)
+RENAME = range(1)
 
 def main() -> None:
     LOGGER.info(TOKEN)
@@ -230,6 +234,20 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_attachment", cancel_attachment)]
     )
     app.add_handler(attach_conv_handler)
+    
+    
+
+    # COPY TRADE ADDRESS RENAME HANDLERS
+    rename_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(copy_trade_rename, pattern=r'^rename_*')
+        ],
+        states={
+            RENAME: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_rename$")), answer_rename)],
+        },
+        fallbacks=[CommandHandler("cancel_rename", cancel_rename)]
+    )
+    app.add_handler(rename_conv_handler)
 
     # TRANSFER HANDLERS
     transfer_conv_handler = ConversationHandler(

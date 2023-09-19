@@ -449,7 +449,7 @@ def build_copy_trade_keyboard(trades):
             
             buttons = [
                 InlineKeyboardButton(f"{tr.name.lower()}", callback_data=f"copy_{tr.name.replace(' ', '_')}"),
-                InlineKeyboardButton(f"Rename", callback_data=f"copy_{tr.name.replace(' ', '_')}_rename"),
+                InlineKeyboardButton(f"Rename", callback_data=f"rename_{tr.id}"),
                 InlineKeyboardButton(f"{'🔴 OFF' if not tr.on else '🔵 ON'}", callback_data=f"copy_{tr.name.replace(' ', '_')}_{'off' if not tr.on else 'on'}"),
                 InlineKeyboardButton("❌", callback_data=f"copy_{tr.name.replace(' ', '_')}_delete")
             ]
@@ -578,6 +578,7 @@ async def start_button_callback(update: Update, context: CallbackContext):
             )
             back_variable(message, context, wallets_asset_message, asset_chain_markup, True, False)
         elif button_data == "trade":
+            context.user_data['copy_id'] = query.message.message_id
             copy_message = "Add or remove wallets from which you'd like to copy trades!"
             trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
             copy_trade_markup = await build_copy_trade_keyboard(trades)
@@ -663,6 +664,7 @@ Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</
 # COPY TRADE BUTTON CALLBACK
 # ------------------------------------------------------------------------------
 TRADEWALLETNAME, TARGETWALLET = range(2)
+RENAME = range(1)
 async def copy_trade_next_and_back_callback(update: Update, context: CallbackContext):    
     global COPYSELECTED_CHAIN_INDEX
 
@@ -672,15 +674,16 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
     user_id = str(query.from_user.id)
     user_data = await load_user_data(user_id)
     text = context.user_data['last_message']
+    context.user_data['copy_next_id'] = query.message.message_id
     markup = context.user_data['last_markup']
     context.user_data["last_message_id"] = query.message.message_id
-    context.user_data["copy_trade_message_id"] = query.message.message_id
     COPYPRESETNETWORK = context.user_data['selected_chain']
     trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
     
     
     if trades is not None:
         # Extract the names from the trade data
+        global trade_names
         trade_names = [trade.name for trade in trades]
     else:
         # Handle the case where no trade data was loaded
@@ -729,35 +732,102 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
                 elif button_data.startswith(trade_name) and '_off' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
-                    await update_copy_trade_addresses(user_id, trade_name, context.user_data['selected_chain'], {'on': False})
+                    LOGGER.info(matched_trade.name)
+                    await update_copy_trade_addresses(user_id, matched_trade.name, context.user_data['selected_chain'], {'on': True})
                     trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
                     # Update the keyboard markup with the new selected chain
                     new_markup = await build_copy_trade_keyboard(trades)
 
                     message = await query.edit_message_reply_markup(reply_markup=new_markup)
                     back_variable(message, context, text, markup, False, True)
-                    return
+                    return message
                 elif button_data.startswith(trade_name) and '_on' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
-                    await update_copy_trade_addresses(user_id, trade_name, context.user_data['selected_chain'], {'on': True})
+                    await update_copy_trade_addresses(user_id, matched_trade.name, context.user_data['selected_chain'], {'on': False})
                     trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
                     # Update the keyboard markup with the new selected chain
                     new_markup = await build_copy_trade_keyboard(trades)
 
                     message = await query.edit_message_reply_markup(reply_markup=new_markup)
                     back_variable(message, context, text, markup, False, True)
-                    return
+                    return message
                 elif button_data.startswith(trade_name) and '_delete' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
-                    trades = await delete_copy_trade_addresses(user_id, trade_name, context.user_data['selected_chain'])
+                    trades = await delete_copy_trade_addresses(user_id, matched_trade.name, context.user_data['selected_chain'])
                     # Update the keyboard markup with the new selected chain
                     new_markup = await build_copy_trade_keyboard(trades)
 
                     message = await query.edit_message_reply_markup(reply_markup=new_markup)
+                    context.user_data['message_id'] = message.message_id
                     back_variable(message, context, text, markup, False, True)
+                    return message
 
+async def copy_trade_rename(update: Update, context: CallbackContext):   
+    LOGGER.info("Copy Trade Rename") 
+
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    
+    context.user_data['copy_next_id'] = query.message.message_id
+    context.user_data["last_message_id"] = query.message.message_id
+    
+    trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
+    
+    
+    if trades is not None:
+        # Extract the names from the trade data
+        trade_names = [trade.id for trade in trades]
+    else:
+        LOGGER.info("No trades")
+        # Handle the case where no trade data was loaded
+        pass
+
+    match = re.match(r"^rename_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        LOGGER.info(button_data)
+        
+        if int(button_data) in trade_names:
+            index = trade_names.index(int(button_data))
+            matched_trade = trades[index]
+            LOGGER.info(matched_trade.name)
+
+            context.user_data['trade'] = matched_trade
+            message = await query.message.reply_text("what would you like to rename the copy trade wallet?")
+            context.user_data['message_id'] = message.message_id
+            return RENAME
+                
+
+async def answer_rename(update: Update, context: CallbackContext):
+    text = update.message.text.strip()
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    matched_trade = context.user_data['trade']
+    await update_copy_trade_addresses(user_id, matched_trade.name, context.user_data['selected_chain'], {'name': text})
+    trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
+    
+    # Update the keyboard markup with the new selected chain
+    new_markup = await build_copy_trade_keyboard(trades)
+    
+    message_id_to_edit = context.user_data.get('copy_id')
+    rename_message_id = context.user_data['message_id']
+
+    await context.bot.delete_message(chat_id=chat_id, message_id=rename_message_id)
+    await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id_to_edit, reply_markup=new_markup)
+    return ConversationHandler.END
+    
+async def cancel_rename(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.pop('trade', None)
+    context.user_data.pop('selected_chain', None)
+    context.user_data.pop("copy_id", None)
+    context.user_data.pop("message_id", None)
+    await update.message.reply_text("Copy Trade Cancelled.")
+    return ConversationHandler.END
 
 async def copy_trade_start_callback(update: Update, context: CallbackContext):
     global COPYSELECTED_CHAIN_INDEX
