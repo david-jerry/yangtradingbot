@@ -7,3 +7,4 @@ mnemonic==0.20
 asgiref==3.7.2
 Django==4.2.4
 uniswap-python==0.7.1
+cctx==1.0.0
