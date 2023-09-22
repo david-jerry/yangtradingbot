@@ -1,6 +1,6 @@
 import time
 import requests
-import cctx
+# import cctx
 
 from decimal import Decimal
 from typing import Final
@@ -19,10 +19,10 @@ MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
 ETHERAPI: Final = config('ETHERSCAN')
 BINANCEAPI: Final = config('BINANCE_API')
 
-exchange = cctx.binance({
-    'apiKey': BINANCEAPI,
-    'enableRateLimit': True,
-})
+# exchange = cctx.binance({
+#     'apiKey': BINANCEAPI,
+#     'enableRateLimit': True,
+# })
 
 async def get_contract_abi(contract_address, api_key=ETHERAPI):
     # Define the Etherscan API URL
