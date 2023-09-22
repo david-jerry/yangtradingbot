@@ -1,6 +1,6 @@
 import time
 import requests
-import ccxt
+import cctx
 
 from decimal import Decimal
 from typing import Final
@@ -19,7 +19,7 @@ MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
 ETHERAPI: Final = config('ETHERSCAN')
 BINANCEAPI: Final = config('BINANCE_API')
 
-exchange = ccxt.binance({
+exchange = cctx.binance({
     'apiKey': BINANCEAPI,
     'enableRateLimit': True,
 })
