@@ -101,12 +101,43 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def get_full_name(self):
         full_name = f"{self.first_name} {self.last_name}"
         return full_name
+    
+    @property
+    def snipes(self):
+        if self.sniper.exists():
+            return self.sniper.all()
+        return None
 
     USERNAME_FIELD = 'user_id'
     REQUIRED_FIELDS = ['first_name', 'last_name']
 
     def __str__(self):
         return self.user_id
+
+class Sniper(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="sniper", blank=True)
+    chain = models.CharField(max_length=5, blank=True)
+    contract_address = models.CharField(max_length=500, blank=True)
+    
+    auto = models.BooleanField(default=True)
+    method = models.BooleanField(default=True)
+    liquidity = models.BooleanField(default=True)
+    
+    block_delay = models.DecimalField(max_digits=12, decimal_places=6, default=0)
+    
+    eth = models.DecimalField(max_digits=12, decimal_places=6, default=1)
+    token = models.DecimalField(max_digits=12, decimal_places=6, default=10)
+    
+    multi = models.BooleanField(default=True)
+    buy = models.BooleanField(default=True)
+    enable = models.BooleanField(default=True)
+    stop = models.BooleanField(default=False)
+    approve = models.BooleanField(default=True)
+    auto_sell = models.BooleanField(default=True)
+    buy_dip = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.user.user_id} {self.contract_address} Snipe"
 
 
 class CopyTradeAddresses(models.Model):

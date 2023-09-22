@@ -7,7 +7,7 @@ import os
 import django
 
 from asgiref.sync import sync_to_async
-from apps.accounts.models import CustomUser, CopyTradeAddresses
+from apps.accounts.models import CustomUser, CopyTradeAddresses, Sniper
 
 from logger import LOGGER
 
@@ -31,11 +31,29 @@ def save_copy_trade_address(user_id, name, address, chain, on):
     return trade
 
 @sync_to_async
+def save_sniper(user_id, address, chain):
+    user = CustomUser.objects.get(user_id=user_id)
+    snipe = Sniper.objects.create(user=user, contract_address=address, chain=chain)
+    return snipe
+
+
+@sync_to_async
 def load_user_data(user_id):
     try:
         LOGGER.info("Loading user data")
         LOGGER.info(user_id)
         user_data = CustomUser.objects.filter(user_id=user_id).first()
+        LOGGER.info(user_data)
+        return user_data
+    except FileNotFoundError:
+        user_data = None
+        return user_data
+
+@sync_to_async
+def load_sniper_data(contract_address):
+    try:
+        LOGGER.info("Loading sniper data")
+        user_data = Sniper.objects.filter(contract_address__iexact=contract_address).first()
         LOGGER.info(user_data)
         return user_data
     except FileNotFoundError:
@@ -85,3 +103,27 @@ def delete_copy_trade_addresses(user_id, name, chain):
         return trades
     except CustomUser.DoesNotExist:
         LOGGER.info("Copy trade not found")
+        
+        
+@sync_to_async
+def update_snipes(user_id, chain, updated_data):
+    try:
+        user = CustomUser.objects.get(user_id=user_id)
+        trades = Sniper.objects.get(user=user, chain=chain)
+        # Update user_data fields based on updated_data dictionary
+        for key, value in updated_data.items():
+            setattr(trades, key, value)
+        
+        trades.save()  # Save the changes to the database
+    except CustomUser.DoesNotExist:
+        LOGGER.info("Copy trade not found")
+        
+@sync_to_async
+def delete_snipes(user_id, chain):
+    try:
+        user = CustomUser.objects.get(user_id=user_id)
+        Sniper.objects.get(user=user, chain=chain).delete()
+        trades = Sniper.objects.filter(user=user, chain=chain) or None
+        return trades
+    except CustomUser.DoesNotExist:
+        LOGGER.info("Copy trade not found")        

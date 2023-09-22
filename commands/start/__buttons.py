@@ -26,7 +26,7 @@ from constants import (
     wallets_asset_message,
 )
 from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_info, get_wallet_balance, trasnfer_currency
-from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
+from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_sniper_data, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
@@ -363,6 +363,20 @@ def build_preset_keyboard():
     
     return preset_markup  
 
+async def build_snipe_comment(token, user_data, network='ETH'):
+    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info(token, network, user_data)
+    global TOKENNAME
+    TOKENNAME = token_name
+    message = f"""
+🪙 {token_name} ({token_symbol}) ⚡️ ethereum
+CA: <pre>{token}</pre>
+LP(UNI-V2): <pre>{token_lp}</pre>
+V2 Pooluser_data
+
+💵 Wallet | <pre>Main</pre>
+⛽️ Gas Price | <pre>Set in Configuration</pre>    
+    """
+    return message
 
 @sync_to_async
 def build_copy_name_caption(matched_trade):
@@ -432,6 +446,78 @@ def build_copy_name_keyboard(matched_trade):
     
     return copyname_markup 
 
+@sync_to_async
+def build_snipping_keyboard(sniper):
+    snipebutton = InlineKeyboardButton("👁 Snipe", callback_data=f"sniper_snipe")
+    sback = InlineKeyboardButton("⏪ ", callback_data="snipper_left")
+    sforward = InlineKeyboardButton("⏩ ", callback_data="snipper_right")
+
+    if sniper != None:
+        multi = InlineKeyboardButton(f"{'❌' if not sniper.multi else '✅'} Multi", callback_data=f"sniper_multi")
+        deletetoken = InlineKeyboardButton("❌ Delete", callback_data=f"sniper_{sniper.id}")
+        token_name = InlineKeyboardButton(f"{TOKENNAME}", callback_data="snipper_right")
+        snipeslippage = InlineKeyboardButton(f"📝 Slippage", callback_data=f"snipper_slippage")
+        delsnipeslippage = InlineKeyboardButton(f"⌫ Slippage", callback_data=f"sniper_delslippage")
+        gas_delta = InlineKeyboardButton(f"📝 Gas Delta", callback_data=f"sniper_gasdelta")
+        liquidity = InlineKeyboardButton(f"{'❌' if not sniper.liquidity else '✅'} Liquidity", callback_data=f"sniper_liquidity")
+        auto = InlineKeyboardButton(f"{'❌' if not sniper.auto else '✅'} Auto", callback_data=f"sniper_auto")
+        method = InlineKeyboardButton(f"{'❌' if not sniper.method else '✅'} Method", callback_data=f"sniper_method")
+        eth_amount = InlineKeyboardButton(f"{sniper.eth} ETH", callback_data=f"sniper_eth")
+        token_amount = InlineKeyboardButton(f"{sniper.token} {TOKENNAME.upper()}", callback_data=f"sniper_token")
+        snipeliquidity = InlineKeyboardButton(f"{'❌' if not sniper.liquidity else '✅'}", callback_data=f"sniper_snipeliquidity")
+        snipemethod = InlineKeyboardButton(f"{'❌' if not sniper.method else '✅'} Snipe Method", callback_data=f"sniper_snipemethod")
+        snipeauto = InlineKeyboardButton(f"{'❌' if not sniper.auto else '✅'} Sell-Lo Amount", callback_data=f"sniper_snipeauto")
+        blockdelay = InlineKeyboardButton(f"Block Delay | {sniper.block_delay}", callback_data=f"sniper_blockdelay")
+    
+        liq = False if not sniper.liquidity else True
+        aut = False if not sniper.auto else True
+        met = False if not sniper.method else True
+    
+
+        if liq:
+            copyname_keyboard = [
+                [home, deletetoken],
+                [snipebutton],
+                [sback, token_name, sforward],
+                [multi, gas_delta],
+                [liquidity, method, auto]
+                [snipeliquidity, blockdelay]
+                [eth_amount, token_amount],
+                [snipeslippage, delsnipeslippage],
+            ] 
+        elif aut:
+            copyname_keyboard = [
+                [home, deletetoken],
+                [snipebutton],
+                [sback, token_name, sforward],
+                [multi, gas_delta],
+                [liquidity, method, auto]
+                [snipeauto]
+                [eth_amount, token_amount],
+                [snipeslippage, delsnipeslippage],
+            ] 
+        elif met:
+            copyname_keyboard = [
+                [home, deletetoken],
+                [snipebutton],
+                [sback, token_name, sforward],
+                [multi, gas_delta],
+                [liquidity, method, auto]
+                [snipemethod, blockdelay]
+                [eth_amount, token_amount],
+                [snipeslippage, delsnipeslippage],
+            ] 
+        
+    else:
+        copyname_keyboard = [
+            [home, snipebutton],
+        ] 
+        
+    copyname_markup = InlineKeyboardMarkup(copyname_keyboard)
+    
+    return copyname_markup 
+    
+    
 @sync_to_async
 def build_copy_trade_keyboard(trades):
     COPYPRESETNETWORK = COPYNETWORK_CHAINS[COPYSELECTED_CHAIN_INDEX]
@@ -514,6 +600,7 @@ async def start_button_callback(update: Update, context: CallbackContext):
     context.user_data["last_message_id"] = query.message.message_id
     gas_price = await get_default_gas_price_gwei()
     
+    user_data = await load_user_data(user_id)
 
     match = re.match(r"^start_(\w+)", command)
     if match:
@@ -582,6 +669,26 @@ async def start_button_callback(update: Update, context: CallbackContext):
             copy_message = "Add or remove wallets from which you'd like to copy trades!"
             trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
             copy_trade_markup = await build_copy_trade_keyboard(trades)
+            message = await query.edit_message_caption(
+                caption=copy_message, 
+                parse_mode=ParseMode.HTML, 
+                reply_markup=copy_trade_markup
+            )
+            context.user_data['selected_chain'] = 'ETH'
+            context.user_data['last_message'] = copy_message
+            context.user_data['last_markup'] = copy_trade_markup
+            context.user_data["last_message_id"] = message.message_id
+            back_variable(message, context, copy_message, copy_trade_markup, True, False)
+        elif button_data == "sniper":
+            if user_data.snipes.exists():
+                copy_message = "⚠️ No tokens to snipe"
+                contract_address = user_data.snipes.first().contract_address if user_data.snipes != None else None
+                trades = await load_sniper_data(contract_address)
+                copy_trade_markup = await build_snipping_keyboard(user_data.snipes.first())
+            else:
+                copy_message = await build_snipe_comment(user_data.snipes.first().contract_address, user_data)
+                copy_trade_markup = await build_snipping_keyboard(None)
+                
             message = await query.edit_message_caption(
                 caption=copy_message, 
                 parse_mode=ParseMode.HTML, 
@@ -1772,7 +1879,7 @@ async def token_address_reply(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     user_data = await load_user_data(str(user_id))
     
-    token_name, token_symbol, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
     if not token_name.startswith('An error occurred:'):
         token_info = f"""
         🪙 CA: {contract_add}
@@ -1795,7 +1902,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
     
-    token_name, token_symbol, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
 
     if not token_name.startswith('An error occurred:'):
         text = f"""
