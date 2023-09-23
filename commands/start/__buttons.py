@@ -856,7 +856,7 @@ async def delete_sniper_callback(update: Update, context: CallbackContext):
             markup = await build_snipping_keyboard(sniper, liq=False, met=True)
             await query.edit_message_reply_markup(reply_markup=markup)
             
-        elif int(button_data) == sniper.id:
+        elif button_data == str(sniper.id):
             context.user_data['sniper'] = sniper
             sniper = await remove_sniper(user_data, sniper.id)
             context.user_data['sniper'] = sniper
