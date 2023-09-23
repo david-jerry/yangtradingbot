@@ -26,7 +26,7 @@ from constants import (
     wallets_asset_message,
 )
 from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_info, get_wallet_balance, trasnfer_currency
-from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_next_sniper_data, load_previous_sniper_data, load_sniper_data, load_user_data, remove_sniper, save_copy_trade_address, save_sniper, save_user_data, update_copy_trade_addresses, update_snipes, update_user_data
+from utils_data import update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
@@ -391,7 +391,7 @@ Target Wallet: {matched_trade.contract_address}
 🤷‍♀️ Auto Buy
 Multi: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.multi else '✅ Enabled'}
 Auto Buy: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.auto_buy else '✅ Enabled'}
-Amount: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.amount > 0.000000 else matched_trade.amout}
+Amount: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.amount > 0.000000 else matched_trade.amount}
 Slippage: {'Default (100%)' if matched_trade.slippage >= 100.000000 else matched_trade.slippage} 
 Smart Slippage: {'❌ Disabled - Wallet Disabled ⚠️' if not matched_trade.smart_slippage else '✅ Enabled'}
 Gas Delta: Default (33.191 GWEI) + Delta ({matched_trade.gas_delta} GWEI)
@@ -412,8 +412,8 @@ def build_copy_name_keyboard(matched_trade):
     multi = InlineKeyboardButton(f"{'❌' if not matched_trade.multi else '✅'} Multi", callback_data=f"copyname_multi")
     copyautobuy = InlineKeyboardButton(f"{'❌' if not matched_trade.auto_buy else '✅'} Auto Buy", callback_data=f"copyname_autobuy")
     copysmartslippage = InlineKeyboardButton(f"{'❌' if not matched_trade.smart_slippage else '✅'} Smart Slippage", callback_data=f"copyname_smartslippage")
-    copybuyamount = InlineKeyboardButton(f"📝 Buy Amount", callback_data=f"copyname_buyamount")
-    copyslippage = InlineKeyboardButton(f"📝 Slippage", callback_data=f"copyname_slippage")
+    copybuyamount = InlineKeyboardButton(f"📝 Buy Amount", callback_data=f"ask_buyamount")
+    copyslippage = InlineKeyboardButton(f"📝 Slippage", callback_data=f"ask_slippage")
     delcopyslippage = InlineKeyboardButton(f"⌫ Slippage", callback_data=f"copyname_delslippage")
     copygasdelta = InlineKeyboardButton(f"📝 Gas Delta", callback_data=f"copyname_gasdelta")
     delcopygasdelta = InlineKeyboardButton(f"⌫ Gas Delta", callback_data=f"copyname_delgasdelta")
@@ -850,6 +850,8 @@ async def cancel_sniper(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ------------------------------------------------------------------------------
 TRADEWALLETNAME, TARGETWALLET = range(2)
 RENAME = range(1)
+CHATCHIT = range(1)
+CHATSLIP = range(1)
 async def copy_trade_next_and_back_callback(update: Update, context: CallbackContext):    
     global COPYSELECTED_CHAIN_INDEX
 
@@ -875,6 +877,9 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
         pass
 
     match = re.match(r"^copy_(\w+)", command)
+    context.user_data["id_ammount"] =user_data.id
+    context.user_data["name_ammount"] =match.group(1)
+
     if match:
         button_data = match.group(1)
         
@@ -902,6 +907,9 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
             back_variable(message, context, text, markup, False, True)
         elif any(button_data.startswith(trade_name) for trade_name in trade_names):
             for trade_name in trade_names:
+                button_data2 = button_data.split('_')
+
+
                 if button_data.startswith(trade_name) and '_' not in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
@@ -914,7 +922,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
                     # Edit the message to display the updated keyboard markup
                     message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
                     back_variable(message, context, text, markup, True, False)
-                elif button_data.startswith(trade_name) and '_off' in button_data:
+                elif button_data2[0] ==trade_name and '_off' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
                     LOGGER.info(matched_trade.name)
@@ -926,7 +934,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
                     message = await query.edit_message_reply_markup(reply_markup=new_markup)
                     back_variable(message, context, text, markup, False, True)
                     return message
-                elif button_data.startswith(trade_name) and '_on' in button_data:
+                elif button_data2[0] ==trade_name and '_on' in button_data:
                     index = trade_names.index(trade_name)
                     matched_trade = trades[index]
                     await update_copy_trade_addresses(user_id, matched_trade.name, context.user_data['selected_chain'], {'on': False})
@@ -1036,6 +1044,35 @@ async def copy_trade_start_callback(update: Update, context: CallbackContext):
             # back_variable(message, context, text, new_markup, False, False)
             return TRADEWALLETNAME
 
+async def AskSlippage2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    message = await query.message.reply_text("Reply to this message with your slippage.")
+
+    return CHATSLIP
+async def AskSlippage(update: Update, context: CallbackContext):
+    print(context.user_data["id_ammount"])
+    print(context.user_data["name_ammount"])
+    print(update.message.text)
+    slippage = Decimal(update.message.text)
+    result = await update_copy_trade_addresses_slippage(context.user_data["id_ammount"], slippage,context.user_data["name_ammount"])
+
+    return ConversationHandler.END
+
+async def AskAmmount2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    message = await query.message.reply_text("Reply to this message with your desired buy ammount.")
+
+    return CHATCHIT
+async def AskAmmount(update: Update, context: CallbackContext):
+    print(context.user_data["id_ammount"])
+    print(context.user_data["name_ammount"])
+    print(update.message.text)
+
+    ammout = Decimal(update.message.text)
+    result = await update_copy_trade_addresses_ammout(context.user_data["id_ammount"], ammout,context.user_data["name_ammount"])
+
+    return ConversationHandler.END
+
 async def target_token_address_reply(update: Update, context: CallbackContext):
     context.user_data['address'] = update.message.text.replace(' ', '_')
     user_id = update.message.from_user.id
@@ -1052,7 +1089,7 @@ async def submit_copy_reply(update: Update, context: CallbackContext):
     token_address = update.message.text.replace(' ', '')
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
-    copy_trade_main_id = context.user_data["copy_trade_message_id"]
+    #copy_trade_main_id = context.user_data["copy_trade_message_id"]
     
     await save_copy_trade_address(user_id, name, token_address, chain, False)
 
@@ -1067,7 +1104,7 @@ async def submit_copy_reply(update: Update, context: CallbackContext):
     # message = await update.message.edit_reply_markup(
     #     reply_markup=copy_trade_markup
     # )
-    message_id_to_edit = copy_trade_main_id
+    message_id_to_edit = "copy_trade_main_id"
     message = context.bot.edit_message_reply_markup(
         chat_id=update.message.chat_id,  # Replace with the chat ID where the message was sent
         message_id=message_id_to_edit,   # Specify the message ID you want to edit

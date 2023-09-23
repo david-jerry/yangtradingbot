@@ -58,6 +58,10 @@ from commands.start.__buttons import (
     cancel_rename,
     copy_trade_start_callback,
     target_token_address_reply,
+    AskAmmount,
+    AskAmmount2,
+    AskSlippage,
+    AskSlippage2,
     submit_copy_reply,
     cancel_copy,
     
@@ -176,6 +180,8 @@ PRIVATEKEY = range(1)
 REPLYDELTA = range(1)
 TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
 TRADEWALLETNAME, TARGETWALLET = range(2)
+CHATCHIT = range(1)
+CHATSLIP = range(1)
 RENAME = range(1)
 SNIPERADDRESS = range(1)
 def main() -> None:
@@ -213,7 +219,30 @@ def main() -> None:
     
     # Copy Trading callback
     app.add_handler(CallbackQueryHandler(copy_trade_next_and_back_callback, pattern=r"^copy_*"))
-    
+    # Slippage
+    Ask_slippage = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskSlippage2, pattern=r"^ask_slippage$")
+
+        ],
+        states={
+            CHATSLIP: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskSlippage)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
+    )
+    app.add_handler(Ask_slippage)
+    # Ammout
+    Ask_ammount = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskAmmount2, pattern=r"^ask_buyamount$")
+
+        ],
+        states={
+            CHATCHIT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskAmmount)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
+    )
+    app.add_handler(Ask_ammount)
     # TRANSFER HANDLERS
     copytrade_conv_handler = ConversationHandler(
         entry_points=[
