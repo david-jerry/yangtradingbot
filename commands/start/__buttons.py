@@ -775,97 +775,6 @@ EDITGASDELTA = range(1)
 EDITETHAMOUNT = range(1)
 EDITTOKENAMOUNT = range(1)
 EDITSLIPPAGE = range(1)
-async def delete_sniper_callback(update: Update, context: CallbackContext):   
-    query = update.callback_query
-    await query.answer()
-    command = query.data
-    user_id = str(query.from_user.id)
-    chat_id = query.message.chat_id
-    caption_id = context.user_data['caption_id']
-    user_data = await load_user_data(user_id)    
-    
-    sniper = await load_sniper_data(user_data)
-    context.user_data['sniper'] = sniper
-    
-    
-    match = re.match(r"^sniper_(\w+)", command)
-    if match:
-        button_data = match.group(1)
-        
-        LOGGER.info(button_data)
-        
-        if button_data == "right":
-            sniper = await load_next_sniper_data(sniper.id)
-            context.user_data['sniper'] = sniper
-            caption = await build_snipe_comment(sniper, user_data)
-            markup = await build_snipping_keyboard(sniper)
-            
-            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
-            context.user_data['message_id'] = message.message_id
-            
-        elif button_data == "left":
-            sniper = await load_previous_sniper_data(sniper.id)
-            context.user_data['sniper'] = sniper
-            caption = await build_snipe_comment(sniper, user_data)
-            markup = await build_snipping_keyboard(sniper)
-            
-            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
-            context.user_data['message_id'] = message.message_id
-            
-        elif button_data == "multi":
-            await update_snipes(user_id, sniper.contract_address, {'multi': True if not sniper.multi else False, 'auto': False, 'liquidity': False, 'method': False})
-            sniper = await load_sniper_data(user_data)
-            markup = await build_snipping_keyboard(sniper)
-            
-            await query.edit_message_reply_markup(reply_markup=markup)
-
-        elif button_data == "snipeliquidity":
-            await update_snipes(user_id, sniper.contract_address, {'multi': False, 'auto': False, 'liquidity': True if not sniper.liquidity else False, 'method': False})
-            sniper = await load_sniper_data(user_data)
-            markup = await build_snipping_keyboard(sniper)
-            
-            await query.edit_message_reply_markup(reply_markup=markup)
-
-        elif button_data == "snipeauto":
-            await update_snipes(user_id, sniper.contract_address, {'multi': False, 'auto': True if not sniper.auto else False, 'liquidity': False, 'method': False})
-            sniper = await load_sniper_data(user_data)
-            markup = await build_snipping_keyboard(sniper, liq=False, aut=True)
-            
-            await query.edit_message_reply_markup(reply_markup=markup)
-
-        elif button_data == "snipemethod":
-            await update_snipes(user_id, sniper.contract_address, {'multi': False, 'auto': False, 'liquidity': False, 'method': True if not sniper.method else False})
-            sniper = await load_sniper_data(user_data)
-            markup = await build_snipping_keyboard(sniper, liq=False, met=True)
-            
-            await query.edit_message_reply_markup(reply_markup=markup)
-
-        elif button_data == "snipe":
-            await query.message.reply_text("what is the token address to snipe?")
-            return SNIPERADDRESS               
-            
-        elif button_data == "auto":
-            markup = await build_snipping_keyboard(sniper, liq=False, aut=True)
-            await query.edit_message_reply_markup(reply_markup=markup)
-            
-        elif button_data == "liquidity":
-            markup = await build_snipping_keyboard(sniper, liq=True)
-            await query.edit_message_reply_markup(reply_markup=markup)
-            
-        elif button_data == "method":
-            markup = await build_snipping_keyboard(sniper, liq=False, met=True)
-            await query.edit_message_reply_markup(reply_markup=markup)
-            
-        elif button_data == str(sniper.id):
-            context.user_data['sniper'] = sniper
-            sniper = await remove_sniper(user_data, sniper.id)
-            context.user_data['sniper'] = sniper
-            caption = await build_snipe_comment(sniper, user_data)
-            markup = await build_snipping_keyboard(sniper)
-            
-            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
-            context.user_data['message_id'] = message.message_id
-        
 async def add_sniper_address(update: Update, context: CallbackContext):
     text = update.message.text.strip()
     user_id = update.message.from_user.id
@@ -1068,6 +977,97 @@ async def cancel_sniper(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Sniper Cancelled.")
     return ConversationHandler.END
 
+async def delete_sniper_callback(update: Update, context: CallbackContext):   
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    chat_id = query.message.chat_id
+    caption_id = context.user_data['caption_id']
+    user_data = await load_user_data(user_id)    
+    
+    sniper = await load_sniper_data(user_data)
+    context.user_data['sniper'] = sniper
+    
+    
+    match = re.match(r"^sniper_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        LOGGER.info(button_data)
+        
+        if button_data == "right":
+            sniper = await load_next_sniper_data(sniper.id)
+            context.user_data['sniper'] = sniper
+            caption = await build_snipe_comment(sniper, user_data)
+            markup = await build_snipping_keyboard(sniper)
+            
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+            context.user_data['message_id'] = message.message_id
+            
+        elif button_data == "left":
+            sniper = await load_previous_sniper_data(sniper.id)
+            context.user_data['sniper'] = sniper
+            caption = await build_snipe_comment(sniper, user_data)
+            markup = await build_snipping_keyboard(sniper)
+            
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+            context.user_data['message_id'] = message.message_id
+            
+        elif button_data == "multi":
+            await update_snipes(user_id, sniper.contract_address, {'multi': True if not sniper.multi else False, 'auto': False, 'liquidity': False, 'method': False})
+            sniper = await load_sniper_data(user_data)
+            markup = await build_snipping_keyboard(sniper)
+            
+            await query.edit_message_reply_markup(reply_markup=markup)
+
+        elif button_data == "snipeliquidity":
+            await update_snipes(user_id, sniper.contract_address, {'multi': False, 'auto': False, 'liquidity': True if not sniper.liquidity else False, 'method': False})
+            sniper = await load_sniper_data(user_data)
+            markup = await build_snipping_keyboard(sniper)
+            
+            await query.edit_message_reply_markup(reply_markup=markup)
+
+        elif button_data == "snipeauto":
+            await update_snipes(user_id, sniper.contract_address, {'multi': False, 'auto': True if not sniper.auto else False, 'liquidity': False, 'method': False})
+            sniper = await load_sniper_data(user_data)
+            markup = await build_snipping_keyboard(sniper, liq=False, aut=True)
+            
+            await query.edit_message_reply_markup(reply_markup=markup)
+
+        elif button_data == "snipemethod":
+            await update_snipes(user_id, sniper.contract_address, {'multi': False, 'auto': False, 'liquidity': False, 'method': True if not sniper.method else False})
+            sniper = await load_sniper_data(user_data)
+            markup = await build_snipping_keyboard(sniper, liq=False, met=True)
+            
+            await query.edit_message_reply_markup(reply_markup=markup)
+
+        elif button_data == "snipe":
+            await query.message.reply_text("what is the token address to snipe?")
+            return SNIPERADDRESS               
+            
+        elif button_data == "auto":
+            markup = await build_snipping_keyboard(sniper, liq=False, aut=True)
+            await query.edit_message_reply_markup(reply_markup=markup)
+            
+        elif button_data == "liquidity":
+            markup = await build_snipping_keyboard(sniper, liq=True)
+            await query.edit_message_reply_markup(reply_markup=markup)
+            
+        elif button_data == "method":
+            markup = await build_snipping_keyboard(sniper, liq=False, met=True)
+            await query.edit_message_reply_markup(reply_markup=markup)
+            
+        elif button_data == str(sniper.id):
+            context.user_data['sniper'] = sniper
+            sniper = await remove_sniper(user_data, sniper.id)
+            context.user_data['sniper'] = sniper
+            caption = await build_snipe_comment(sniper, user_data)
+            markup = await build_snipping_keyboard(sniper)
+            
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+            context.user_data['message_id'] = message.message_id
+        
 
 
 
