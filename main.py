@@ -73,7 +73,11 @@ from commands.start.__buttons import (
     wallets_chain_connect_button_callback,
     wallets_chain_attach_callback,
     reply_wallet_attach,
-    cancel_attachment
+    cancel_attachment,
+    
+    delete_sniper_callback,
+    add_sniper_address,
+    cancel_sniper,
 )
 
 
@@ -173,7 +177,7 @@ REPLYDELTA = range(1)
 TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
 TRADEWALLETNAME, TARGETWALLET = range(2)
 RENAME = range(1)
-
+SNIPERADDRESS = range(1)
 def main() -> None:
     LOGGER.info(TOKEN)
     LOGGER.info(USERNAME)
@@ -234,6 +238,18 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_attachment", cancel_attachment)]
     )
     app.add_handler(attach_conv_handler)
+    
+    # SNIPER CONVERSATION HANDLERS
+    sniper_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_snipe$")
+        ],
+        states={
+            SNIPERADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
+        },
+        fallbacks=[CommandHandler("cancel_sniper", cancel_sniper)]
+    )
+    app.add_handler(sniper_conv_handler)
     
     
 

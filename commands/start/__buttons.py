@@ -26,7 +26,7 @@ from constants import (
     wallets_asset_message,
 )
 from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_info, get_wallet_balance, trasnfer_currency
-from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_sniper_data, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
+from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_next_sniper_data, load_previous_sniper_data, load_sniper_data, load_user_data, remove_sniper, save_copy_trade_address, save_sniper, save_user_data, update_copy_trade_addresses, update_snipes, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
@@ -363,19 +363,22 @@ def build_preset_keyboard():
     
     return preset_markup  
 
-async def build_snipe_comment(token, user_data, network='ETH'):
-    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info(token, network, user_data)
-    global TOKENNAME
-    TOKENNAME = token_name
-    message = f"""
+async def build_snipe_comment(sniper, user_data, network='ETH'):
+    if sniper:
+        token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info(sniper.contract_address, network, user_data)
+        global TOKENNAME
+        TOKENNAME = token_name
+        message = f"""
 🪙 {token_name} ({token_symbol}) ⚡️ ethereum
-CA: <pre>{token}</pre>
+CA: <pre>{TOKENNAME}</pre>
 LP(UNI-V2): <pre>{token_lp}</pre>
 V2 Pooluser_data
 
 💵 Wallet | <pre>Main</pre>
 ⛽️ Gas Price | <pre>Set in Configuration</pre>    
-    """
+        """
+    else:
+        message = "⚠️ No tokens to snipe"
     return message
 
 @sync_to_async
@@ -480,8 +483,8 @@ def build_snipping_keyboard(sniper):
                 [snipebutton],
                 [sback, token_name, sforward],
                 [multi, gas_delta],
-                [liquidity, method, auto]
-                [snipeliquidity, blockdelay]
+                [liquidity, method, auto],
+                [snipeliquidity, blockdelay],
                 [eth_amount, token_amount],
                 [snipeslippage, delsnipeslippage],
             ] 
@@ -491,8 +494,8 @@ def build_snipping_keyboard(sniper):
                 [snipebutton],
                 [sback, token_name, sforward],
                 [multi, gas_delta],
-                [liquidity, method, auto]
-                [snipeauto]
+                [liquidity, method, auto],
+                [snipeauto],
                 [eth_amount, token_amount],
                 [snipeslippage, delsnipeslippage],
             ] 
@@ -502,8 +505,8 @@ def build_snipping_keyboard(sniper):
                 [snipebutton],
                 [sback, token_name, sforward],
                 [multi, gas_delta],
-                [liquidity, method, auto]
-                [snipemethod, blockdelay]
+                [liquidity, method, auto],
+                [snipemethod, blockdelay],
                 [eth_amount, token_amount],
                 [snipeslippage, delsnipeslippage],
             ] 
@@ -680,14 +683,10 @@ async def start_button_callback(update: Update, context: CallbackContext):
             context.user_data["last_message_id"] = message.message_id
             back_variable(message, context, copy_message, copy_trade_markup, True, False)
         elif button_data == "sniper":
-            if user_data.snipes.exists():
-                copy_message = "⚠️ No tokens to snipe"
-                contract_address = user_data.snipes.first().contract_address if user_data.snipes != None else None
-                trades = await load_sniper_data(contract_address)
-                copy_trade_markup = await build_snipping_keyboard(user_data.snipes.first())
-            else:
-                copy_message = await build_snipe_comment(user_data.snipes.first().contract_address, user_data)
-                copy_trade_markup = await build_snipping_keyboard(None)
+            context.user_data['caption_id'] = query.message.message_id
+            sniper = await load_sniper_data(user_data)
+            copy_message = await build_snipe_comment(sniper, user_data)
+            copy_trade_markup = await build_snipping_keyboard(sniper)
                 
             message = await query.edit_message_caption(
                 caption=copy_message, 
@@ -757,6 +756,85 @@ Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</
         await query.message.reply_text("I don't understand that command.")
 
 
+
+
+
+# ------------------------------------------------------------------------------
+# SNIPER BUTTON CALLBACK
+# ------------------------------------------------------------------------------
+SNIPERADDRESS = range(1)
+
+async def delete_sniper_callback(update: Update, context: CallbackContext):   
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    chat_id = query.message.chat_id
+    caption_id = context.user_data['caption_id']
+    user_data = await load_user_data(user_id)    
+    
+    sniper = await load_sniper_data(user_data)
+    context.user_data['sniper'] = sniper
+    
+    
+    match = re.match(r"^sniper_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        LOGGER.info(button_data)
+        
+        if button_data == "right":
+            sniper = await load_next_sniper_data(sniper.id)
+            context.user_data['sniper'] = sniper
+            caption = await build_snipe_comment(sniper, user_data)
+            markup = await build_snipping_keyboard(sniper)
+            
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+            context.user_data['message_id'] = message.message_id
+            
+        elif button_data == "left":
+            sniper = await load_previous_sniper_data(sniper.id)
+            context.user_data['sniper'] = sniper
+            caption = await build_snipe_comment(sniper, user_data)
+            markup = await build_snipping_keyboard(sniper)
+            
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+            context.user_data['message_id'] = message.message_id
+            
+        elif button_data == "snipe":
+            await query.message.reply_text("what is the token address to snipe?")
+            return SNIPERADDRESS
+        
+        elif int(button_data) == sniper.id:
+            context.user_data['sniper'] = sniper
+            sniper = await remove_sniper(user_data, sniper.id)
+            context.user_data['sniper'] = sniper
+            caption = await build_snipe_comment(sniper, user_data)
+            markup = await build_snipping_keyboard(sniper)
+            
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+            context.user_data['message_id'] = message.message_id
+        
+async def add_sniper_address(update: Update, context: CallbackContext):
+    text = update.message.text.strip()
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    
+    sniper = await save_sniper(user_id, text, context.user_data['selected_chain'])
+    # Update the keyboard markup with the new selected chain
+    caption = await build_snipe_comment(sniper, user_data)
+    new_markup = await build_snipping_keyboard(sniper)
+    
+    message_id_to_edit = context.user_data.get('caption_id')
+
+    await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
+    return ConversationHandler.END
+    
+async def cancel_sniper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.pop('sniper', None)
+    await update.message.reply_text("Sniper Cancelled.")
+    return ConversationHandler.END
 
 
 

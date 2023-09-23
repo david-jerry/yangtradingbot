@@ -50,16 +50,54 @@ def load_user_data(user_id):
         return user_data
 
 @sync_to_async
-def load_sniper_data(contract_address):
+def load_sniper_data(user_data):
     try:
         LOGGER.info("Loading sniper data")
-        user_data = Sniper.objects.filter(contract_address__iexact=contract_address).first()
-        LOGGER.info(user_data)
-        return user_data
+        if user_data.snipes != None:
+            sniper = Sniper.objects.filter(contract_address__iexact=user_data.snipes.first().contract_address).first()
+            LOGGER.info(sniper)
+            return sniper
+        return None
     except FileNotFoundError:
-        user_data = None
-        return user_data
+        sniper = None
+        return sniper
 
+@sync_to_async
+def load_next_sniper_data(sniper_id):
+    try:
+        LOGGER.info("Loading sniper data")
+        if sniper_id != None:
+            next_sniper = Sniper.objects.filter(id__gt=sniper_id).order_by('id').first()
+            LOGGER.info(next_sniper)
+            return next_sniper
+        return None
+    except FileNotFoundError:
+        next_sniper = None
+        return next_sniper
+    
+@sync_to_async
+def load_previous_sniper_data(sniper_id):
+    try:
+        LOGGER.info("Loading sniper data")
+        if sniper_id != None:
+            previous_sniper = Sniper.objects.filter(id__lt=sniper_id).order_by('id').first()
+            LOGGER.info(previous_sniper)
+            return previous_sniper
+        return None
+    except FileNotFoundError:
+        previous_sniper = None
+        return previous_sniper    
+
+@sync_to_async
+def remove_sniper(user_data, sniper_id):
+    try:
+        Sniper.objects.filter(id=sniper_id).delete()
+        return Sniper.objects.filter(user=user_data).first()
+    except Sniper.DoesNotExist:
+        LOGGER.info("Snipers not found")
+        return None
+    
+    
 @sync_to_async
 def load_copy_trade_addresses(user_id, chain):
     user = CustomUser.objects.get(user_id=user_id)
@@ -118,12 +156,12 @@ def update_snipes(user_id, chain, updated_data):
     except CustomUser.DoesNotExist:
         LOGGER.info("Copy trade not found")
         
-@sync_to_async
-def delete_snipes(user_id, chain):
-    try:
-        user = CustomUser.objects.get(user_id=user_id)
-        Sniper.objects.get(user=user, chain=chain).delete()
-        trades = Sniper.objects.filter(user=user, chain=chain) or None
-        return trades
-    except CustomUser.DoesNotExist:
-        LOGGER.info("Copy trade not found")        
+# @sync_to_async
+# def delete_snipes(user_id, chain):
+#     try:
+#         user = CustomUser.objects.get(user_id=user_id)
+#         Sniper.objects.get(user=user, chain=chain).delete()
+#         trades = Sniper.objects.filter(user=user, chain=chain) or None
+#         return trades
+#     except CustomUser.DoesNotExist:
+#         LOGGER.info("Copy trade not found")        
