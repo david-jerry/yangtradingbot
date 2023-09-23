@@ -451,7 +451,7 @@ def build_copy_name_keyboard(matched_trade):
 
 @sync_to_async
 def build_snipping_keyboard(sniper, liq=True, aut=False, met=False):
-    snipebutton = InlineKeyboardButton("👁 Snipe", callback_data=f"sniper_snipe")
+    snipebutton = InlineKeyboardButton("👁 Snipe", callback_data=f"conversation_sniper_snipe")
     sback = InlineKeyboardButton("⏪ ", callback_data="snipper_left")
     sforward = InlineKeyboardButton("⏩ ", callback_data="snipper_right")
     LOGGER.info(f"Sniper Keyboard Rebuiding: {sniper}")
@@ -459,18 +459,18 @@ def build_snipping_keyboard(sniper, liq=True, aut=False, met=False):
         multi = InlineKeyboardButton(f"{'❌' if not sniper.multi else '✅'} Multi", callback_data=f"sniper_multi")
         deletetoken = InlineKeyboardButton("❌ Delete", callback_data=f"sniper_{sniper.id}")
         token_name = InlineKeyboardButton(f"{TOKENNAME}", callback_data="snipper_right")
-        snipeslippage = InlineKeyboardButton(f"📝 Slippage", callback_data=f"snipper_slippage")
+        snipeslippage = InlineKeyboardButton(f"📝 Slippage", callback_data=f"snipper_conversation_slippage")
         delsnipeslippage = InlineKeyboardButton(f"⌫ Slippage", callback_data=f"sniper_delslippage")
-        gas_delta = InlineKeyboardButton(f"📝 Gas Delta", callback_data=f"sniper_gasdelta")
+        gas_delta = InlineKeyboardButton(f"📝 Gas Delta", callback_data=f"conversation_sniper_gasdelta")
         liquidity = InlineKeyboardButton(f"{'❌' if not sniper.liquidity else '✅'} Liquidity", callback_data=f"sniper_liquidity")
         auto = InlineKeyboardButton(f"{'❌' if not sniper.auto else '✅'} Auto", callback_data=f"sniper_auto")
         method = InlineKeyboardButton(f"{'❌' if not sniper.method else '✅'} Method", callback_data=f"sniper_method")
-        eth_amount = InlineKeyboardButton(f"{round(sniper.eth, 2)} ETH", callback_data=f"sniper_eth")
-        token_amount = InlineKeyboardButton(f"{round(sniper.token, 2)} {TOKENNAME.upper()}", callback_data=f"sniper_token")
+        eth_amount = InlineKeyboardButton(f"{round(sniper.eth, 2)} ETH", callback_data=f"conversation_sniper_eth")
+        token_amount = InlineKeyboardButton(f"{round(sniper.token, 2)} {TOKENNAME.upper()}", callback_data=f"conversation_sniper_token")
         snipeliquidity = InlineKeyboardButton(f"{'❌' if not sniper.liquidity else '✅'} Snipe Liquidity", callback_data=f"sniper_snipeliquidity")
         snipemethod = InlineKeyboardButton(f"{'❌' if not sniper.method else '✅'} Snipe Method", callback_data=f"sniper_snipemethod")
         snipeauto = InlineKeyboardButton(f"{'❌' if not sniper.auto else '✅'} Sell-Lo Amount", callback_data=f"sniper_snipeauto")
-        blockdelay = InlineKeyboardButton(f"Block Delay | {round(sniper.block_delay, 1)}", callback_data=f"sniper_blockdelay")
+        blockdelay = InlineKeyboardButton(f"Block Delay | {round(sniper.block_delay, 1)}", callback_data=f"conversation_sniper_blockdelay")
     
         # liq = True if liq == True or sniper.liquidity else False
         # aut = True if aut == True or sniper.auto else False
@@ -770,29 +770,8 @@ Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</
 # ------------------------------------------------------------------------------
 # SNIPER BUTTON CALLBACK
 # ------------------------------------------------------------------------------
-SNIPERADDRESS = range(1)
-EDITGASDELTA = range(1)
-EDITETHAMOUNT = range(1)
-EDITTOKENAMOUNT = range(1)
-EDITSLIPPAGE = range(1)
-async def add_sniper_address(update: Update, context: CallbackContext):
-    text = update.message.text.strip()
-    user_id = update.message.from_user.id
-    chat_id = update.message.chat_id
-    user_data = await load_user_data(user_id)    
-    
-    sniper = await save_sniper(user_id, text, context.user_data['selected_chain'])
-    # Update the keyboard markup with the new selected chain
-    caption = await build_snipe_comment(sniper, user_data)
-    new_markup = await build_snipping_keyboard(sniper)
-    
-    message_id_to_edit = context.user_data.get('caption_id')
-
-    await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
-    return ConversationHandler.END
-
-
-async def delta_sniper_callback(update: Update, context: CallbackContext):   
+SNIPERADDRESS, EDITGASDELTA, EDITETHAMOUNT, EDITTOKENAMOUNT, EDITSLIPPAGE, EDITBLOCKDELAY = range(6)
+async def delete_conversation_sniper_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     command = query.data
@@ -804,179 +783,36 @@ async def delta_sniper_callback(update: Update, context: CallbackContext):
     sniper = await load_sniper_data(user_data)
     context.user_data['sniper'] = sniper
     
-    
-    match = re.match(r"^sniper_(\w+)", command)
+    match = re.match(r"^conversation_sniper_(\w+)", command)
     if match:
         button_data = match.group(1)
         
         LOGGER.info(button_data)
-        
-        if button_data == "gasdelta":
-            await query.message.reply_text(f"Reply to this message with your desired gas price (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is {user_data.max_gas_price}!")
+        if button_data == "snipe":
+            message = await query.message.reply_text("what is the token address to snipe?")
+            context.user_data['question_message_id'] = message.message_id
+            return SNIPERADDRESS        
+        elif button_data == "gasdelta":
+            message = await query.message.reply_text(f"Reply to this message with your desired gas price (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is {user_data.max_gas_price}!")
+            context.user_data['question_message_id'] = message.message_id
             return EDITGASDELTA
-
-async def sniper_gas_delta_reply(update: Update, context: CallbackContext):
-    text = Decimal(update.message.text.strip())
-    user_id = update.message.from_user.id
-    chat_id = update.message.chat_id
-    user_data = await load_user_data(user_id)    
-    
-    sniper = await load_sniper_data(user_data)
-    
-    await update_user_data(user_id, {'max_delta': text})
-    
-    user_data = await load_user_data(user_id)
-    
-    # Update the keyboard markup with the new selected chain
-    caption = await build_snipe_comment(sniper, user_data)
-    new_markup = await build_snipping_keyboard(sniper)
-    
-    message_id_to_edit = context.user_data.get('caption_id')
-
-    await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
-    return ConversationHandler.END
-
-
-async def slipage_sniper_callback(update: Update, context: CallbackContext):   
-    query = update.callback_query
-    await query.answer()
-    command = query.data
-    user_id = str(query.from_user.id)
-    chat_id = query.message.chat_id
-    caption_id = context.user_data['caption_id']
-    user_data = await load_user_data(user_id)    
-    
-    sniper = await load_sniper_data(user_data)
-    context.user_data['sniper'] = sniper
-    
-    
-    match = re.match(r"^sniper_(\w+)", command)
-    if match:
-        button_data = match.group(1)
-        
-        LOGGER.info(button_data)
-        
-        if button_data == "slippage":
-            await query.message.reply_text("Reply to this message with your desired slippage percentage.")
-            return EDITSLIPPAGE
-        
-async def sniper_slippage_reply(update: Update, context: CallbackContext):
-    text = Decimal(update.message.text.strip())
-    user_id = update.message.from_user.id
-    chat_id = update.message.chat_id
-    user_data = await load_user_data(user_id)    
-    
-    sniper = await load_sniper_data(user_data)
-
-    await update_user_data(user_id, {'slippage': text})
-    
-    user_data = await load_user_data(user_id)
-    
-    # Update the keyboard markup with the new selected chain
-    caption = await build_snipe_comment(sniper, user_data)
-    new_markup = await build_snipping_keyboard(sniper)
-    
-    message_id_to_edit = context.user_data.get('caption_id')
-
-    await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
-    return ConversationHandler.END
-
-
-async def token_amount_sniper_callback(update: Update, context: CallbackContext):   
-    query = update.callback_query
-    await query.answer()
-    command = query.data
-    user_id = str(query.from_user.id)
-    chat_id = query.message.chat_id
-    caption_id = context.user_data['caption_id']
-    user_data = await load_user_data(user_id)    
-    
-    sniper = await load_sniper_data(user_data)
-    context.user_data['sniper'] = sniper
-    
-    
-    match = re.match(r"^sniper_(\w+)", command)
-    if match:
-        button_data = match.group(1)
-        
-        LOGGER.info(button_data)
-        
-        if button_data == "token":
-            await query.message.reply_text(f"Reply to this message with your desired buy amount (in {TOKENNAME.upper()}) when liquidity is added.")
-            return EDITTOKENAMOUNT
-
-        
-async def sniper_token_amount_reply(update: Update, context: CallbackContext):
-    text = Decimal(update.message.text.strip())
-    user_id = update.message.from_user.id
-    chat_id = update.message.chat_id
-    user_data = await load_user_data(user_id)    
-    
-    sniper = await load_sniper_data(user_data)
-
-    await update_snipes(user_id, sniper.contract_address, {'token': text})
-    
-    user_data = await load_user_data(user_id)
-    
-    # Update the keyboard markup with the new selected chain
-    caption = await build_snipe_comment(sniper, user_data)
-    new_markup = await build_snipping_keyboard(sniper)
-    
-    message_id_to_edit = context.user_data.get('caption_id')
-
-    await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
-    return ConversationHandler.END
-
-
-async def eth_amount_sniper_callback(update: Update, context: CallbackContext):   
-    query = update.callback_query
-    await query.answer()
-    command = query.data
-    user_id = str(query.from_user.id)
-    chat_id = query.message.chat_id
-    caption_id = context.user_data['caption_id']
-    user_data = await load_user_data(user_id)    
-    
-    sniper = await load_sniper_data(user_data)
-    context.user_data['sniper'] = sniper
-    
-    
-    match = re.match(r"^sniper_(\w+)", command)
-    if match:
-        button_data = match.group(1)
-        
-        LOGGER.info(button_data)
-        
-        if button_data == "eth":
-            await query.message.reply_text("Reply to this message with your desired buy amount (in ETH) or percentage when liquidity is added.")
+        elif button_data == "blockdelay":
+            message = await query.message.reply_text(f"Reply to this message with your desired block delay.")
+            context.user_data['question_message_id'] = message.message_id
+            return EDITBLOCKDELAY
+        elif button_data == "eth":
+            message = await query.message.reply_text("Reply to this message with your desired buy amount (in ETH) or percentage when liquidity is added.")
+            context.user_data['question_message_id'] = message.message_id
             return EDITETHAMOUNT
-        
-async def sniper_eth_amount_reply(update: Update, context: CallbackContext):
-    text = Decimal(update.message.text.strip())
-    user_id = update.message.from_user.id
-    chat_id = update.message.chat_id
-    user_data = await load_user_data(user_id)    
-    
-    sniper = await load_sniper_data(user_data)
-
-    await update_snipes(user_id, sniper.contract_address, {'eth': text})
-    
-    user_data = await load_user_data(user_id)
-    
-    # Update the keyboard markup with the new selected chain
-    caption = await build_snipe_comment(sniper, user_data)
-    new_markup = await build_snipping_keyboard(sniper)
-    
-    message_id_to_edit = context.user_data.get('caption_id')
-
-    await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
-    return ConversationHandler.END
-    
-async def cancel_sniper(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.user_data.pop('sniper', None)
-    await update.message.reply_text("Sniper Cancelled.")
-    return ConversationHandler.END
-
+        elif button_data == "token":
+            message = await query.message.reply_text(f"Reply to this message with your desired buy amount (in {TOKENNAME.upper()}) when liquidity is added.")
+            context.user_data['question_message_id'] = message.message_id
+            return EDITTOKENAMOUNT
+        elif button_data == "slippage":
+            message = await query.message.reply_text("Reply to this message with your desired slippage percentage.")
+            context.user_data['question_message_id'] = message.message_id
+            return EDITSLIPPAGE
+            
 async def delete_sniper_callback(update: Update, context: CallbackContext):   
     query = update.callback_query
     await query.answer()
@@ -1040,11 +876,7 @@ async def delete_sniper_callback(update: Update, context: CallbackContext):
             sniper = await load_sniper_data(user_data)
             markup = await build_snipping_keyboard(sniper, liq=False, met=True)
             
-            await query.edit_message_reply_markup(reply_markup=markup)
-
-        elif button_data == "snipe":
-            await query.message.reply_text("what is the token address to snipe?")
-            return SNIPERADDRESS               
+            await query.edit_message_reply_markup(reply_markup=markup)      
             
         elif button_data == "auto":
             markup = await build_snipping_keyboard(sniper, liq=False, aut=True)
@@ -1058,7 +890,7 @@ async def delete_sniper_callback(update: Update, context: CallbackContext):
             markup = await build_snipping_keyboard(sniper, liq=False, met=True)
             await query.edit_message_reply_markup(reply_markup=markup)
             
-        elif button_data == str(sniper.id):
+        elif int(button_data) == sniper.id:
             context.user_data['sniper'] = sniper
             sniper = await remove_sniper(user_data, sniper.id)
             context.user_data['sniper'] = sniper
@@ -1068,6 +900,137 @@ async def delete_sniper_callback(update: Update, context: CallbackContext):
             message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
             context.user_data['message_id'] = message.message_id
         
+async def add_sniper_address(update: Update, context: CallbackContext):
+    text = update.message.text.strip()
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    
+    sniper = await save_sniper(user_id, text, context.user_data['selected_chain'])
+    # Update the keyboard markup with the new selected chain
+    caption = await build_snipe_comment(sniper, user_data)
+    new_markup = await build_snipping_keyboard(sniper)
+    
+    message_id_to_edit = context.user_data.get('caption_id')
+
+    await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
+    return ConversationHandler.END
+
+
+async def sniper_gas_delta_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = Decimal(update.message.text.strip())
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    question_message_id = context.user_data.get('question_message_id')
+    
+    sniper = await load_sniper_data(user_data)
+    
+    await update_user_data(user_id, {'max_delta': text})
+    
+    user_data = await load_user_data(user_id)    
+    sniper = await load_sniper_data(user_data)
+    
+    # Update the keyboard markup with the new selected chain
+    new_markup = await build_snipping_keyboard(sniper)
+    
+    message_id_to_edit = context.user_data.get('caption_id')
+
+    await context.bot.delete_message(chat_id=chat_id, message_id=question_message_id)
+    # await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id_to_edit, reply_markup=new_markup)
+    return ConversationHandler.END
+
+async def sniper_blockdelay_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = Decimal(update.message.text.strip())
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    question_message_id = context.user_data.get('question_message_id')
+    sniper = await load_sniper_data(user_data)
+
+    await update_snipes(user_id, sniper.contract_address, {'block_delay': text})
+    
+    user_data = await load_user_data(user_id)    
+    sniper = await load_sniper_data(user_data)
+    
+    # Update the keyboard markup with the new selected chain
+    new_markup = await build_snipping_keyboard(sniper)
+    
+    message_id_to_edit = context.user_data.get('caption_id')
+    await context.bot.delete_message(chat_id=chat_id, message_id=question_message_id)
+    await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id_to_edit, reply_markup=new_markup)
+    return ConversationHandler.END
+
+async def sniper_slippage_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = Decimal(update.message.text.strip())
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    question_message_id = context.user_data.get('question_message_id')
+    sniper = await load_sniper_data(user_data)
+
+    await update_user_data(user_id, {'slippage': text})
+    
+    user_data = await load_user_data(user_id)    
+    sniper = await load_sniper_data(user_data)
+    
+    # Update the keyboard markup with the new selected chain
+    new_markup = await build_snipping_keyboard(sniper)
+    
+    message_id_to_edit = context.user_data.get('caption_id')
+
+    await context.bot.delete_message(chat_id=chat_id, message_id=question_message_id)
+    # await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id_to_edit, reply_markup=new_markup)
+    return ConversationHandler.END
+
+async def sniper_token_amount_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = Decimal(update.message.text.strip())
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    question_message_id = context.user_data.get('question_message_id')
+    sniper = await load_sniper_data(user_data)
+
+    await update_snipes(user_id, sniper.contract_address, {'token': text})
+    
+    user_data = await load_user_data(user_id)    
+    sniper = await load_sniper_data(user_data)
+    
+    # Update the keyboard markup with the new selected chain
+    new_markup = await build_snipping_keyboard(sniper)
+    
+    message_id_to_edit = context.user_data.get('caption_id')
+
+    await context.bot.delete_message(chat_id=chat_id, message_id=question_message_id)
+    await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id_to_edit, reply_markup=new_markup)
+    return ConversationHandler.END
+
+async def sniper_eth_amount_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = Decimal(update.message.text.strip())
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    question_message_id = context.user_data.get('question_message_id')
+    sniper = await load_sniper_data(user_data)
+
+    await update_snipes(user_id, sniper.contract_address, {'eth': text})
+    
+    user_data = await load_user_data(user_id)    
+    sniper = await load_sniper_data(user_data)
+    
+    # Update the keyboard markup with the new selected chain
+    new_markup = await build_snipping_keyboard(sniper)
+    
+    message_id_to_edit = context.user_data.get('caption_id')
+    await context.bot.delete_message(chat_id=chat_id, message_id=question_message_id)
+    await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id_to_edit, reply_markup=new_markup)
+    return ConversationHandler.END
+    
+async def cancel_sniper(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data.pop('sniper', None)
+    await update.message.reply_text("Sniper Cancelled.")
+    return ConversationHandler.END
+
 
 
 
