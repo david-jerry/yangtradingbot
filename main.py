@@ -77,6 +77,10 @@ from commands.start.__buttons import (
     
     delete_sniper_callback,
     add_sniper_address,
+    sniper_gas_delta_reply,
+    sniper_slippage_reply,
+    sniper_token_amount_reply,
+    sniper_eth_amount_reply,
     cancel_sniper,
 )
 
@@ -264,7 +268,7 @@ def main() -> None:
             CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_gasdelta$")
         ],
         states={
-            EDITGASDELTA: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
+            EDITGASDELTA: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), sniper_gas_delta_reply)],
         },
         fallbacks=[CommandHandler("cancel_sniper", cancel_sniper)]
     )
@@ -275,7 +279,7 @@ def main() -> None:
             CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_eth$")
         ],
         states={
-            EDITETHAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
+            EDITETHAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), sniper_eth_amount_reply)],
         },
         fallbacks=[CommandHandler("cancel_sniper", cancel_sniper)]
     )
@@ -286,7 +290,7 @@ def main() -> None:
             CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_token$")
         ],
         states={
-            EDITTOKENAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
+            EDITTOKENAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), sniper_token_amount_reply)],
         },
         fallbacks=[CommandHandler("cancel_sniper", cancel_sniper)]
     )
@@ -297,7 +301,7 @@ def main() -> None:
             CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_slippage$")
         ],
         states={
-            EDITSLIPPAGE: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
+            EDITSLIPPAGE: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), sniper_slippage_reply)],
         },
         fallbacks=[CommandHandler("cancel_sniper", cancel_sniper)]
     )
