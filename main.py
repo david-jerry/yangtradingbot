@@ -255,20 +255,7 @@ def main() -> None:
     )
     app.add_handler(attach_conv_handler)
     
-    # SNIPER CONVERSATION HANDLERS
-    sniper_conv_handler = ConversationHandler(
-        entry_points=[
-            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_snipe$")
-        ],
-        states={
-            SNIPERADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
-        },
-        fallbacks=[CommandHandler("cancel_sniper", cancel_sniper)]
-    )
-    app.add_handler(sniper_conv_handler)
-    
-    
-    
+    # SNIPER CONVERSATION HANDLERS   
     edit_sniper_gasdelta_conv_handler = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(delta_sniper_callback, pattern=r"^sniper_gasdelta$")
@@ -318,6 +305,18 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_sniper", cancel_sniper)]
     )
     app.add_handler(edit_sniper_slippage_conv_handler)
+    
+    sniper_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_snipe$")
+        ],
+        states={
+            SNIPERADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
+        },
+        fallbacks=[CommandHandler("cancel_sniper", cancel_sniper)]
+    )
+    app.add_handler(sniper_conv_handler)
+    
     
     
 
