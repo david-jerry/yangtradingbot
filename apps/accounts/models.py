@@ -117,18 +117,21 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class Sniper(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="sniper", blank=True)
     chain = models.CharField(max_length=5, blank=True)
+    name = models.CharField(max_length=255, blank=True)
+    symbol = models.CharField(max_length=255, blank=True)
+    decimal = models.IntegerField(default=18)
     contract_address = models.CharField(max_length=500, blank=True)
     
-    auto = models.BooleanField(default=True)
-    method = models.BooleanField(default=True)
-    liquidity = models.BooleanField(default=True)
+    auto = models.BooleanField(default=False)
+    method = models.BooleanField(default=False)
+    liquidity = models.BooleanField(default=False)
     
     block_delay = models.DecimalField(max_digits=12, decimal_places=6, default=0)
     
     eth = models.DecimalField(max_digits=12, decimal_places=6, default=1)
     token = models.DecimalField(max_digits=12, decimal_places=6, default=10)
     
-    multi = models.BooleanField(default=True)
+    multi = models.BooleanField(default=False)
     buy = models.BooleanField(default=True)
     enable = models.BooleanField(default=True)
     stop = models.BooleanField(default=False)

@@ -144,10 +144,10 @@ def delete_copy_trade_addresses(user_id, name, chain):
         
         
 @sync_to_async
-def update_snipes(user_id, chain, updated_data):
+def update_snipes(user_id, address, updated_data):
     try:
         user = CustomUser.objects.get(user_id=user_id)
-        trades = Sniper.objects.get(user=user, chain=chain)
+        trades = Sniper.objects.get(user=user, contract_address=address)
         # Update user_data fields based on updated_data dictionary
         for key, value in updated_data.items():
             setattr(trades, key, value)
@@ -155,6 +155,7 @@ def update_snipes(user_id, chain, updated_data):
         trades.save()  # Save the changes to the database
     except CustomUser.DoesNotExist:
         LOGGER.info("Copy trade not found")
+
         
 # @sync_to_async
 # def delete_snipes(user_id, chain):

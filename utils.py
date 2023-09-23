@@ -8,7 +8,7 @@ from web3 import Web3
 from decouple import config
 from asgiref.sync import sync_to_async
 from logger import LOGGER
-from utils_data import load_user_data
+from utils_data import load_user_data, update_snipes
 from uniswap import Uniswap
 
 from mnemonic import Mnemonic
@@ -79,32 +79,36 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         
         provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
         
-        # uni_abi = [{'inputs': [], 'stateMutability': 'nonpayable', 'type': 'constructor'}, {'anonymous': False, 'inputs': [{'indexed': True, 'internalType': 'uint24', 'name': 'fee', 'type': 'uint24'}, {'indexed': True, 'internalType': 'int24', 'name': 'tickSpacing', 'type': 'int24'}], 'name': 'FeeAmountEnabled', 'type': 'event'}, {'anonymous': False, 'inputs': [{'indexed': True, 'internalType': 'address', 'name': 'oldOwner', 'type': 'address'}, {'indexed': True, 'internalType': 'address', 'name': 'newOwner', 'type': 'address'}], 'name': 'OwnerChanged', 'type': 'event'}, {'anonymous': False, 'inputs': [{'indexed': True, 'internalType': 'address', 'name': 'token0', 'type': 'address'}, {'indexed': True, 'internalType': 'address', 'name': 'token1', 'type': 'address'}, {'indexed': True, 'internalType': 'uint24', 'name': 'fee', 'type': 'uint24'}, {'indexed': False, 'internalType': 'int24', 'name': 'tickSpacing', 'type': 'int24'}, {'indexed': False, 'internalType': 'address', 'name': 'pool', 'type': 'address'}], 'name': 'PoolCreated', 'type': 'event'}, {'inputs': [{'internalType': 'address', 'name': 'tokenA', 'type': 'address'}, {'internalType': 'address', 'name': 'tokenB', 'type': 'address'}, {'internalType': 'uint24', 'name': 'fee', 'type': 'uint24'}], 'name': 'createPool', 'outputs': [{'internalType': 'address', 'name': 'pool', 'type': 'address'}], 'stateMutability': 'nonpayable', 'type': 'function'}, {'inputs': [{'internalType': 'uint24', 'name': 'fee', 'type': 'uint24'}, {'internalType': 'int24', 'name': 'tickSpacing', 'type': 'int24'}], 'name': 'enableFeeAmount', 'outputs': [], 'stateMutability': 'nonpayable', 'type': 'function'}, {'inputs': [{'internalType': 'uint24', 'name': '', 'type': 'uint24'}], 'name': 'feeAmountTickSpacing', 'outputs': [{'internalType': 'int24', 'name': '', 'type': 'int24'}], 'stateMutability': 'view', 'type': 'function'}, {'inputs': [{'internalType': 'address', 'name': '', 'type': 'address'}, {'internalType': 'address', 'name': '', 'type': 'address'}, {'internalType': 'uint24', 'name': '', 'type': 'uint24'}], 'name': 'getPool', 'outputs': [{'internalType': 'address', 'name': '', 'type': 'address'}], 'stateMutability': 'view', 'type': 'function'}, {'inputs': [], 'name': 'owner', 'outputs': [{'internalType': 'address', 'name': '', 'type': 'address'}], 'stateMutability': 'view', 'type': 'function'}, {'inputs': [], 'name': 'parameters', 'outputs': [{'internalType': 'address', 'name': 'factory', 'type': 'address'}, {'internalType': 'address', 'name': 'token0', 'type': 'address'}, {'internalType': 'address', 'name': 'token1', 'type': 'address'}, {'internalType': 'uint24', 'name': 'fee', 'type': 'uint24'}, {'internalType': 'int24', 'name': 'tickSpacing', 'type': 'int24'}], 'stateMutability': 'view', 'type': 'function'}, {'inputs': [{'internalType': 'address', 'name': '_owner', 'type': 'address'}], 'name': 'setOwner', 'outputs': [], 'stateMutability': 'nonpayable', 'type': 'function'}]
-        # uni_v3_pool = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
-        # univ3 = w3.eth.contract(uni_v3_pool, abi=uni_abi)
+        uni_abi = """[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint24","name":"fee","type":"uint24"},{"indexed":true,"internalType":"int24","name":"tickSpacing","type":"int24"}],"name":"FeeAmountEnabled","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnerChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token0","type":"address"},{"indexed":true,"internalType":"address","name":"token1","type":"address"},{"indexed":true,"internalType":"uint24","name":"fee","type":"uint24"},{"indexed":false,"internalType":"int24","name":"tickSpacing","type":"int24"},{"indexed":false,"internalType":"address","name":"pool","type":"address"}],"name":"PoolCreated","type":"event"},{"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"}],"name":"createPool","outputs":[{"internalType":"address","name":"pool","type":"address"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"int24","name":"tickSpacing","type":"int24"}],"name":"enableFeeAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint24","name":"","type":"uint24"}],"name":"feeAmountTickSpacing","outputs":[{"internalType":"int24","name":"","type":"int24"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint24","name":"","type":"uint24"}],"name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"parameters","outputs":[{"internalType":"address","name":"factory","type":"address"},{"internalType":"address","name":"token0","type":"address"},{"internalType":"address","name":"token1","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"int24","name":"tickSpacing","type":"int24"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_owner","type":"address"}],"name":"setOwner","outputs":[],"stateMutability":"nonpayable","type":"function"}]"""
+        uni_v3_pool = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+        univ3 = w3.eth.contract(uni_v3_pool, abi=uni_abi)
         
         eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-        # try:
-        #     lp = univ3.functions.getPool(checksum_address, eth, 10000)
-        # except Exception as e:     
-        #     LOGGER.error(f"Error Occured: {e}")       
-
-        uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=3, provider=provider)
-        
-        lp=""
+        lp = ""
         try:
-            info = uniswap.get_liquidity_positions()
-            LOGGER,info(info)
-            lp = uniswap.get_pool_instance(checksum_address, eth, 10000)
+            lp = univ3.functions.getPool(checksum_address, eth, 10000).call()
             LOGGER.info(lp)
-        except Exception as e:
-            if '0 address returned. Pool does not exist' in str(e):
-                LOGGER.info("Exception running")
-                lp = uniswap.create_pool_instance(checksum_address, eth, 10000)
-                LOGGER.error(f"Error Occured: {e}")
-                LOGGER.info(lp)
-            else:
-                LOGGER.error(f"Error Occured: {e}")
+            if lp == "0x0000000000000000000000000000000000000000":
+                lp = univ3.functions.createPool(checksum_address, eth, 10000).call()
+        except Exception as e:     
+            LOGGER.error(f"Error Occured: {e}")       
+
+        # uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=3, provider=provider)
+        
+        # lp=""
+        # try:
+        #     # info = uniswap.get_liquidity_positions()
+        #     # LOGGER,info(info)
+        #     # lp = uniswap.get_pool_instance(checksum_address, eth, 10000)
+        #     # LOGGER.info(lp)
+        # except Exception as e:
+        #     if '0 address returned. Pool does not exist' in str(e):
+        #         LOGGER.info("Exception running")
+        #         # lp = uniswap.create_pool_instance(checksum_address, eth, 10000)
+        #         LOGGER.error(f"Error Occured: {e}")
+        #         # LOGGER.info(lp)
+        #     else:
+        #         LOGGER.error(f"Error Occured: {e}")
 
         # Get the functions for retrieving the name and symbol
         name_function = token_contract.functions.name()
@@ -115,6 +119,9 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         # Call the functions to retrieve the name and symbol
         token_name = name_function.call()
         token_symbol = symbol_function.call()
+        LOGGER.info("Updating the sniper information")
+        token_info = await update_snipes(user_data.user_id, checksum_address, {'name': token_name, 'symbol': token_symbol, 'decimal': token_decimals})
+        LOGGER.info(token_info)
         return token_name, token_symbol, int(token_decimals), lp, val, checksum_address
     except Exception as e:
         LOGGER.info(e)
