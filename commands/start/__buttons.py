@@ -890,6 +890,9 @@ async def delete_sniper_callback(update: Update, context: CallbackContext):
             markup = await build_snipping_keyboard(sniper, liq=False, met=True)
             await query.edit_message_reply_markup(reply_markup=markup)
             
+        elif button_data == "delslippage":
+            await update_user_data(user_id, {'slippage': 0.00})
+            
         elif int(button_data) == sniper.id:
             context.user_data['sniper'] = sniper
             sniper = await remove_sniper(user_data, sniper.id)
@@ -913,7 +916,7 @@ async def add_sniper_address(update: Update, context: CallbackContext):
     
     message_id_to_edit = context.user_data.get('caption_id')
 
-    await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
+    await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup, parse_mode=ParseMode.HTML)
     return ConversationHandler.END
 
 
@@ -936,7 +939,7 @@ async def sniper_gas_delta_reply(update: Update, context: ContextTypes.DEFAULT_T
     
     message_id_to_edit = context.user_data.get('caption_id')
 
-    await context.bot.delete_message(chat_id=chat_id, message_id=question_message_id)
+    await context.bot.delete_message(chat_id=chat_id, message_id=question_message_id, parse_mode=ParseMode.HTML)
     # await context.bot.edit_message_reply_markup(chat_id=chat_id, message_id=message_id_to_edit, reply_markup=new_markup)
     return ConversationHandler.END
 

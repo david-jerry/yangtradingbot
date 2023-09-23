@@ -54,7 +54,7 @@ def load_sniper_data(user_data):
     try:
         LOGGER.info("Loading sniper data")
         if user_data.snipes != None:
-            sniper = Sniper.objects.filter(contract_address__iexact=user_data.snipes.first().contract_address).first()
+            sniper = Sniper.objects.filter(user=user_data, contract_address__iexact=user_data.snipes.first().contract_address).first()
             LOGGER.info(sniper)
             return sniper
         return None
