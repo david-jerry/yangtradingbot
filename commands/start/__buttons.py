@@ -465,7 +465,7 @@ def build_snipping_keyboard(sniper, liq=True, aut=False, met=False):
         liquidity = InlineKeyboardButton(f"{'❌' if not sniper.liquidity else '✅'} Liquidity", callback_data=f"sniper_liquidity")
         auto = InlineKeyboardButton(f"{'❌' if not sniper.auto else '✅'} Auto", callback_data=f"sniper_auto")
         method = InlineKeyboardButton(f"{'❌' if not sniper.method else '✅'} Method", callback_data=f"sniper_method")
-        eth_amount = InlineKeyboardButton(f"{round(sniper.eth, 2)} ETH", callback_data=f"conversation_sniper_eth")
+        eth_amount = InlineKeyboardButton(f"{round(sniper.eth, 6)} ETH", callback_data=f"conversation_sniper_eth")
         token_amount = InlineKeyboardButton(f"{round(sniper.token, 2)} {TOKENNAME.upper()}", callback_data=f"conversation_sniper_token")
         snipeliquidity = InlineKeyboardButton(f"{'❌' if not sniper.liquidity else '✅'} Snipe Liquidity", callback_data=f"sniper_snipeliquidity")
         snipemethod = InlineKeyboardButton(f"{'❌' if not sniper.method else '✅'} Snipe Method", callback_data=f"sniper_snipemethod")
