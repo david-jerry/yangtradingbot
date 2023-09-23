@@ -261,7 +261,7 @@ def main() -> None:
     
     edit_sniper_gasdelta_conv_handler = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_snipe$")
+            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_gasdelta$")
         ],
         states={
             EDITGASDELTA: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
@@ -272,7 +272,7 @@ def main() -> None:
 
     edit_sniper_ethamount_conv_handler = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_snipe$")
+            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_eth$")
         ],
         states={
             EDITETHAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
@@ -283,7 +283,7 @@ def main() -> None:
 
     edit_sniper_tokenamount_conv_handler = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_snipe$")
+            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_token$")
         ],
         states={
             EDITTOKENAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
@@ -294,7 +294,7 @@ def main() -> None:
 
     edit_sniper_slippage_conv_handler = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_snipe$")
+            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_slippage$")
         ],
         states={
             EDITSLIPPAGE: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
