@@ -842,22 +842,7 @@ async def delete_sniper_callback(update: Update, context: CallbackContext):
 
         elif button_data == "snipe":
             await query.message.reply_text("what is the token address to snipe?")
-            return SNIPERADDRESS
-        
-        
-        elif button_data == "gasdelta":
-            await query.message.reply_text(f"Reply to this message with your desired gas price (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is {user_data.max_gas_price}!")
-            return EDITGASDELTA
-        elif button_data == "eth":
-            await query.message.reply_text("Reply to this message with your desired buy amount (in ETH) or percentage when liquidity is added.")
-            return EDITETHAMOUNT
-        elif button_data == "token":
-            await query.message.reply_text(f"Reply to this message with your desired buy amount (in {TOKENNAME.upper()}) when liquidity is added.")
-            return EDITTOKENAMOUNT
-        elif button_data == "slippage":
-            await query.message.reply_text("Reply to this message with your desired slippage percentage.")
-            return EDITSLIPPAGE
-        
+            return SNIPERADDRESS               
             
         elif button_data == "auto":
             markup = await build_snipping_keyboard(sniper, liq=False, aut=True)
@@ -897,6 +882,30 @@ async def add_sniper_address(update: Update, context: CallbackContext):
     await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
     return ConversationHandler.END
 
+
+async def delta_sniper_callback(update: Update, context: CallbackContext):   
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    chat_id = query.message.chat_id
+    caption_id = context.user_data['caption_id']
+    user_data = await load_user_data(user_id)    
+    
+    sniper = await load_sniper_data(user_data)
+    context.user_data['sniper'] = sniper
+    
+    
+    match = re.match(r"^sniper_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        LOGGER.info(button_data)
+        
+        if button_data == "gasdelta":
+            await query.message.reply_text(f"Reply to this message with your desired gas price (in GWEI). 1 GWEI = 10 ^ 9 wei. Minimum is {user_data.max_gas_price}!")
+            return EDITGASDELTA
+
 async def sniper_gas_delta_reply(update: Update, context: CallbackContext):
     text = Decimal(update.message.text.strip())
     user_id = update.message.from_user.id
@@ -918,6 +927,30 @@ async def sniper_gas_delta_reply(update: Update, context: CallbackContext):
     await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
     return ConversationHandler.END
 
+
+async def slipage_sniper_callback(update: Update, context: CallbackContext):   
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    chat_id = query.message.chat_id
+    caption_id = context.user_data['caption_id']
+    user_data = await load_user_data(user_id)    
+    
+    sniper = await load_sniper_data(user_data)
+    context.user_data['sniper'] = sniper
+    
+    
+    match = re.match(r"^sniper_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        LOGGER.info(button_data)
+        
+        if button_data == "slippage":
+            await query.message.reply_text("Reply to this message with your desired slippage percentage.")
+            return EDITSLIPPAGE
+        
 async def sniper_slippage_reply(update: Update, context: CallbackContext):
     text = Decimal(update.message.text.strip())
     user_id = update.message.from_user.id
@@ -939,6 +972,31 @@ async def sniper_slippage_reply(update: Update, context: CallbackContext):
     await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
     return ConversationHandler.END
 
+
+async def token_amount_sniper_callback(update: Update, context: CallbackContext):   
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    chat_id = query.message.chat_id
+    caption_id = context.user_data['caption_id']
+    user_data = await load_user_data(user_id)    
+    
+    sniper = await load_sniper_data(user_data)
+    context.user_data['sniper'] = sniper
+    
+    
+    match = re.match(r"^sniper_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        LOGGER.info(button_data)
+        
+        if button_data == "token":
+            await query.message.reply_text(f"Reply to this message with your desired buy amount (in {TOKENNAME.upper()}) when liquidity is added.")
+            return EDITTOKENAMOUNT
+
+        
 async def sniper_token_amount_reply(update: Update, context: CallbackContext):
     text = Decimal(update.message.text.strip())
     user_id = update.message.from_user.id
@@ -960,6 +1018,30 @@ async def sniper_token_amount_reply(update: Update, context: CallbackContext):
     await context.bot.edit_message_caption(chat_id=chat_id, message_id=message_id_to_edit, caption=caption, reply_markup=new_markup)
     return ConversationHandler.END
 
+
+async def eth_amount_sniper_callback(update: Update, context: CallbackContext):   
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    chat_id = query.message.chat_id
+    caption_id = context.user_data['caption_id']
+    user_data = await load_user_data(user_id)    
+    
+    sniper = await load_sniper_data(user_data)
+    context.user_data['sniper'] = sniper
+    
+    
+    match = re.match(r"^sniper_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        LOGGER.info(button_data)
+        
+        if button_data == "eth":
+            await query.message.reply_text("Reply to this message with your desired buy amount (in ETH) or percentage when liquidity is added.")
+            return EDITETHAMOUNT
+        
 async def sniper_eth_amount_reply(update: Update, context: CallbackContext):
     text = Decimal(update.message.text.strip())
     user_id = update.message.from_user.id
