@@ -109,7 +109,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return None
 
     USERNAME_FIELD = 'user_id'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
 
     def __str__(self):
         return self.user_id
@@ -165,8 +165,10 @@ class CopyTradeAddresses(models.Model):
     
     def __str__(self):
         return f"{self.user.user_id} {self.contract_address}"
-
+    
+    
 class Txhash(models.Model):
         Txhash = models.CharField(max_length=500, blank=True)
         def str(self):
             return f"{self.Txhash}"
+    

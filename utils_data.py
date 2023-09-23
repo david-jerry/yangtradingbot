@@ -16,7 +16,7 @@ django.setup()
 
 
 
-@sync_to_async
+# @sync_to_async
 def save_txhash_data(user_data):
     txhash = Txhash.objects.create(
         **user_data
@@ -24,7 +24,7 @@ def save_txhash_data(user_data):
     LOGGER.info(txhash)
     return txhash
 
-@sync_to_async
+# @sync_to_async
 def load_txhash_data(Txhash1):
     try:
         LOGGER.info("Loading user data")
@@ -35,7 +35,52 @@ def load_txhash_data(Txhash1):
     except FileNotFoundError:
         user_data = None
         return user_data
-    
+
+def load_copy_trade_addresses_copy(address):
+    try:
+        LOGGER.info("Loading user data")
+        LOGGER.info(CopyTradeAddresses)
+        print(address)
+        trade = CopyTradeAddresses.objects.filter(contract_address=address).first()
+        LOGGER.info(trade)
+        return trade
+    except FileNotFoundError:
+        trade = None
+        return trade
+
+def address_to_id(contract_address1):
+    user_data = CopyTradeAddresses.objects.filter(contract_address =contract_address1)
+    data =[]
+    if user_data:
+        for i in user_data:
+            data.append(i.user_id)
+    else:
+        return None
+    return data
+
+def load_user_data_id(user_id):
+    try:
+        LOGGER.info("Loading user data")
+        LOGGER.info(user_id)
+        user_data = CustomUser.objects.filter(id=user_id).first()
+        LOGGER.info(user_data)
+        return user_data
+    except FileNotFoundError:
+        user_data = None
+        return user_data
+
+def load_copytrade_address_user_data_id(address, id):
+    try:
+        LOGGER.info("Loading copy trade data")
+        LOGGER.info(address)
+        LOGGER.info(id)
+        trade = CopyTradeAddresses.objects.filter(user_id=id, contract_address=address).first()
+        LOGGER.info(trade)
+        return trade
+    except FileNotFoundError:
+        trade = None
+        return trade
+
 @sync_to_async
 def save_user_data(user_data):
     LOGGER.info(user_data)
@@ -177,7 +222,6 @@ def update_copy_trade_addresses_slippage(id1, slippage1,name1):
     return my_object
 
 
-        
 @sync_to_async
 def update_copy_trade_addresses(user_id, name, chain, updated_data):
     try:
@@ -199,8 +243,8 @@ def delete_copy_trade_addresses(user_id, name, chain):
         trades = CopyTradeAddresses.objects.filter(user=user, chain=chain) or None
         return trades
     except CustomUser.DoesNotExist:
-        LOGGER.info("Copy trade not found")
-        
+        LOGGER.info("Copy trade not found")        
+
         
 @sync_to_async
 def update_snipes(user_id, chain, updated_data):

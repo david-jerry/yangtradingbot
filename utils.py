@@ -4,9 +4,11 @@ import requests
 
 from decimal import Decimal
 from typing import Final
+import requests
 from web3 import Web3
 from decouple import config
 from asgiref.sync import sync_to_async
+
 from logger import LOGGER
 from utils_data import load_user_data
 from uniswap import Uniswap
@@ -56,7 +58,7 @@ async def get_contract_abi(contract_address, api_key=ETHERAPI):
     
 async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     if network.upper() == "ETH" and user_data.wallet_address:
-        w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+        w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
     elif network.upper() == "BSC" and user_data.BSC_added:
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
     elif network.upper() == "ARB" and user_data.ARB_added:
@@ -70,7 +72,7 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     
     if not w3.is_checksum_address(checksum_address.strip().lower()):
         checksum_address = w3.to_checksum_address(token_address.strip().lower())
-                
+        
 
     try:
         abi = await get_contract_abi(checksum_address)
@@ -150,7 +152,7 @@ def back_variable(message, context, text, markup, caption, markup_reply):
     
 async def get_default_gas_price(unit='ether'):
     # Connect to your Ethereum node
-    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
 
     # Get the current gas price (in wei)
     price = w3.eth.gas_price
@@ -159,7 +161,7 @@ async def get_default_gas_price(unit='ether'):
 
 async def get_default_gas_price_gwei():
     # Connect to your Ethereum node
-    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
 
     # Get the current gas price (in wei)
     gas_price = w3.eth.gas_price
@@ -169,7 +171,7 @@ async def get_default_gas_price_gwei():
 
 async def attach_wallet_function(network, user_id, key):
     user_data = await load_user_data(user_id)
-    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
     if user_data:
         if network.upper() == "ETH" and user_data.wallet_address:
             balance = w3.eth.get_balance(user_data.wallet_address)
@@ -201,7 +203,7 @@ async def attach_wallet_function(network, user_id, key):
 
 async def get_wallet_balance(network, user_id):
     user_data = await load_user_data(user_id)
-    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
     if user_data:
         if network.upper() == "ETH" and user_data.wallet_address:
             balance = w3.eth.get_balance(user_data.wallet_address)
@@ -231,7 +233,7 @@ async def generate_wallet(network, user_id):
     
 
     # Connect to Ethereum node
-    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
 
     # Generate BSC wallet
     w3.eth.account.enable_unaudited_hdwallet_features()
@@ -313,7 +315,7 @@ async def get_contract_abi(contract_address):
         
 async def get_token_balance(network, token_address, user_data):
     if network.upper() == "ETH" and user_data.wallet_address:
-        w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+        w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
     elif network.upper() == "BSC" and user_data.BSC_added:
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
     elif network.upper() == "ARB" and user_data.ARB_added:
@@ -340,7 +342,7 @@ async def get_token_balance(network, token_address, user_data):
     return balance
             
 async def trasnfer_currency(network, user_data, percentage, to_address, token_address=None):
-    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
     chain_id = w3.eth.chain_id
     nonce = w3.eth.get_transaction_count(user_data.wallet_address)
     
@@ -472,7 +474,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
 
 async def check_transaction_status(network, user_data,  tx_hash):
     if network.upper() == "ETH" and user_data.wallet_address:
-        w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+        w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
     elif network.upper() == "BSC" and user_data.BSC_added:
         w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
     elif network.upper() == "ARB" and user_data.ARB_added:
