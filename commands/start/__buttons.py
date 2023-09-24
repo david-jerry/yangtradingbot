@@ -26,7 +26,7 @@ from constants import (
     wallets_asset_message,
 )
 from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_info, get_wallet_balance, trasnfer_currency
-from utils_data import save_sniper,remove_sniper,load_next_sniper_data,update_snipes,load_previous_sniper_data,load_sniper_data,update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
+from utils_data import update_copy_trade_addresses_gas,load_copy_trade_address_all,load_copy_trade_all,save_sniper,remove_sniper,load_next_sniper_data,update_snipes,load_previous_sniper_data,load_sniper_data,update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
@@ -415,7 +415,7 @@ def build_copy_name_keyboard(matched_trade):
     copybuyamount = InlineKeyboardButton(f"📝 Buy Amount", callback_data=f"ask_buyamount")
     copyslippage = InlineKeyboardButton(f"📝 Slippage", callback_data=f"ask_slippage")
     delcopyslippage = InlineKeyboardButton(f"⌫ Slippage", callback_data=f"copyname_delslippage")
-    copygasdelta = InlineKeyboardButton(f"📝 Gas Delta", callback_data=f"copyname_gasdelta")
+    copygasdelta = InlineKeyboardButton(f"📝 Gas Delta", callback_data=f"ask_gasdelta")
     delcopygasdelta = InlineKeyboardButton(f"⌫ Gas Delta", callback_data=f"copyname_delgasdelta")
     copysell = InlineKeyboardButton(f"{'❌' if not matched_trade.copy_sell else '✅'} Copy Sell", callback_data=f"copyname_copysell")
     copysellhi = InlineKeyboardButton(f"📝 Sell-Hi", callback_data=f"copyname_sellhi")
@@ -1050,6 +1050,7 @@ TRADEWALLETNAME, TARGETWALLET = range(2)
 RENAME = range(1)
 CHATCHIT = range(1)
 CHATSLIP = range(1)
+CHATGAS = range(1)
 async def copy_trade_next_and_back_callback(update: Update, context: CallbackContext):    
     global COPYSELECTED_CHAIN_INDEX
 
@@ -1077,7 +1078,6 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
     match = re.match(r"^copy_(\w+)", command)
     context.user_data["id_ammount"] =user_data.id
     context.user_data["name_ammount"] =match.group(1)
-
     if match:
         button_data = match.group(1)
         
@@ -1241,6 +1241,19 @@ async def copy_trade_start_callback(update: Update, context: CallbackContext):
             message = await query.message.reply_text("What would you like to name this copy trade wallet?")
             # back_variable(message, context, text, new_markup, False, False)
             return TRADEWALLETNAME
+async def AskGas2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    message = await query.message.reply_text("Reply to this message with your gas.")
+
+    return CHATGAS
+async def AskGas(update: Update, context: CallbackContext):
+    print(context.user_data["id_ammount"])
+    print(context.user_data["name_ammount"])
+    print(update.message.text)
+    slippage = Decimal(update.message.text)
+    result = await update_copy_trade_addresses_gas(context.user_data["id_ammount"], slippage,context.user_data["name_ammount"])
+
+    return ConversationHandler.END
 
 async def AskSlippage2(update: Update, context: CallbackContext):
     query = update.callback_query
@@ -1282,13 +1295,31 @@ async def target_token_address_reply(update: Update, context: CallbackContext):
 
 
 async def submit_copy_reply(update: Update, context: CallbackContext):
+    user_id = update.message.from_user.id
     name = context.user_data.get('address')
+    temp = []
+    temp = await load_copy_trade_all(user_id)
+    print(temp)
+    if temp:
+        if name in temp:
+             await update.message.reply_text(f"Your name bot has been used. Please use another name.")
+             return ConversationHandler.END
+    
+  
     chain = context.user_data['selected_chain']
     token_address = update.message.text.replace(' ', '')
-    user_id = update.message.from_user.id
+    temp2= []
+    temp2 = await load_copy_trade_address_all(user_id)
+    if temp2:
+        if token_address in temp2:
+             await update.message.reply_text(f"This address has been copy")
+             return ConversationHandler.END
+    if(token_address.__len__() != 42):
+        await update.message.reply_text(f"Please enter a valid wallet address.")
+        return ConversationHandler.END
     chat_id = update.message.chat_id
     #copy_trade_main_id = context.user_data["copy_trade_message_id"]
-    
+    token_address = token_address.lower()
     await save_copy_trade_address(user_id, name, token_address, chain, False)
 
     # This message is a reply to the input message, and we can process the user's input here

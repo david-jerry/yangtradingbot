@@ -62,6 +62,8 @@ from commands.start.__buttons import (
     AskAmmount2,
     AskSlippage,
     AskSlippage2,
+    AskGas,
+    AskGas2,
     submit_copy_reply,
     cancel_copy,
     
@@ -188,6 +190,7 @@ TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
 TRADEWALLETNAME, TARGETWALLET = range(2)
 CHATCHIT = range(1)
 CHATSLIP = range(1)
+CHATGAS = range(1)
 RENAME = range(1)
 SNIPERADDRESS, EDITGASDELTA, EDITETHAMOUNT, EDITTOKENAMOUNT, EDITSLIPPAGE, EDITBLOCKDELAY = range(6)
 def main() -> None:
@@ -228,6 +231,19 @@ def main() -> None:
     
     # Copy Trading callback
     app.add_handler(CallbackQueryHandler(copy_trade_next_and_back_callback, pattern=r"^copy_*"))
+    #gas
+    Ask_gas = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskGas2, pattern=r"^ask_gasdelta$")
+
+        ],
+        states={
+            CHATGAS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskGas)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
+    )
+    app.add_handler(Ask_gas)
+
     # Slippage
     Ask_slippage = ConversationHandler(
         entry_points=[
@@ -240,7 +256,7 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
     )
     app.add_handler(Ask_slippage)
-    # Ammout
+    # Ammount
     Ask_ammount = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(AskAmmount2, pattern=r"^ask_buyamount$")

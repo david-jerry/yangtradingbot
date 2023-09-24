@@ -239,7 +239,12 @@ def update_copy_trade_addresses_slippage(id1, slippage1,name1):
     my_object.slippage =Decimal(slippage1)
     my_object.save()
     return my_object
-
+@sync_to_async
+def update_copy_trade_addresses_gas(id1, gas1,name1):
+    my_object = CopyTradeAddresses.objects.get(user_id=id1,name=name1)
+    my_object.gas_delta =Decimal(gas1)
+    my_object.save()
+    return my_object
 
 @sync_to_async
 def update_copy_trade_addresses(user_id, name, chain, updated_data):
