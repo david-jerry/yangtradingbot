@@ -80,7 +80,13 @@ from commands.start.__buttons import (
     cancel_attachment,
     
     delete_sniper_callback,
+    delete_conversation_sniper_callback,
     add_sniper_address,
+    sniper_gas_delta_reply,
+    sniper_slippage_reply,
+    sniper_token_amount_reply,
+    sniper_eth_amount_reply,
+    sniper_blockdelay_reply,
     cancel_sniper,
 )
 
@@ -183,7 +189,7 @@ TRADEWALLETNAME, TARGETWALLET = range(2)
 CHATCHIT = range(1)
 CHATSLIP = range(1)
 RENAME = range(1)
-SNIPERADDRESS = range(1)
+SNIPERADDRESS, EDITGASDELTA, EDITETHAMOUNT, EDITTOKENAMOUNT, EDITSLIPPAGE, EDITBLOCKDELAY = range(6)
 def main() -> None:
     LOGGER.info(TOKEN)
     LOGGER.info(USERNAME)
@@ -208,6 +214,9 @@ def main() -> None:
 
     # CONFIGURATION BUTTON CALLBACK
     app.add_handler(CallbackQueryHandler(configuration_next_and_back_callback, pattern=r"^presets_*"))
+
+    # SNIPER BUTTON CALLBACK
+    app.add_handler(CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_*"))
 
     # START BUTTON CALLBACKS
     app.add_handler(CallbackQueryHandler(start_button_callback, pattern=r"^start_*"))
@@ -271,14 +280,20 @@ def main() -> None:
     # SNIPER CONVERSATION HANDLERS
     sniper_conv_handler = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_snipe$")
+            CallbackQueryHandler(delete_conversation_sniper_callback, pattern=r"^conversation_sniper_*")
         ],
         states={
             SNIPERADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), add_sniper_address)],
+            EDITGASDELTA: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), sniper_gas_delta_reply)],
+            EDITETHAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), sniper_eth_amount_reply)],
+            EDITTOKENAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), sniper_token_amount_reply)],
+            EDITSLIPPAGE: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), sniper_slippage_reply)],
+            EDITBLOCKDELAY: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_sniper$")), sniper_blockdelay_reply)],
         },
         fallbacks=[CommandHandler("cancel_sniper", cancel_sniper)]
     )
     app.add_handler(sniper_conv_handler)
+    
     
     
 
