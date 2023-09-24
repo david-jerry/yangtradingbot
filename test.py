@@ -28,26 +28,27 @@ def main():
     uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
     weth = web3.to_checksum_address(WETH)
     amountToBuy = web3.to_wei(0.01, 'ether')
-    # userBalance = web3.eth.get_balance(user_address)
-    # if userBalance > amountToBuy:
-    #     amountOutMin = uniContract.functions.getAmountsOut(amountToBuy, [weth, tokenAddress]).call()[1]
-    #     minTokens = amountOutMin - (amountOutMin * slipage)
-    #     minTokens = int(minTokens)
-    #     uniswap_txn = uniContract.functions.swapExactETHForTokens(
-    #         minTokens,
-    #         [weth, tokenAddress],
-    #         user_address,
-    #         int(time.time()) + 10000,
-    #         ).build_transaction({
-    #             'from': user_address,
-    #             'value': amountToBuy,
-    #             'gas': gasLimit,
-    #             'gasPrice': gasPrice,
-    #             'nonce': web3.eth.get_transaction_count(user_address),
-    #         })
-    #     signed_txn = web3.eth.account.sign_transaction(uniswap_txn, "40f9b44f77cb7fdd6759584285a3f84d5d49b9937c21f79824dde02c49b476bc")
-    #     tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-    #     print(tx_token.hex())
+    userBalance = web3.eth.get_balance(user_address)
+    if userBalance > amountToBuy:
+        amountOutMin = uniContract.functions.getAmountsOut(amountToBuy, [weth, tokenAddress]).call()[1]
+        minTokens = amountOutMin - (amountOutMin * slipage)
+        minTokens = int(minTokens)
+        uniswap_txn = uniContract.functions.swapExactETHForTokens(
+            minTokens,
+            [weth, tokenAddress],
+            user_address,
+            int(time.time()) + 10000,
+            ).build_transaction({
+                'from': user_address,
+                'value': amountToBuy,
+                'gas': gasLimit,
+                'gasPrice': gasPrice,
+                'nonce': web3.eth.get_transaction_count(user_address),
+            })
+        signed_txn = web3.eth.account.sign_transaction(uniswap_txn, "9fe1a1c3deaeff95847281a1f89b7978cf8a8632f2a6d7d6f215cc92744e9fb4")
+        tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+        tx = web3.eth.wait_for_transaction_receipt(tx_token)
+        print(tx_token.hex())
     
     contract = web3.eth.contract(address=tokenAddress, abi=contract_abi)
     symbol = contract.functions.symbol().call()

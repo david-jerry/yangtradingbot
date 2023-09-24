@@ -10,6 +10,7 @@ from telegram import Bot
 import django, os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")
 django.setup()
+EXPLORER_URL = config("EXPLORER_URL")
 from utils_data import load_txhash_data,Load_txhash_copy_data
 TOKEN = config("TOKEN")
 async def send_message(bot_token, chat_id, message):
@@ -31,12 +32,12 @@ async def checkDatabase(bot_token,contract_ab):
                     chat_id = copytradetxhash[i]['user_id']
                     contract = web3.eth.contract(address=copytradetxhash[i]['token_address'], abi=contract_ab)
                     txhash = copytradetxhash[i]['txhash']
-                    txhash = "https://etherscan.io/tx/" + txhash
+                    txhash = EXPLORER_URL + txhash
                     botname = copytradetxhash[i]['bot_name']
                     symbol = contract.functions.symbol().call()
                     name = contract.functions.name().call()
-                    amount = copytradetxhash[i]['amount']
-                    fullmessage = f'Copy trade from {botname} amount {amount} ${symbol} {name} \n Explorer: {txhash}'
+                    amount = int(copytradetxhash[i]['amount'])
+                    fullmessage = f'Copy trade of {botname} - Swap to {amount} ${symbol} ${name} \n Transaction hash : {txhash}'
                     await send_message(bot_token, chat_id, fullmessage)
                     currentcopytradetxhash = copytradetxhash
           else:

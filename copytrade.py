@@ -11,29 +11,14 @@ import requests
 address = "0x8BF2405f5848db6dD2B8041456f73550c8d78E78"
 lastestBlock = web3.eth.get_block("latest")["number"]
 startBlock = 9737693
+import django, os
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")
+django.setup()
 ETHERAPI = config("ETHERAPI")
 ETHERSCAN_ENDPOINT = config("ETHERSCAN_ENDPOINT")
 UNISWAP_ROUTER =config("UNISWAP_ROUTER")
-import django, os
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")
-django.setup()
+UNISWAP_ABI = config("UNISWAP_ABI")
 from utils_data import load_copy_trade_addresses_chain, save_txhash_data
-
-abi = [
-    {
-        "inputs": [
-            {"internalType": "uint256", "name": "amountOutMin", "type": "uint256"},
-            {"internalType": "address[]", "name": "path", "type": "address[]"},
-            {"internalType": "address", "name": "to", "type": "address"},
-            {"internalType": "uint256", "name": "deadline", "type": "uint256"},
-        ],
-        "name": "swapExactETHForTokens",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function",
-    }
-]
 
 
 async def log_loop(event_filter, poll_interval):
@@ -72,7 +57,7 @@ async def log_loop(event_filter, poll_interval):
                     # hash_record = {"Txhash": _hash}
                     # save_hash = await save_txhash_data(hash_record)
                     # print("SAVE HASH: ", save_hash)
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(0.4)
             startblock = latest_block
         except requests.exceptions.ConnectionError as e:
             print(f"Connection error: {e}")
@@ -83,14 +68,14 @@ async def log_loop(event_filter, poll_interval):
 def handle_event(event):
     # print("handle_event")
     input_data = event["result"][0]['input']
-    decoded_inputs = web3.eth.contract(abi=abi).decode_function_input(input_data)
-    _from = event["result"][0]["from"]
-    # print("From: ", _from)
     _to = event["result"][0]["to"]
     # print(_to)
     if (_to.lower() not in UNISWAP_ROUTER.lower()):
         print("Not UNISWAP_ROUTER_V2 contract")
         return
+    decoded_inputs = web3.eth.contract(abi=UNISWAP_ABI).decode_function_input(input_data)
+    _from = event["result"][0]["from"]
+    # print("From: ", _from)
     _hash = event["result"][0]["hash"]
     # print("Hash: ", _hash)
     # print(decoded_inputs[0].fn_name)

@@ -45,7 +45,7 @@ def save_txhash_data(user_data):
     txhash = Txhash.objects.create(
         **user_data
     )
-    LOGGER.info()
+    # LOGGER.info()
     return txhash
 
 # @sync_to_async

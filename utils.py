@@ -10,7 +10,7 @@ from decouple import config
 from asgiref.sync import sync_to_async
 
 from logger import LOGGER
-from utils_data import load_user_data, update_snipes
+from utils_data import load_user_data, update_snipes, save_txhash_copy_data
 from uniswap import Uniswap
 
 from mnemonic import Mnemonic
@@ -638,11 +638,18 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
         new_userBalance = contract.functions.balanceOf(user_address).call()
         amount = new_userBalance - tokenBalance
         amount = web3.from_wei(amount, 'ether')
+        data = {
+            'user_id':user_data['user_id'],
+            'txhash':tx_token.hex(),
+            'amount':amount,
+            'token_address':token_address,
+            'bot_name':copytrade_data['name'],
+        }
+        save_txhash_copy_data(data)
         return tx_token.hex()
 
 
 def sellExactToken(user_data,copytrade_data,tokensell):
-    UNISWAP_ABI = UNISWAP_ABI.lower()
     user_address = user_data['wallet_address']
     private_key = user_data['wallet_private_key']
     gas = web3.eth.gas_price
@@ -653,11 +660,14 @@ def sellExactToken(user_data,copytrade_data,tokensell):
     contract = web3.eth.contract(address=token_address, abi=contract_abi)
     amount = copytrade_data['amount']
     amount = Web3.to_wei(amount, 'ether')
+    ethBalance = web3.eth.get_balance(user_address)
     userBalance = contract.functions.balanceOf(user_address).call()
     if userBalance <= 0:
         LOGGER.info("Insufficient Balance")
     else:
-        uniswapRouter = web3.toChecksumAddress(UNISWAP_ROUTER)
+        uniswapRouter = UNISWAP_ROUTER
+        uniswapRouter = uniswapRouter.lower()
+        uniswapRouter = web3.to_checksum_address(uniswapRouter)
         uniswapABI = UNISWAP_ABI
         uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
         weth = web3.to_checksum_address(WETH.lower())
@@ -678,7 +688,6 @@ def sellExactToken(user_data,copytrade_data,tokensell):
         allowance = contract.functions.allowance(user_address, uniswapRouter).call()
         print(allowance)                                                     
         web3.eth.wait_for_transaction_receipt(tx_token)
-        print(allowance)
         uniswap_txn = uniContract.functions.swapExactTokensForETH(
             amount,
             amountOutMin,
@@ -694,7 +703,20 @@ def sellExactToken(user_data,copytrade_data,tokensell):
         signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
         tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
         web3.eth.wait_for_transaction_receipt(tx_token)
+        new_userBalance = web3.eth.get_balance(user_address)
+        amount = new_userBalance - ethBalance
+        amount = web3.from_wei(amount, 'ether')
+        print(amount)
+        data = {
+            'user_id':user_data['user_id'],
+            'txhash':tx_token.hex(),
+            'amount':amount,
+            'token_address':token_address,
+            'bot_name':copytrade_data['name'],
+        }
+        save_txhash_copy_data(data)
         print(tx_token.hex())
+        return tx_token.hex()
 
 
     
