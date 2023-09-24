@@ -667,7 +667,7 @@ async def processs_buy_or_sell_only(eth_amount, user_data, token_address, decima
             LOGGER.info(sell_result)
             return f"You are selling: {eth_in_wei / 10**decimals} {token_name} "
     except Exception as e:
-        return f"{e.message}"
+        return f"{e}"
         
         
 
