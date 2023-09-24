@@ -26,7 +26,7 @@ from constants import (
     wallets_asset_message,
 )
 from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_info, get_wallet_balance, trasnfer_currency
-from utils_data import update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
+from utils_data import save_sniper,remove_sniper,load_next_sniper_data,update_snipes,load_previous_sniper_data,load_sniper_data,update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
