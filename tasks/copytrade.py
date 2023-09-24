@@ -64,8 +64,6 @@ def copytrade(data):
                             data_copytrade[key] = float(data_copytrade[key])
                         except ValueError:
                             pass
-                # print(data_copytrade)
-
                 pair_contract[0] = pair_contract[0].lower()
                 pair_contract[1] = pair_contract[1].lower()
                 # print(pair_contract)

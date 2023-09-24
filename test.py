@@ -15,10 +15,10 @@ def main():
     # buy token
     gas = web3.eth.gas_price
     print(gas)
-    gas = web3.from_wei(gas, 'gwwei')
+    gas = web3.from_wei(gas, 'gwei')
     print(gas)
     path = []
-    user_address = web3.to_checksum_address('0x8BF2405f5848db6dD2B8041456f73550c8d78E78')
+    user_address = web3.to_checksum_address('0xfa7a0232958938202039f4e35216cea65971f876')
     slipage = 0.5
     gasLimit = 10000000
     gasPrice = web3.to_wei(5, 'gwei')
@@ -50,6 +50,8 @@ def main():
     #     print(tx_token.hex())
     
     contract = web3.eth.contract(address=tokenAddress, abi=contract_abi)
+    symbol = contract.functions.symbol().call()
+    print(symbol)
     userBalance = contract.functions.balanceOf(user_address).call()
     contractsell = web3.eth.contract(address=tokenAddress, abi=contract_abi)
     allowance = contractsell.functions.allowance(user_address, uniswapRouter).call()
@@ -63,18 +65,15 @@ def main():
         'nonce': web3.eth.get_transaction_count(user_address),
         'from': user_address,
         })
-    signed_txn = web3.eth.account.sign_transaction(approve_tx, "40f9b44f77cb7fdd6759584285a3f84d5d49b9937c21f79824dde02c49b476bc")
+    signed_txn = web3.eth.account.sign_transaction(approve_tx, "9fe1a1c3deaeff95847281a1f89b7978cf8a8632f2a6d7d6f215cc92744e9fb4")
     tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-    print(tx_token.hex())
+    print('approve: ', tx_token.hex())
+    tx = web3.eth.wait_for_transaction_receipt(tx_token)
+    print("approve success")
     allowance = contractsell.functions.allowance(user_address, uniswapRouter).call()
-    print(allowance)                                                     
-    while contractsell.functions.allowance(user_address, uniswapRouter).call() != amountToBuy:
-        print("waiting for approval")
-    print("approved")
-    allowance = contractsell.functions.allowance(user_address, uniswapRouter).call()
-    print(allowance)    
+    print(allowance)                                                        
 
-        
+    print('sell')    
     amountOutMin = uniContract.functions.getAmountsOut(userBalance, [tokenAddress,weth]).call()[1]
     minEth = amountOutMin - (amountOutMin * slipage)
     minEth = int(minEth)
@@ -92,9 +91,9 @@ def main():
             'gasPrice': gasPrice,
             'nonce': web3.eth.get_transaction_count(user_address),
         })
-    # signed_txn = web3.eth.account.sign_transaction(uniswap_txn, "40f9b44f77cb7fdd6759584285a3f84d5d49b9937c21f79824dde02c49b476bc")
-    # tx_token =  web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-    # print(tx_token.hex())
+    signed_txn = web3.eth.account.sign_transaction(uniswap_txn, "9fe1a1c3deaeff95847281a1f89b7978cf8a8632f2a6d7d6f215cc92744e9fb4")
+    tx_token =  web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+    print(tx_token.hex())
 
 if(__name__ == '__main__'):
     main()

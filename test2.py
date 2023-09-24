@@ -10,7 +10,7 @@ INFURA_URL = config("INFURA_URL")
 WETH = config("WETH")
 web3 = Web3(Web3.HTTPProvider(INFURA_URL))
 
-
+contract_abi = config("CONTRACT_ABI")
 def main():
     contract_abi = [
         {
@@ -41,9 +41,13 @@ def main():
     # user_address = "0xfa7a0232958938202039f4e35216cea65971f876"
     user_address = web3.to_checksum_address(
         '0xfa7a0232958938202039f4e35216cea65971f876')
+    gas = web3.eth.gas_price
+    print(gas)
+    gas = web3.from_wei(gas, 'gwei')
+    print(gas)
     slipage = 0.8
     gasLimit = 10000000
-    gasPrice = web3.to_wei(5, 'gwei')
+    gasPrice = web3.to_wei(10, 'gwei')
     tokenToBuy = web3.to_checksum_address(
         '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984')
     uniswapRouter = web3.to_checksum_address(
@@ -73,10 +77,12 @@ def main():
         uniswap_txn, "9fe1a1c3deaeff95847281a1f89b7978cf8a8632f2a6d7d6f215cc92744e9fb4")
     tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
     print(tx_token.hex())
-    contract = web3.eth.contract(address=tokenToBuy, abi=contract_abi)
-    name = contract.functions.name().call()
-    symbol = contract.functions.symbol().call()
-    blocknumber = web3.eth.get_block_number()
+    tx = web3.eth.wait_for_transaction_receipt(tx_token)
+    # print(tx)
+    # contract = web3.eth.contract(address=tokenToBuy, abi=contract_abi)
+    # name = contract.functions.name().call()
+    # symbol = contract.functions.symbol().call()
+    # blocknumber = web3.eth.get_block_number()
     # # sell token
     # amountToSell = web3.to_wei(0.001, 'ether')
     # amountOutMin = contractbuy.functions.getAmountsOut(

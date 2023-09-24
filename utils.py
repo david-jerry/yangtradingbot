@@ -20,7 +20,7 @@ WETH = config("WETH")
 INFURA_URL = config("INFURA_URL")
 UNISWAP_ROUTER =config("UNISWAP_ROUTER")
 web3 = Web3(Web3.HTTPProvider(INFURA_URL))
-CONTRACT_ABI = config("CONTRACT_ABI")
+# CONTRACT_ABI = config("CONTRACT_ABI")
 INFURA_ID: Final = config("INFURA_ID")
 MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
 ETHERAPI: Final = config('ETHERAPI')
@@ -30,7 +30,7 @@ ETHERAPI: Final = config('ETHERAPI')
 #     'apiKey': BINANCEAPI,
 #     'enableRateLimit': True,
 # })
-
+contract_abi = [{"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"address","name":"minter_","type":"address"},{"internalType":"uint256","name":"mintingAllowedAfter_","type":"uint256"}],"payable":False,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"owner","type":"address"},{"indexed":True,"internalType":"address","name":"spender","type":"address"},{"indexed":False,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"delegator","type":"address"},{"indexed":True,"internalType":"address","name":"fromDelegate","type":"address"},{"indexed":True,"internalType":"address","name":"toDelegate","type":"address"}],"name":"DelegateChanged","type":"event"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"delegate","type":"address"},{"indexed":False,"internalType":"uint256","name":"previousBalance","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"newBalance","type":"uint256"}],"name":"DelegateVotesChanged","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"address","name":"minter","type":"address"},{"indexed":False,"internalType":"address","name":"newMinter","type":"address"}],"name":"MinterChanged","type":"event"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"from","type":"address"},{"indexed":True,"internalType":"address","name":"to","type":"address"},{"indexed":False,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Transfer","type":"event"},{"constant":True,"inputs":[],"name":"DELEGATION_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"DOMAIN_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"PERMIT_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint32","name":"","type":"uint32"}],"name":"checkpoints","outputs":[{"internalType":"uint32","name":"fromBlock","type":"uint32"},{"internalType":"uint96","name":"votes","type":"uint96"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"delegatee","type":"address"}],"name":"delegate","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"delegatee","type":"address"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"uint256","name":"expiry","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"delegateBySig","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"delegates","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"getCurrentVotes","outputs":[{"internalType":"uint96","name":"","type":"uint96"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"uint256","name":"blockNumber","type":"uint256"}],"name":"getPriorVotes","outputs":[{"internalType":"uint96","name":"","type":"uint96"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"minimumTimeBetweenMints","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"mint","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[],"name":"mintCap","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"minter","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"mintingAllowedAfter","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"numCheckpoints","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"permit","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"minter_","type":"address"}],"name":"setMinter","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"src","type":"address"},{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":False,"stateMutability":"nonpayable","type":"function"}]
 async def get_contract_abi(contract_address, api_key=ETHERAPI):
     # Define the Etherscan API URL
     etherscan_api_url = 'https://api.etherscan.io/api'
@@ -595,26 +595,30 @@ def sell(amount, decimal, uniswap, token_contract, sending_to, eth='0xC02aaA39b2
 
 
 def buyExactEth(user_data,copytrade_data,tokenbuy):
-    return "buyExactEth"
     user_address = user_data['wallet_address']
     private_key = user_data['wallet_private_key']
-    gasPrice = user_data['max_gas_price']
-    gasLimit = user_data['max_gas']
-    slipage = copytrade_data['slipage']
-    token_address = tokenbuy
+    gas = web3.eth.gas_price
+    gasPrice = copytrade_data['gas_delta']+gas
+    slippage = copytrade_data['slippage']
+    token_address = tokenbuy.lower()
+    token_address = web3.to_checksum_address(token_address)
+    contract = web3.eth.contract(address=token_address, abi=contract_abi)
     amount = copytrade_data['amount']
-    amount = int(amount)
-    amount = Web3.to_wei(amount, 'ether')
+    amount = web3.to_wei(amount, 'ether')
     userBalance = web3.eth.get_balance(user_address)
+    tokenBalance = contract.functions.balanceOf(user_address).call()
     if userBalance < amount:
         LOGGER.info("Insufficient Balance")
     else:
-        uniswapRouter = web3.toChecksumAddress(UNISWAP_ROUTER)
+        uniswapRouter = UNISWAP_ROUTER
+        uniswapRouter = uniswapRouter.lower()
+        uniswapRouter = web3.to_checksum_address(uniswapRouter)
         uniswapABI = UNISWAP_ABI
         uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
-        weth = web3.to_checksum_address(WETH)
+        weth = WETH.lower()
+        weth = web3.to_checksum_address(weth)
         amountOutMin = uniContract.functions.getAmountsOut(amount, [weth, token_address]).call()[1]
-        amountOutMin = amountOutMin - (amountOutMin * slipage)
+        amountOutMin = amount - (amount * slippage/100)
         amountOutMin = int(amountOutMin)
         uniswap_txn = uniContract.functions.swapExactETHForTokens(
             amountOutMin,
@@ -624,45 +628,47 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
             ).build_transaction({
                 'from': user_address,
                 'value': amount,
-                'gas': gasLimit,
-                'gasPrice': gasPrice,
+                'gas': 10000000,
+                'gasPrice': int(gasPrice),
                 'nonce': web3.eth.get_transaction_count(user_address),
             })
         signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
         tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-        print(tx_token.hex())
+        web3.eth.wait_for_transaction_receipt(tx_token)
+        new_userBalance = contract.functions.balanceOf(user_address).call()
+        amount = new_userBalance - tokenBalance
+        amount = web3.from_wei(amount, 'ether')
+        return tx_token.hex()
 
 
 def sellExactToken(user_data,copytrade_data,tokensell):
-    return "sellExactToken"
+    UNISWAP_ABI = UNISWAP_ABI.lower()
     user_address = user_data['wallet_address']
     private_key = user_data['wallet_private_key']
-    gasPrice = user_data['max_gas_price']
-    gasLimit = user_data['max_gas']
-    slipage = copytrade_data['slipage']
-    token_address = tokensell
+    gas = web3.eth.gas_price
+    gasPrice = copytrade_data['gas_delta']+gas
+    slippage = copytrade_data['slippage']
+    token_address = tokensell.lower()
+    token_address = web3.to_checksum_address(token_address)
+    contract = web3.eth.contract(address=token_address, abi=contract_abi)
     amount = copytrade_data['amount']
-    amount = int(amount)
     amount = Web3.to_wei(amount, 'ether')
-    contract = web3.eth.contract(address=token_address, abi=CONTRACT_ABI)
     userBalance = contract.functions.balanceOf(user_address).call()
     if userBalance <= 0:
         LOGGER.info("Insufficient Balance")
-
     else:
         uniswapRouter = web3.toChecksumAddress(UNISWAP_ROUTER)
         uniswapABI = UNISWAP_ABI
         uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
-        weth = web3.to_checksum_address(WETH)
+        weth = web3.to_checksum_address(WETH.lower())
         amountOutMin = uniContract.functions.getAmountsOut(amount, [token_address, weth]).call()[1]
-        amountOutMin = amountOutMin - (amountOutMin * slipage)
         amountOutMin = int(amountOutMin)
         allowance = contract.functions.allowance(user_address, uniswapRouter).call()
         approve_tx = contract.functions.approve(
             uniswapRouter,
             amount).build_transaction({
-            'gas': gasLimit,
-            'gasPrice':gasPrice,
+            'gas': 10000000,
+            'gasPrice':int(gasPrice),
             'nonce': web3.eth.get_transaction_count(user_address),
             'from': user_address,
             })
@@ -684,8 +690,8 @@ def sellExactToken(user_data,copytrade_data,tokensell):
             int(time.time()) + 10000,
             ).build_transaction({
                 'from': user_address,
-                'gas': gasLimit,
-                'gasPrice': gasPrice,
+                'gas': 10000000,
+                'gasPrice': int(gasPrice),
                 'nonce': web3.eth.get_transaction_count(user_address),
             })
         signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
