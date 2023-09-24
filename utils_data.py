@@ -7,7 +7,7 @@ import os
 import django
 
 from asgiref.sync import sync_to_async
-from apps.accounts.models import CustomUser, CopyTradeAddresses, Sniper, Txhash
+from apps.accounts.models import CustomUser, CopyTradeAddresses, Sniper, Txhash, copytradetxhash
 
 from logger import LOGGER
 
@@ -16,12 +16,36 @@ django.setup()
 
 
 
+
+def save_txhash_copy_data(user_data):
+    temp = copytradetxhash.objects.create(
+        **user_data
+    )
+    LOGGER.info(temp)
+    return temp
+@sync_to_async
+def Load_txhash_copy_data():
+    data = copytradetxhash.objects.filter()
+    if(data is not None):
+        temp = []
+        for i in data:
+            temp.append({
+                'user_id': i.user_id,
+                'txhash': i.txhash,
+                'bot_name': i.bot_name,
+                'amount': i.amount,
+                'token_address': i.token_address,
+            })
+        return temp
+    return 0
+def Delete_txhash_copy_data():
+        copytradetxhash.objects.get(id="9").delete()
 # @sync_to_async
 def save_txhash_data(user_data):
     txhash = Txhash.objects.create(
         **user_data
     )
-    LOGGER.info(txhash)
+    LOGGER.info()
     return txhash
 
 # @sync_to_async
@@ -153,17 +177,37 @@ def load_previous_sniper_data(sniper_id):
         return None
     except FileNotFoundError:
         previous_sniper = None
-        return previous_sniper    
-
+        return previous_sniper  
+@sync_to_async
+def load_copy_trade_address_all(user_id1):
+    user = CustomUser.objects.get(user_id=user_id1)
+    user_data = CopyTradeAddresses.objects.filter(user=user)
+    if user_data:
+        temp =[]
+        for i in user_data:
+            temp.append(i.contract_address)
+        return temp
+    else:
+        return None  
+@sync_to_async
+def load_copy_trade_all(user_id1):
+    user = CustomUser.objects.get(user_id=user_id1)
+    user_data = CopyTradeAddresses.objects.filter(user=user)
+    if user_data:
+        temp =[]
+        for i in user_data:
+            temp.append(i.name)
+        return temp
+    else:
+        return None
 @sync_to_async
 def load_copy_trade_addresses_chain(chain1):
     user_data = CopyTradeAddresses.objects.filter(chain =chain1)
     if user_data:
-        for data in user_data:
-            print(data)
+        return user_data
     else:
         return None
-    return user_data
+
 
 @sync_to_async
 def remove_sniper(user_data, sniper_id):
@@ -208,7 +252,12 @@ def update_copy_trade_addresses_slippage(id1, slippage1,name1):
     my_object.slippage =Decimal(slippage1)
     my_object.save()
     return my_object
-
+@sync_to_async
+def update_copy_trade_addresses_gas(id1, gas1,name1):
+    my_object = CopyTradeAddresses.objects.get(user_id=id1,name=name1)
+    my_object.gas_delta =Decimal(gas1)
+    my_object.save()
+    return my_object
 
 @sync_to_async
 def update_copy_trade_addresses(user_id, name, chain, updated_data):
