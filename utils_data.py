@@ -17,16 +17,29 @@ django.setup()
 
 
 
-
 def save_txhash_copy_data(user_data):
     temp = copytradetxhash.objects.create(
         **user_data
     )
     LOGGER.info(temp)
     return temp
+@sync_to_async
 def Load_txhash_copy_data():
     data = copytradetxhash.objects.filter()
-    return data
+    if(data is not None):
+        temp = []
+        for i in data:
+            temp.append({
+                'user_id': i.user_id,
+                'txhash': i.txhash,
+                'bot_name': i.bot_name,
+                'amount': i.amount,
+                'token_address': i.token_address,
+            })
+        return temp
+    return 0
+def Delete_txhash_copy_data():
+        copytradetxhash.objects.get(id="9").delete()
 # @sync_to_async
 def save_txhash_data(user_data):
     txhash = Txhash.objects.create(
