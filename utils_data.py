@@ -117,18 +117,6 @@ def load_user_data(user_id):
         return user_data
 
 @sync_to_async
-def address_to_id(contract_address1):
-    user_data = CopyTradeAddresses.objects.filter(contract_address =contract_address1)
-    data =[]
-    if user_data:
-        for i in user_data:
-            data.append(i.user_id)
-    else:
-        return None
-    return data
-
-
-@sync_to_async
 def load_sniper_data(user_data):
     try:
         LOGGER.info("Loading sniper data")

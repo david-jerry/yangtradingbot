@@ -14,6 +14,8 @@ INFURA_ID = config("INFURA_ID")
 UNISWAP_ABI = config("UNISWAP_ABI")
 web3 = Web3(Web3.HTTPProvider("https://mainnet.infura.io/v3/{INFURA_ID}"))
 
+WETH = config("WETH")
+weth = web3.to_checksum_address(WETH).lower()
 
 @worker.task(name="worker.copytrade", rate_limit="1000/s")
 # async def copytrade(data): 
@@ -26,6 +28,7 @@ def copytrade(data):
     print(data)
     hash_record = {"Txhash": data['_hash']}
     check_duplicate = load_txhash_data(hash_record['Txhash'])
+    pair_contract = data["_path"]
     print(check_duplicate)
     if (check_duplicate is None):
         result = save_txhash_data(hash_record)
@@ -62,6 +65,14 @@ def copytrade(data):
                         except ValueError:
                             pass
                 print(data_copytrade)
+
+                pair_contract[0] = pair_contract[0].lower()
+                pair_contract[1] = pair_contract[1].lower()
+                print(pair_contract)
+                if (pair_contract[0] in weth):
+                    print("buy")
+                else:
+                    print("sale")
         else:
             return "TRADE NOT EXIST"
     else:
