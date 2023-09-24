@@ -164,8 +164,29 @@ def load_previous_sniper_data(sniper_id):
         return None
     except FileNotFoundError:
         previous_sniper = None
-        return previous_sniper    
-
+        return previous_sniper  
+@sync_to_async
+def load_copy_trade_address_all(user_id1):
+    user = CustomUser.objects.get(user_id=user_id1)
+    user_data = CopyTradeAddresses.objects.filter(user=user)
+    if user_data:
+        temp =[]
+        for i in user_data:
+            temp.append(i.contract_address)
+        return temp
+    else:
+        return None  
+@sync_to_async
+def load_copy_trade_all(user_id1):
+    user = CustomUser.objects.get(user_id=user_id1)
+    user_data = CopyTradeAddresses.objects.filter(user=user)
+    if user_data:
+        temp =[]
+        for i in user_data:
+            temp.append(i.name)
+        return temp
+    else:
+        return None
 @sync_to_async
 def load_copy_trade_addresses_chain(chain1):
     user_data = CopyTradeAddresses.objects.filter(chain =chain1)
