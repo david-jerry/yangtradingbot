@@ -677,10 +677,7 @@ def sellExactToken(user_data,copytrade_data,tokensell):
         print(tx_token.hex())
         allowance = contract.functions.allowance(user_address, uniswapRouter).call()
         print(allowance)                                                     
-        while contract.functions.allowance(user_address, uniswapRouter).call() != amount:
-            print("waiting for approval")
-        print("approved")
-        allowance = contract.functions.allowance(user_address, uniswapRouter).call()
+        web3.eth.wait_for_transaction_receipt(tx_token)
         print(allowance)
         uniswap_txn = uniContract.functions.swapExactTokensForETH(
             amount,
@@ -696,6 +693,7 @@ def sellExactToken(user_data,copytrade_data,tokensell):
             })
         signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
         tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+        web3.eth.wait_for_transaction_receipt(tx_token)
         print(tx_token.hex())
 
 
