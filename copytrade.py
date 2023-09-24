@@ -13,6 +13,7 @@ lastestBlock = web3.eth.get_block("latest")["number"]
 startBlock = 9737693
 ETHERAPI = config("ETHERAPI")
 ETHERSCAN_ENDPOINT = config("ETHERSCAN_ENDPOINT")
+UNISWAP_ROUTER =config("UNISWAP_ROUTER")
 import django, os
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")
@@ -86,9 +87,17 @@ def handle_event(event):
     _from = event["result"][0]["from"]
     # print("From: ", _from)
     _to = event["result"][0]["to"]
-    # print("To: ", _to)
+    # print(_to)
+    if (_to.lower() not in UNISWAP_ROUTER.lower()):
+        print("Not UNISWAP_ROUTER_V2 contract")
+        return
     _hash = event["result"][0]["hash"]
     # print("Hash: ", _hash)
+    # print(decoded_inputs[0].fn_name)
+    # print(type(decoded_inputs[0].fn_name))
+    if (decoded_inputs[0].fn_name not in ["swapExactETHForTokens","swapExactTokensForETH"]):
+        print("Not swapExactETHForTokens or swapExactTokensForETH method")
+        return
     print("-------------------------------------------------------------")
     data = {
         "_from": _from,
