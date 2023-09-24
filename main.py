@@ -264,7 +264,7 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
     )
     app.add_handler(copytrade_conv_handler)
-
+    
     # CONVERSATION HANDLERS
     attach_conv_handler = ConversationHandler(
         entry_points=[
@@ -365,6 +365,7 @@ def main() -> None:
 
     LOGGER.info("Hit Ctrl + C to terminate the server")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
+
 
 
 if __name__ == "__main__":
