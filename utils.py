@@ -23,6 +23,11 @@ BINANCEAPI: Final = config('BINANCE_API')
 #     'apiKey': BINANCEAPI,
 #     'enableRateLimit': True,
 # })
+eth="0x0000000000000000000000000000000000000000" #'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+
+
+
+
 
 async def get_contract_abi(contract_address, api_key=ETHERAPI):
     # Define the Etherscan API URL
@@ -54,6 +59,62 @@ async def get_contract_abi(contract_address, api_key=ETHERAPI):
     except Exception as e:
         return f'An error occurred: {str(e)}'
     
+async def get_token_full_information(token_address, user_data):
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
+    checksum_address = token_address
+    if not w3.is_address(checksum_address.strip().lower()):
+        return f"An error occurred: Invalid address format\n\n{e}", "", "", "", "", ""
+    
+    if not w3.is_checksum_address(checksum_address.strip().lower()):
+        checksum_address = w3.to_checksum_address(token_address.strip().lower())
+        
+    abi = await get_contract_abi(checksum_address)
+    token_contract = w3.eth.contract(address=checksum_address, abi=abi)
+                
+    uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
+    uniswap3 = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=3, provider=provider)
+    uniswap1 = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=1, provider=provider)
+
+    # Get the owner address from the contract
+    owner_address = token_contract.functions.owner().call()
+
+    # Get the timestamp of the block in which the token contract was created
+    creation_timestamp = w3.eth.get_block('earliest').timestamp
+
+    # Calculate the age of the token in seconds
+    current_timestamp = w3.eth.get_block('latest').timestamp
+    token_age_seconds = current_timestamp - creation_timestamp
+    token_decimals = token_contract.functions.decimals().call()
+    
+    market_price = uniswap.get_price_output(eth, checksum_address, 1 * 10**18)
+    total_supply = token_contract.functions.totalSupply().call()
+    crypto_price_usd = 0.0
+    try:
+        response = requests.get('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd')
+        data = response.json()
+        crypto_price_usd = data['ethereum']['usd']
+    except Exception as e:
+        print(f'Error fetching price data: {e}')
+        
+    market_cap = round(total_supply * crypto_price_usd, 8) * round(market_price * crypto_price_usd, 8)
+
+    
+    try:
+        token_balance = w3.from_wei(uniswap.get_token_balance(checksum_address), 'ether')
+        
+        eth_balance = uniswap.get_eth_balance()
+        token_liquidity_positions = uniswap3.get_liquidity_positions()
+        current_exchange_rate = uniswap1.get_exchange_rate(checksum_address)
+        token_metadata = token_contract.functions.name().call()
+        token_symbol = token_contract.functions.symbol().call()
+        return token_balance, token_symbol, token_decimals, eth_balance, current_exchange_rate, token_metadata, token_liquidity_positions, owner_address, token_age_seconds, market_cap
+    except Exception as e:
+        LOGGER.info(e)
+        return "Error retrieving token informations.", '', '', '', '', '', '', '', '', ''
+
+
+    
 async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     if network.upper() == "ETH" and user_data.wallet_address:
         w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
@@ -83,7 +144,6 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         uni_v3_pool = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
         univ3 = w3.eth.contract(uni_v3_pool, abi=uni_abi)
         
-        eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
         lp = ""
         try:
             lp = univ3.functions.getPool(checksum_address, eth, 10000).call()
@@ -161,7 +221,7 @@ async def get_default_gas_price(unit='ether'):
 
     # Get the current gas price (in wei)
     price = w3.eth.gas_price
-    gas_price = w3.from_wei(price, unit)
+    gas_price = w3.from_wei(round(price, 8), unit)
     return gas_price
 
 async def get_default_gas_price_gwei():
@@ -170,7 +230,7 @@ async def get_default_gas_price_gwei():
 
     # Get the current gas price (in wei)
     gas_price = w3.eth.gas_price
-    gas_price_gwei = w3.from_wei(int(gas_price), 'gwei')
+    gas_price_gwei = w3.from_wei(round(gas_price, 8), 'gwei')
     return gas_price_gwei
 
 
@@ -517,11 +577,7 @@ async def snipping_run(user_data, token_address, buy_price_threshold, sell_price
         eth_checksum_address = w3.to_checksum_address(token_address)
             
     abi = await get_contract_abi(checksum_address)
-    LOGGER.info(abi)
     
-
-    LOGGER.info(checksum_address)
-    LOGGER.info(user_data.wallet_address)
     
     # Create a contract instance for the USDT token
     token_contract = w3.eth.contract(address=checksum_address, abi=abi)
@@ -552,12 +608,12 @@ async def snipping_run(user_data, token_address, buy_price_threshold, sell_price
         
     
     if token_price == buy_price_threshold and buy_price_threshold > 0 or buy:
-        result = buy(eth_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
+        result = buy_token(eth_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
         LOGGER.info(result)
         return result
 
     elif token_price == sell_price_threshold and sell_price_threshold > 0 or not buy:
-        result = sell(yng_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
+        result = sell_token(yng_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
         LOGGER.info(result)
         return result
         
@@ -573,15 +629,57 @@ async def snipping_run(user_data, token_address, buy_price_threshold, sell_price
     
 
 
-def buy(amount, decimal, uniswap, token_contract, sending_to, eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'):
+
+async def processs_buy_or_sell_only(eth_amount, user_data, token_address, decimals,  token_name='Yangbot', buy=True):
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
+    
+    checksum_address = token_address
+    if not w3.is_address(checksum_address.strip().lower()):
+        return f"Error Trasferring: Invalid address format"
+
+    if not w3.is_checksum_address(checksum_address.strip().lower()):
+        checksum_address = w3.to_checksum_address(token_address)
+
+    eth_checksum_address = "0x0000000000000000000000000000000000000000"
+    if not w3.is_address(eth_checksum_address.strip().lower()):
+        return f"Error Trasferring: Invalid address format"
+
+    if not w3.is_checksum_address(eth_checksum_address.strip().lower()):
+        eth_checksum_address = w3.to_checksum_address(token_address)
+        
+    uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
+    eth_in_wei = eth_amount * 10**decimals
+    LOGGER.info(f"FMT Amount: {int(eth_in_wei)}")
+    try:
+        if buy:
+            token_in_eth = uniswap.get_price_input(eth, checksum_address, int(eth_in_wei))
+            LOGGER.info(f"Token Amount: {token_in_eth}")
+            LOGGER.info(buy)
+            buy_result = buy_token(eth_in_wei, uniswap, checksum_address, user_data.wallet_address, eth=eth)
+            LOGGER.info(buy_result)
+            return f"You are buying: {eth_in_wei / 10**decimals} {token_name}"
+        else:
+            token_in_eth = uniswap.get_price_input(eth, checksum_address, int(eth_in_wei))
+            LOGGER.info(f"Token Amount: {token_in_eth}")
+            LOGGER.info(buy)
+            sell_result = sell_token(eth_in_wei, uniswap, checksum_address, user_data.wallet_address, eth=eth)
+            LOGGER.info(sell_result)
+            return f"You are selling: {eth_in_wei / 10**decimals} {token_name} "
+    except Exception as e:
+        return f"{e.message}"
+        
+        
+
+def buy_token(amount, uniswap, token_contract, sending_to, eth='0x0000000000000000000000000000000000000000'):
     # Returns the amount of DAI you get for 1 ETH (10^18 wei)
-    swap_result = uniswap.make_trade_output(token_contract, eth, amount*10**decimal, sending_to)
+    swap_result = uniswap.make_trade_output(token_contract, eth, amount, sending_to)
     LOGGER.info(swap_result)
     return swap_result
     
     
-def sell(amount, decimal, uniswap, token_contract, sending_to, eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'):
+def sell_token(amount, uniswap, token_contract, sending_to, eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'):
     # Returns the amount of ETH you need to pay (in wei) to get 1000 DAI
-    swap_result = uniswap.make_trade(token_contract, eth, amount*10**decimal, sending_to)
+    swap_result = uniswap.make_trade(token_contract, eth, amount, sending_to)
     LOGGER.info(swap_result)
     return swap_result

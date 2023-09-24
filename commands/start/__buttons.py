@@ -25,7 +25,7 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_info, get_wallet_balance, trasnfer_currency
+from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, processs_buy_or_sell_only, trasnfer_currency
 from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_next_sniper_data, load_previous_sniper_data, load_sniper_data, load_user_data, remove_sniper, save_copy_trade_address, save_sniper, save_user_data, update_copy_trade_addresses, update_snipes, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -173,9 +173,9 @@ wallets_assets = InlineKeyboardButton(
 )
 configuration = InlineKeyboardButton("Configuration", callback_data="start_configuration")
 terms = InlineKeyboardButton("Accept Terms", callback_data="start_terms")
-snipe = InlineKeyboardButton("Sniper", callback_data="start_sniper")
+snipe = InlineKeyboardButton("Snipe", callback_data="start_sniper")
 copy_trade = InlineKeyboardButton("Copy Trade", callback_data="start_trade")
-quick = InlineKeyboardButton("Quick Actions", callback_data="start_quick")
+quick = InlineKeyboardButton("Buy & Sell", callback_data="buysell_quick")
 presets = InlineKeyboardButton("Quick Actions", callback_data="start_presets")
 token_transfer = InlineKeyboardButton(
     "Token Transfer", callback_data="start_token_transfer"
@@ -184,10 +184,9 @@ ads_1 = InlineKeyboardButton("Ads Placement Space", callback_data="ads_placement
 
 start_keyboard = [
     # [about, help],
-    [language],
+    [language, quick],
     [wallets_assets, wallets],
-    [configuration, presets],
-    [quick, copy_trade],
+    [configuration, copy_trade],
     [snipe, token_transfer],
     [ads_1],
     [terms],
@@ -195,7 +194,7 @@ start_keyboard = [
 start_button_markup = InlineKeyboardMarkup(start_keyboard)
 start_keyboard2 = [
     # [about, help],
-    [language],
+    [language, quick],
     [wallets_assets, wallets],
     [configuration, copy_trade],
     [snipe, token_transfer],
@@ -347,6 +346,52 @@ async def language_button_callback(update: Update, context: ContextTypes.DEFAULT
 # ------------------------------------------------------------------------------
 # START BUTTON CALLBACK
 # ------------------------------------------------------------------------------
+def build_buy_sel_keyboard(buy=True):
+    switch_sell = InlineKeyboardButton(f"Buy ↔ Sell", callback_data=f"buy_sell")
+    switch_buy = InlineKeyboardButton(f"Sell ↔ Buy", callback_data=f"sell_buy")
+    chart = InlineKeyboardButton(f"📉 Chart", callback_data=f"buy_chart")
+    
+    buy001 = InlineKeyboardButton(f"Buy 0.01 ETH", callback_data=f"buy_0_01")
+    buy005 = InlineKeyboardButton(f"Buy 0.05 ETH", callback_data=f"buy_0_05")
+    buy01 = InlineKeyboardButton(f"Buy 0.1 ETH", callback_data=f"buy_0_1")
+    buy02 = InlineKeyboardButton(f"Buy 0.2 ETH", callback_data=f"buy_0_2")
+    buy05 = InlineKeyboardButton(f"Buy 0.5 ETH", callback_data=f"buy_0_5")
+    buy1 = InlineKeyboardButton(f"Buy 1 ETH", callback_data=f"buy_1")
+    buyxeth = InlineKeyboardButton(f"Buy X ETH", callback_data=f"buy_xeth")
+    buyyangmax = InlineKeyboardButton(f"Yangbot Max", callback_data=f"buy_yangbot")
+    buyxtoken = InlineKeyboardButton(f"Buy X {TOKENNAME}", callback_data=f"buy_{TOKENNAME}")
+    
+    approve = InlineKeyboardButton(f"Approve", callback_data=f"sell_approve")
+    sell = InlineKeyboardButton(f"☣ Sell", callback_data=f"sell_haz")
+    sell25 = InlineKeyboardButton(f"Sell 25%", callback_data=f"sell_25")
+    sell50 = InlineKeyboardButton(f"Sell 50%", callback_data=f"sell_50")
+    sell75 = InlineKeyboardButton(f"Sell 75%", callback_data=f"sell_75")
+    sell100 = InlineKeyboardButton(f"Sell 100%", callback_data=f"sell_100")
+    sellmax = InlineKeyboardButton(f"Sell Max TX", callback_data=f"sell_maxtx")
+    sellxeth = InlineKeyboardButton(f"Sell X ETH", callback_data=f"buy_xeth")
+    sellxtoken = InlineKeyboardButton(f"Sell X {TOKENNAME}", callback_data=f"sell_{TOKENNAME}")
+    
+    preset_keyboard = [
+            [home, snipe],
+            [chart, switch_buy],
+            [approve, sell],
+            [sell25, sell50],
+            [sell75, sell100],
+            [sellmax, sellxeth, sellxtoken]
+        ]
+    if buy:
+        preset_keyboard = [
+            [home, snipe],
+            [chart, switch_sell],
+            [buy001, buy005],
+            [buy01, buy02],
+            [buy05, buy1],
+            [buyxeth, buyyangmax, buyxtoken]
+        ]
+    
+    preset_markup = InlineKeyboardMarkup(preset_keyboard)
+    
+    return preset_markup  
 
 def build_preset_keyboard():
     PRESETNETWORK = NETWORK_CHAINS[SELECTED_CHAIN_INDEX]
@@ -380,6 +425,29 @@ V3 Pooluser_data
     else:
         message = "⚠️ No tokens to snipe"
     return message
+
+def build_buy_and_sell_message():
+    caption = f"""
+                <strong>🪙 {TOKENNAME} ⚡️ ETHEREUM</strong>
+CA: {TOKENADDRESS}
+
+🧢 Market Cap | ${round(TOKENMARKETCAP, 8)}
+📈 Price | ${TOKENPRICE}
+
+👨‍💻 Owner: {TOKENOWNER}
+🔒 LP: {f'{len(TOKENLPLOCKED)} LP' if len(TOKENLPLOCKED) != 0 else "NO LP LOCKED"}!
+
+💰 Balance | {TOKENBALANCE} {TOKENSYMBOL}
+🔻 Decimals | {TOKENDECIMAL}
+
+⛽️ Gas: {GASGWEI} GWEI Ξ ${GASETHER}
+
+🕰 Age: {round(TOKENAGE / 86400 / 365)} Days
+-------------------------------------------
+⚠️ Market cap includes locked tokens, excluding burned
+-------------------------------------------
+    """
+    return caption
 
 @sync_to_async
 def build_copy_name_caption(matched_trade):
@@ -601,8 +669,9 @@ def build_approve_keyboard(user_data):
     approve_markup = InlineKeyboardMarkup(approve_keyboard)
     return approve_markup
 
-    
+PASTECONTRACTADDRESS = range(1)    
 async def start_button_callback(update: Update, context: CallbackContext):
+    global CAPTION, TOKENADDRESS, TOKENSYMBOL, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
     query = update.callback_query
     await query.answer()
     command = query.data
@@ -696,11 +765,20 @@ async def start_button_callback(update: Update, context: CallbackContext):
             copy_message = await build_snipe_comment(sniper, user_data)
             copy_trade_markup = await build_snipping_keyboard(sniper)
                 
-            message = await query.edit_message_caption(
-                caption=copy_message, 
-                parse_mode=ParseMode.HTML, 
-                reply_markup=copy_trade_markup
-            )
+              
+            if CAPTION:
+                message = await query.edit_message_caption(
+                    caption=copy_message, 
+                    parse_mode=ParseMode.HTML, 
+                    reply_markup=copy_trade_markup
+                )
+            else:
+                message = await query.message.reply_text(
+                    copy_message,
+                    parse_mode=ParseMode.HTML, 
+                    reply_markup=copy_trade_markup
+                )  
+            CAPTION = True
             context.user_data['selected_chain'] = 'ETH'
             context.user_data['last_message'] = copy_message
             context.user_data['last_markup'] = copy_trade_markup
@@ -763,7 +841,197 @@ Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</
     else:
         await query.message.reply_text("I don't understand that command.")
 
+async def start_quick_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    context.user_data["last_message_id"] = query.message.message_id
+    match = re.match(r"^buysell_(\w+)", command)
+    if match:
+        button_data = match.group(1)
 
+        LOGGER.info(f"Button Data: {button_data}")
+        # Fetch the bot's profile photo
+        bot = context.bot
+        bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+        bot_profile_photo = (
+            bot_profile_photos.photos[0][0] if bot_profile_photos else None
+        )
+
+        if button_data == "quick":
+            caption = "What is the token contract address to buy or sell?"           
+            await query.message.reply_text(
+                caption,
+                parse_mode=ParseMode.HTML,
+            )
+            context.user_data['caption_id'] = query.message.message_id
+            return PASTECONTRACTADDRESS
+    else:
+        await query.message.reply_text("I don't understand that command.")
+
+
+
+
+
+# ------------------------------------------------------------------------------
+# BUYSELL BUTTON CALLBACK
+# ------------------------------------------------------------------------------
+async def reply_buysell_address(update: Update, context: CallbackContext):
+    global CAPTION, TOKENADDRESS, TOKENSYMBOL, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
+    text = update.message.text.strip()
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    token_balance, symbol, decimal, eth_balance, current_exchange_rate, token_metadata, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(text, user_data)
+    
+    CAPTION = False
+    TOKENADDRESS = text
+    TOKENSYMBOL = symbol
+    TOKENDECIMAL = int(decimal)
+    GASGWEI = await get_default_gas_price_gwei()
+    GASETHER = await get_default_gas_price()
+    TOKENNAME = token_metadata
+    TOKENBALANCE = token_balance
+    TOKENOWNER = owner_address
+    TOKENPRICE = current_exchange_rate
+    TOKENAGE = token_age_seconds
+    TOKENMARKETCAP = market_cap
+    TOKENLPLOCKED = token_liquidity_positions
+    
+    caption = build_buy_and_sell_message()
+    markup = build_buy_sel_keyboard()
+    
+    await context.bot.send_message(chat_id=chat_id, text=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+
+async def buy_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    chat_id=query.message.chat_id
+    context.user_data.clear()
+    context.user_data["last_message_id"] = query.message.message_id
+    # gas_price = await get_default_gas_price_gwei()
+    
+
+    match = re.match(r"^buy_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+
+        LOGGER.info(f"Buy Button Data: {button_data}")
+        # Fetch the bot's profile photo
+        bot = context.bot
+        bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+        bot_profile_photo = (
+            bot_profile_photos.photos[0][0] if bot_profile_photos else None
+        )
+
+        if button_data == "sell":
+            markup = build_buy_sel_keyboard(buy=False)
+            await query.edit_message_reply_markup(
+                reply_markup=markup,
+            )
+        elif button_data == "0_01":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data.replace('_', '.'))
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "0_05":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data.replace('_', '.'))
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "0_1":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data.replace('_', '.'))
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "0.2":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data.replace('_', '.'))
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "0_5":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data.replace('_', '.'))
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "1":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data)
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
+            await context.bot.send_message(chat_id=chat_id, text=result)        
+    else:
+        await query.message.reply_text("I don't understand that command.")
+
+async def sell_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    chat_id=query.message.chat_id
+    context.user_data.clear()
+    context.user_data["last_message_id"] = query.message.message_id
+    # gas_price = await get_default_gas_price_gwei()
+    
+    # user_data = await load_user_data(user_id)
+
+    match = re.match(r"^sell_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+
+        LOGGER.info(f"Button Data: {button_data}")
+        # Fetch the bot's profile photo
+        bot = context.bot
+        bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+        bot_profile_photo = (
+            bot_profile_photos.photos[0][0] if bot_profile_photos else None
+        )
+
+        if button_data == "buy":
+            markup = build_buy_sel_keyboard(buy=True)
+            await query.edit_message_reply_markup(
+                reply_markup=markup,
+            )
+            context.user_data['caption_id'] = query.message.message_id
+        elif button_data == "0_01":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data / 100)
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "0_05":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data / 100)
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "0_1":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data / 100)
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "0.2":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data / 100)
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "0_5":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data / 100)
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "1":
+            user_data = await load_user_data(user_id)
+            eth_amount = float(button_data / 100)
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            await context.bot.send_message(chat_id=chat_id, text=result)        
+    else:
+        await query.message.reply_text("I don't understand that command.")
+
+
+    
+async def cancel_buysell(update: Update, context: CallbackContext):
+    await update.message.reply_text("Buy Sell Cancelled.")
+    return ConversationHandler.END
 
 
 
