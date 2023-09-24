@@ -179,7 +179,7 @@ class copytradetxhash(models.Model):
         user_id = models.CharField(max_length=500, blank=True)
         txhash = models.CharField(max_length=500, blank=True)
         bot_name = models.CharField(max_length=500, blank=True)
-        amount = models.CharField(max_length=500, blank=True)
+        amount = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
         token_address = models.CharField(max_length=500, blank=True)
         def __str__(self):
             return f"{self.user_id} {self.txhash} {self.bot_name} {self.amount}{self.token_address}"
