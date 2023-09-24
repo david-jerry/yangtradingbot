@@ -170,11 +170,10 @@ def load_previous_sniper_data(sniper_id):
 def load_copy_trade_addresses_chain(chain1):
     user_data = CopyTradeAddresses.objects.filter(chain =chain1)
     if user_data:
-        for data in user_data:
-            print(data)
+        return user_data
     else:
         return None
-    return user_data
+
 
 @sync_to_async
 def remove_sniper(user_data, sniper_id):
