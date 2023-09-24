@@ -5,9 +5,9 @@ import time
 import json
 import os, django
 from django.core import serializers
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")
 django.setup()
+from utils import buyExactEth,sellExactToken
 from utils_data import load_copytrade_address_user_data_id, save_txhash_data, load_txhash_data, load_copy_trade_addresses_copy, address_to_id, load_user_data_id
 
 INFURA_ID = config("INFURA_ID")
@@ -25,14 +25,14 @@ weth = web3.to_checksum_address(WETH).lower()
 #     return "Cac"
 
 def copytrade(data): 
-    print(data)
+    # print(data)
     hash_record = {"Txhash": data['_hash']}
     check_duplicate = load_txhash_data(hash_record['Txhash'])
     pair_contract = data["_path"]
-    print(check_duplicate)
+    # print(check_duplicate)
     if (check_duplicate is None):
         result = save_txhash_data(hash_record)
-        print("SAVE: ", result)
+        # print("SAVE: ", result)
         trade = load_copy_trade_addresses_copy(data["_from"])
         if (trade is not None):
             list_user_id = address_to_id(data["_from"])
@@ -42,7 +42,7 @@ def copytrade(data):
                 list_user_data.append((user, load_copytrade_address_user_data_id(data['_from'], user.id)))
             for user_data in list_user_data:
                 data = {}
-                print(user_data)
+                # print(user_data)
 
                 user_data_json = serializers.serialize('json', [user_data[0]])
                 data_customer = json.loads(user_data_json)[0]['fields'] 
@@ -53,7 +53,7 @@ def copytrade(data):
                             data_customer[key] = float(data_customer[key])
                         except ValueError:
                             pass
-                print(data_customer)
+                # print(data_customer)
 
                 user_data_json = serializers.serialize('json', [user_data[1]])
                 data_copytrade = json.loads(user_data_json)[0]['fields'] 
@@ -64,15 +64,17 @@ def copytrade(data):
                             data_copytrade[key] = float(data_copytrade[key])
                         except ValueError:
                             pass
-                print(data_copytrade)
+                # print(data_copytrade)
 
                 pair_contract[0] = pair_contract[0].lower()
                 pair_contract[1] = pair_contract[1].lower()
-                print(pair_contract)
+                # print(pair_contract)
                 if (pair_contract[0] in weth):
-                    print("buy")
+                    result = buyExactEth(data_customer, data_copytrade, pair_contract[1])
+                    print("BUY Tokens---------------: ", result)
                 else:
-                    print("sale")
+                    sellExactToken(data_customer, data_copytrade, pair_contract[0])
+                    print("SELL Tokens---------------: " , result)
         else:
             return "TRADE NOT EXIST"
     else:

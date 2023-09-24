@@ -594,7 +594,8 @@ def sell(amount, decimal, uniswap, token_contract, sending_to, eth='0xC02aaA39b2
     return swap_result
 
 
-def buyExactlyEth(user_data,copytrade_data,tokenbuy):
+def buyExactEth(user_data,copytrade_data,tokenbuy):
+    return "buyExactEth"
     user_address = user_data['wallet_address']
     private_key = user_data['wallet_private_key']
     gasPrice = user_data['max_gas_price']
@@ -632,7 +633,8 @@ def buyExactlyEth(user_data,copytrade_data,tokenbuy):
         print(tx_token.hex())
 
 
-def sellExactlyToken(user_data,copytrade_data,tokensell):
+def sellExactToken(user_data,copytrade_data,tokensell):
+    return "sellExactToken"
     user_address = user_data['wallet_address']
     private_key = user_data['wallet_private_key']
     gasPrice = user_data['max_gas_price']
