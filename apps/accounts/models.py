@@ -174,4 +174,13 @@ class Txhash(models.Model):
         Txhash = models.CharField(max_length=500, blank=True)
         def str(self):
             return f"{self.Txhash}"
+        
+class copytradetxhash(models.Model):
+        user_id = models.CharField(max_length=500, blank=True)
+        txhash = models.CharField(max_length=500, blank=True)
+        bot_name = models.CharField(max_length=500, blank=True)
+        amount = models.CharField(max_length=500, blank=True)
+        token_address = models.CharField(max_length=500, blank=True)
+        def __str__(self):
+            return f"{self.user_id} {self.txhash} {self.bot_name} {self.amount}{self.token_address}"
     

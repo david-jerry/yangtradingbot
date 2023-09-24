@@ -7,7 +7,7 @@ import os
 import django
 
 from asgiref.sync import sync_to_async
-from apps.accounts.models import CustomUser, CopyTradeAddresses, Sniper, Txhash
+from apps.accounts.models import CustomUser, CopyTradeAddresses, Sniper, Txhash, copytradetxhash
 
 from logger import LOGGER
 
@@ -16,12 +16,23 @@ django.setup()
 
 
 
+
+
+def save_txhash_copy_data(user_data):
+    temp = copytradetxhash.objects.create(
+        **user_data
+    )
+    LOGGER.info(temp)
+    return temp
+def Load_txhash_copy_data():
+    data = copytradetxhash.objects.filter()
+    return data
 # @sync_to_async
 def save_txhash_data(user_data):
     txhash = Txhash.objects.create(
         **user_data
     )
-    LOGGER.info(txhash)
+    LOGGER.info()
     return txhash
 
 # @sync_to_async
