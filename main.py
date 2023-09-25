@@ -42,10 +42,16 @@ from commands.start.__command import (
 )
 from commands.start.__buttons import (
     start_button_callback,
+    start_quick_callback,
     terms_button_callback,
     language_button_callback,
     home_button_callback,
     back_button_callback,
+    
+    reply_buysell_address,
+    buy_callback,
+    sell_callback,
+    cancel_buysell,
     
     configuration_next_and_back_callback,
     configuration_button_callback,
@@ -185,6 +191,7 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 PRIVATEKEY = range(1)
+PASTECONTRACTADDRESS = range(1)
 REPLYDELTA = range(1)
 TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
 TRADEWALLETNAME, TARGETWALLET = range(2)
@@ -201,6 +208,18 @@ def main() -> None:
     LOGGER.info("App initialized")
 
     LOGGER.info("Commands Ready")
+    # Buy and Sell Conversation
+    buysel_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(start_quick_callback, pattern=r"^buysell_quick")
+        ],
+        states={
+            PASTECONTRACTADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_attachment$")), reply_buysell_address)],
+        },
+        fallbacks=[CommandHandler("cancel_buysell", cancel_buysell)]
+    )
+    app.add_handler(buysel_conv_handler)
+
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("terms", terms_command))
     app.add_handler(CommandHandler("menu", help_command))
@@ -220,6 +239,8 @@ def main() -> None:
 
     # SNIPER BUTTON CALLBACK
     app.add_handler(CallbackQueryHandler(delete_sniper_callback, pattern=r"^sniper_*"))
+
+
 
     # START BUTTON CALLBACKS
     app.add_handler(CallbackQueryHandler(start_button_callback, pattern=r"^start_*"))
@@ -293,6 +314,7 @@ def main() -> None:
     )
     app.add_handler(attach_conv_handler)
     
+    
     # SNIPER CONVERSATION HANDLERS
     sniper_conv_handler = ConversationHandler(
         entry_points=[
@@ -353,7 +375,12 @@ def main() -> None:
 
     
     
+    # buy callbacks
+    app.add_handler(CallbackQueryHandler(buy_callback, pattern=r"^buy_*"))
     
+    # sell callback
+    app.add_handler(CallbackQueryHandler(sell_callback, pattern=r"^sell_*"))
+
     
 
     # WALLETS CONNECT OR CREATE CALLBACKS

@@ -23,13 +23,19 @@ web3 = Web3(Web3.HTTPProvider(INFURA_URL))
 # CONTRACT_ABI = config("CONTRACT_ABI")
 INFURA_ID: Final = config("INFURA_ID")
 MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
-ETHERAPI: Final = config('ETHERAPI')
-# BINANCEAPI: Final = config('BINANCE_API')
-
+ETHERAPI: Final = config('ETHERSCAN')
+BINANCEAPI: Final = config('BINANCE_API')
+CONTRACTABI: Final = config('CONTRACT_ABI')
+UNISWAPABI: Final = config('UNISWAP_ABI')
 # exchange = cctx.binance({
 #     'apiKey': BINANCEAPI,
 #     'enableRateLimit': True,
 # })
+eth="0x0000000000000000000000000000000000000000" #'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+
+
+
+
 contract_abi = [{"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"address","name":"minter_","type":"address"},{"internalType":"uint256","name":"mintingAllowedAfter_","type":"uint256"}],"payable":False,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"owner","type":"address"},{"indexed":True,"internalType":"address","name":"spender","type":"address"},{"indexed":False,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"delegator","type":"address"},{"indexed":True,"internalType":"address","name":"fromDelegate","type":"address"},{"indexed":True,"internalType":"address","name":"toDelegate","type":"address"}],"name":"DelegateChanged","type":"event"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"delegate","type":"address"},{"indexed":False,"internalType":"uint256","name":"previousBalance","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"newBalance","type":"uint256"}],"name":"DelegateVotesChanged","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"address","name":"minter","type":"address"},{"indexed":False,"internalType":"address","name":"newMinter","type":"address"}],"name":"MinterChanged","type":"event"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"from","type":"address"},{"indexed":True,"internalType":"address","name":"to","type":"address"},{"indexed":False,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Transfer","type":"event"},{"constant":True,"inputs":[],"name":"DELEGATION_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"DOMAIN_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"PERMIT_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint32","name":"","type":"uint32"}],"name":"checkpoints","outputs":[{"internalType":"uint32","name":"fromBlock","type":"uint32"},{"internalType":"uint96","name":"votes","type":"uint96"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"delegatee","type":"address"}],"name":"delegate","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"delegatee","type":"address"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"uint256","name":"expiry","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"delegateBySig","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"delegates","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"getCurrentVotes","outputs":[{"internalType":"uint96","name":"","type":"uint96"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"uint256","name":"blockNumber","type":"uint256"}],"name":"getPriorVotes","outputs":[{"internalType":"uint96","name":"","type":"uint96"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"minimumTimeBetweenMints","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"mint","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[],"name":"mintCap","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"minter","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"mintingAllowedAfter","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"numCheckpoints","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"permit","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"minter_","type":"address"}],"name":"setMinter","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"src","type":"address"},{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":False,"stateMutability":"nonpayable","type":"function"}]
 async def get_contract_abi(contract_address, api_key=ETHERAPI):
     # Define the Etherscan API URL
@@ -61,6 +67,67 @@ async def get_contract_abi(contract_address, api_key=ETHERAPI):
     except Exception as e:
         return f'An error occurred: {str(e)}'
     
+async def get_token_full_information(token_address, user_data):
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
+    checksum_address = token_address
+    if not w3.is_address(checksum_address.strip().lower()):
+        return f"An error occurred: Invalid address format\n\n{e}", "", "", "", "", ""
+    
+    if not w3.is_checksum_address(checksum_address.strip().lower()):
+        checksum_address = w3.to_checksum_address(token_address.strip().lower())
+        
+    abi = await get_contract_abi(checksum_address)
+    token_contract = w3.eth.contract(address=checksum_address, abi=abi)
+                
+    uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
+    uniswap3 = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=3, provider=provider)
+    uniswap1 = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=1, provider=provider)
+
+    # Get the owner address from the contract
+    owner_address = token_contract.functions.owner().call()
+
+    # Get the timestamp of the block in which the token contract was created
+    creation_timestamp = w3.eth.get_block('earliest').timestamp
+
+    # Calculate the age of the token in seconds
+    current_timestamp = w3.eth.get_block('latest').timestamp
+    token_age_seconds = current_timestamp - creation_timestamp
+    token_decimals = token_contract.functions.decimals().call()
+    
+    market_price = uniswap.get_price_input(eth, checksum_address, 1 * 10**token_decimals)
+    current_exchange_rate = uniswap1.get_exchange_rate(checksum_address)
+    total_supply = token_contract.functions.totalSupply().call() / 10**token_decimals
+    LOGGER.info(total_supply)
+    LOGGER.info(current_exchange_rate)
+    crypto_price_usd = 0.0
+    try:
+        response = requests.get('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd')
+        data = response.json()
+        crypto_price_usd = data['ethereum']['usd']
+        token_price = (crypto_price_usd * total_supply)# / (10**token_decimals))
+        LOGGER.info(token_price)
+    except Exception as e:
+        print(f'Error fetching price data: {e}')
+        
+    market_cap = token_price * total_supply
+    LOGGER.info(market_cap)
+
+    
+    try:
+        token_balance = w3.from_wei(uniswap.get_token_balance(checksum_address), 'ether')
+        
+        eth_balance = uniswap.get_eth_balance()
+        token_liquidity_positions = uniswap3.get_liquidity_positions()
+        token_metadata = token_contract.functions.name().call()
+        token_symbol = token_contract.functions.symbol().call()
+        return token_balance, token_symbol, token_decimals, eth_balance, token_price, token_metadata, token_liquidity_positions, owner_address, token_age_seconds, market_cap
+    except Exception as e:
+        LOGGER.info(e)
+        return "Error retrieving token informations.", '', '', '', '', '', '', '', '', ''
+
+
+    
 async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     if network.upper() == "ETH" and user_data.wallet_address:
         w3 = Web3(Web3.HTTPProvider(f"https://goerli.infura.io/v3/{INFURA_ID}"))
@@ -90,7 +157,6 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         uni_v3_pool = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
         univ3 = w3.eth.contract(uni_v3_pool, abi=uni_abi)
         
-        eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
         lp = ""
         try:
             lp = univ3.functions.getPool(checksum_address, eth, 10000).call()
@@ -168,7 +234,7 @@ async def get_default_gas_price(unit='ether'):
 
     # Get the current gas price (in wei)
     price = w3.eth.gas_price
-    gas_price = w3.from_wei(price, unit)
+    gas_price = w3.from_wei(round(price, 8), unit)
     return gas_price
 
 async def get_default_gas_price_gwei():
@@ -177,7 +243,7 @@ async def get_default_gas_price_gwei():
 
     # Get the current gas price (in wei)
     gas_price = w3.eth.gas_price
-    gas_price_gwei = w3.from_wei(int(gas_price), 'gwei')
+    gas_price_gwei = w3.from_wei(round(gas_price, 8), 'gwei')
     return gas_price_gwei
 
 
@@ -524,11 +590,7 @@ async def snipping_run(user_data, token_address, buy_price_threshold, sell_price
         eth_checksum_address = w3.to_checksum_address(token_address)
             
     abi = await get_contract_abi(checksum_address)
-    LOGGER.info(abi)
     
-
-    LOGGER.info(checksum_address)
-    LOGGER.info(user_data.wallet_address)
     
     # Create a contract instance for the USDT token
     token_contract = w3.eth.contract(address=checksum_address, abi=abi)
@@ -559,12 +621,12 @@ async def snipping_run(user_data, token_address, buy_price_threshold, sell_price
         
     
     if token_price == buy_price_threshold and buy_price_threshold > 0 or buy:
-        result = buy(eth_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
+        result = buy_token(eth_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
         LOGGER.info(result)
         return result
 
     elif token_price == sell_price_threshold and sell_price_threshold > 0 or not buy:
-        result = sell(yng_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
+        result = sell_token(yng_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
         LOGGER.info(result)
         return result
         
@@ -580,16 +642,68 @@ async def snipping_run(user_data, token_address, buy_price_threshold, sell_price
     
 
 
-def buy(amount, decimal, uniswap, token_contract, sending_to, eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'):
+
+async def processs_buy_or_sell_only(eth_amount, user_data, token_address, decimals,  token_name='Yangbot', balance=0.00, buy=True):
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
+    
+    checksum_address = token_address
+    if not w3.is_address(checksum_address.strip().lower()):
+        return f"Error Trasferring: Invalid address format"
+
+    if not w3.is_checksum_address(checksum_address.strip().lower()):
+        checksum_address = w3.to_checksum_address(token_address)
+
+    eth_checksum_address = "0x0000000000000000000000000000000000000000"
+    if not w3.is_address(eth_checksum_address.strip().lower()):
+        return f"Error Trasferring: Invalid address format"
+
+    if not w3.is_checksum_address(eth_checksum_address.strip().lower()):
+        eth_checksum_address = w3.to_checksum_address(token_address)
+        
+    uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
+    try:
+        if buy:
+            eth_in_wei = eth_amount * 10**decimals
+            LOGGER.info(f"FMT Amount: {int(eth_in_wei)}")
+            token_in_eth = uniswap.get_price_input(eth, checksum_address, int(eth_in_wei))
+            LOGGER.info(f"Token Amount: {token_in_eth}")
+            LOGGER.info(buy)
+            buy_result = buy_token(eth_in_wei, uniswap, checksum_address, user_data.wallet_address, eth=eth)
+            LOGGER.info(buy_result)
+            return f"""
+Approving your purchase of: {eth_in_wei / 10**decimals} {token_name}
+            
+{buy_result}
+            """
+        elif not buy:
+            eth_in_wei = (eth_amount * float(balance)) * 10**decimals
+            LOGGER.info(f"FMT Amount: {w3.from_wei(eth_in_wei, 'ether')} {token_name}")
+            eth_to_get_from_token = uniswap.get_price_output(checksum_address, eth, int(eth_in_wei))
+            LOGGER.info(f"ETH To Get: {eth_to_get_from_token / 10**decimals}")
+            LOGGER.info(buy)
+            sell_result = sell_token(eth_in_wei, uniswap, checksum_address, user_data.wallet_address, eth=eth)
+            LOGGER.info(sell_result)
+            return f"""
+Approving your sale of: {eth_in_wei / 10**decimals} {token_name}
+            
+{sell_result}
+            """
+    except Exception as e:
+        return f"{e}"
+        
+        
+
+def buy_token(amount, uniswap, token_contract, sending_to, eth='0x0000000000000000000000000000000000000000'):
     # Returns the amount of DAI you get for 1 ETH (10^18 wei)
-    swap_result = uniswap.make_trade_output(token_contract, eth, amount*10**decimal, sending_to)
+    swap_result = uniswap.make_trade_output(token_contract, eth, amount, sending_to)
     LOGGER.info(swap_result)
     return swap_result
     
     
-def sell(amount, decimal, uniswap, token_contract, sending_to, eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'):
+def sell_token(amount, uniswap, token_contract, sending_to, eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'):
     # Returns the amount of ETH you need to pay (in wei) to get 1000 DAI
-    swap_result = uniswap.make_trade(token_contract, eth, amount*10**decimal, sending_to)
+    swap_result = uniswap.make_trade(token_contract, eth, amount, sending_to)
     LOGGER.info(swap_result)
     return swap_result
 
@@ -739,3 +853,23 @@ def sellExactToken(user_data,copytrade_data,tokensell):
 
 
 
+
+
+async def approve_token(token_address, user_data, balance, decimals):
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
+    
+    checksum_address = token_address
+    if not w3.is_address(checksum_address.strip().lower()):
+        return f"Error Trasferring: Invalid address format"
+
+    if not w3.is_checksum_address(checksum_address.strip().lower()):
+        checksum_address = w3.to_checksum_address(token_address)
+    uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
+    try:
+        result = uniswap.approve(checksum_address, balance * 10**decimals)
+        LOGGER.info(result)
+        return result
+    except Exception as e:
+        LOGGER.info(e)
+        return f"{e}"
