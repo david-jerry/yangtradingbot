@@ -31,7 +31,7 @@ UNISWAPABI: Final = config('UNISWAP_ABI')
 #     'apiKey': BINANCEAPI,
 #     'enableRateLimit': True,
 # })
-eth="0x0000000000000000000000000000000000000000" #'0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
+eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
 
 
 
@@ -78,7 +78,10 @@ async def get_token_full_information(token_address, user_data):
         checksum_address = w3.to_checksum_address(token_address.strip().lower())
         
     abi = await get_contract_abi(checksum_address)
+    eth_abi = await get_contract_abi(eth)
+    
     token_contract = w3.eth.contract(address=checksum_address, abi=abi)
+    eth_contract = w3.eth.contract(address=eth, abi=eth_abi)
                 
     uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
     uniswap3 = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=3, provider=provider)
@@ -95,24 +98,32 @@ async def get_token_full_information(token_address, user_data):
     token_age_seconds = current_timestamp - creation_timestamp
     token_decimals = token_contract.functions.decimals().call()
     
-    market_price = uniswap.get_price_input(eth, checksum_address, 1 * 10**token_decimals)
+    market_price = uniswap.get_price_output(eth, checksum_address, 10**token_decimals)
+    LOGGER.info(market_price)
+    LOGGER.info(w3.from_wei(market_price, 'ether'))
     current_exchange_rate = uniswap1.get_exchange_rate(checksum_address)
     total_supply = token_contract.functions.totalSupply().call() / 10**token_decimals
-    LOGGER.info(total_supply)
-    LOGGER.info(current_exchange_rate)
+    eth_total_supply = eth_contract.functions.totalSupply().call() / 10**18
     crypto_price_usd = 0.0
+    token_price = 0.00
     try:
         response = requests.get('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd')
         data = response.json()
         crypto_price_usd = data['ethereum']['usd']
-        token_price = (crypto_price_usd * total_supply)# / (10**token_decimals))
-        LOGGER.info(token_price)
+        token_price = (crypto_price_usd) * float(w3.from_wei(market_price, 'ether'))
+        LOGGER.info(crypto_price_usd)
     except Exception as e:
         print(f'Error fetching price data: {e}')
         
-    market_cap = token_price * total_supply
-    LOGGER.info(market_cap)
-
+    busd_price = uniswap.get_price_output(eth, '0x4Fabb145d64652a948d72533023f6E7A623C7C53', 1 * 10**18)
+    LOGGER.info(busd_price / 10**18)
+    LOGGER.info(total_supply)
+    LOGGER.info(token_price)
+    LOGGER.info(current_exchange_rate)
+    market_cap = token_price * float(total_supply)
+    LOGGER.info(current_exchange_rate)
+    
+# usd * 1eth token of the token
     
     try:
         token_balance = w3.from_wei(uniswap.get_token_balance(checksum_address), 'ether')
