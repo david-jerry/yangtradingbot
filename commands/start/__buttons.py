@@ -25,7 +25,7 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import approve_token, attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, processs_buy_or_sell_only, trasnfer_currency
+from utils import approve_token, attach_wallet_function, back_variable, buyTokenWithEth, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, processs_buy_or_sell_only, sellTokenForEth, trasnfer_currency
 from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_next_sniper_data, load_previous_sniper_data, load_sniper_data, load_user_data, remove_sniper, save_copy_trade_address, save_sniper, save_user_data, update_copy_trade_addresses, update_snipes, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -359,7 +359,7 @@ def build_buy_sel_keyboard(buy=True):
     buy1 = InlineKeyboardButton(f"Buy 1 ETH", callback_data=f"buy_1")
     buyxeth = InlineKeyboardButton(f"Buy X ETH", callback_data=f"buy_xeth")
     buyyangmax = InlineKeyboardButton(f"Yangbot Max", callback_data=f"buy_yangbot")
-    buyxtoken = InlineKeyboardButton(f"Buy X {TOKENNAME}", callback_data=f"buy_{TOKENNAME}")
+    buyxtoken = InlineKeyboardButton(f"Buy X {TOKENNAME}", callback_data=f"buy_token")
     
     approve = InlineKeyboardButton(f"Approve", callback_data=f"sell_approve")
     sell = InlineKeyboardButton(f"☣ Sell", callback_data=f"sell_haz")
@@ -369,7 +369,7 @@ def build_buy_sel_keyboard(buy=True):
     sell100 = InlineKeyboardButton(f"Sell 100%", callback_data=f"sell_100")
     sellmax = InlineKeyboardButton(f"Sell Max TX", callback_data=f"sell_maxtx")
     sellxeth = InlineKeyboardButton(f"Sell X ETH", callback_data=f"buy_xeth")
-    sellxtoken = InlineKeyboardButton(f"Sell X {TOKENNAME}", callback_data=f"sell_{TOKENNAME}")
+    sellxtoken = InlineKeyboardButton(f"Sell X {TOKENNAME}", callback_data=f"sell_token")
     
     preset_keyboard = [
             [home, snipe],
@@ -877,13 +877,14 @@ async def start_quick_callback(update: Update, context: CallbackContext):
 # BUYSELL BUTTON CALLBACK
 # ------------------------------------------------------------------------------
 async def reply_buysell_address(update: Update, context: CallbackContext):
-    global CAPTION, TOKENADDRESS, TOKENSYMBOL, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
-    text = update.message.text.strip()
+    global CAPTION, TOKENADDRESS, TOKENSYMBOL, ETHBALANCE, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
+    text = update.message.text.strip().lower()
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     user_data = await load_user_data(user_id)    
     token_balance, symbol, decimal, eth_balance, current_exchange_rate, token_metadata, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(text, user_data)
     
+    ETHBALANCE = eth_balance
     CAPTION = False
     TOKENADDRESS = text
     TOKENSYMBOL = symbol
@@ -902,16 +903,20 @@ async def reply_buysell_address(update: Update, context: CallbackContext):
     markup = build_buy_sel_keyboard()
     
     await context.bot.send_message(chat_id=chat_id, text=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+    return ConversationHandler.END
 
+ANSWERBUYAMOUNT = range(1)
 async def buy_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     command = query.data
     user_id = str(query.from_user.id)
     chat_id=query.message.chat_id
-    context.user_data.clear()
+    # context.user_data.clear()
     context.user_data["last_message_id"] = query.message.message_id
     # gas_price = await get_default_gas_price_gwei()
+    context.user_data['buy'] = True
+    context.user_data['get_eth'] = get_eth = True
     
 
     match = re.match(r"^buy_(\w+)", command)
@@ -933,34 +938,59 @@ async def buy_callback(update: Update, context: CallbackContext):
             )
         elif button_data == "0_01":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = float(button_data.replace('_', '.'))
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_05":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = float(button_data.replace('_', '.'))
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_1":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = float(button_data.replace('_', '.'))
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_2":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = float(button_data.replace('_', '.'))
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_5":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = float(button_data.replace('_', '.'))
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "1":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data)
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)        
+            amount = float(button_data)
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
+        elif button_data == "xeth":
+            message = f"""
+How much ETH do you want to buy? Write your value in eth.
+
+If you type {ETHBALANCE}. It will transfer the entire balance.
+You currently have {ETHBALANCE} ETH        
+            """
+            await query.message.reply_text(message, parse_mode=ParseMode.HTML)
+            return ANSWERBUYAMOUNT
+               
+        elif button_data == 'token':
+            context.user_data['get_eth'] = False
+            message = f"""
+How much {TOKENNAME} do you want to buy? You can use a regular number (1, 4, 20, 5, 12, etc).
+
+If you type {TOKENBALANCE}. It will transfer the entire balance.
+You currently have {TOKENBALANCE} {TOKENNAME}        
+            """
+            await query.message.reply_text(message, parse_mode=ParseMode.HTML)
+            return ANSWERBUYAMOUNT
+        elif button_data == "yangbot":
+            user_data = await load_user_data(user_id)
+            amount = float(ETHBALANCE)
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
     else:
         await query.message.reply_text("I don't understand that command.")
 
@@ -970,10 +1000,11 @@ async def sell_callback(update: Update, context: CallbackContext):
     command = query.data
     user_id = str(query.from_user.id)
     chat_id=query.message.chat_id
-    context.user_data.clear()
+    # context.user_data.clear()
+    context.user_data['get_eth'] = False
     context.user_data["last_message_id"] = query.message.message_id
     # gas_price = await get_default_gas_price_gwei()
-    
+    context.user_data['buy'] = False
     # user_data = await load_user_data(user_id)
 
     match = re.match(r"^sell_(\w+)", command)
@@ -1000,32 +1031,86 @@ async def sell_callback(update: Update, context: CallbackContext):
             await context.bot.send_message(chat_id=chat_id, text=result)
         elif button_data == "haz":
             user_data = await load_user_data(user_id)
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            amount = TOKENBALANCE
+            LOGGER.info(f"Token Transferred: {amount}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result)
         elif button_data == "25":
             user_data = await load_user_data(user_id)
-            eth_amount = int(button_data) / 100
-            LOGGER.info(f"Percentage: {eth_amount}")
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
+            amount = float(TOKENBALANCE) * (int(button_data) / 100)
+            LOGGER.info(f"Token Transferred: {amount}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result)
         elif button_data == "50":
             user_data = await load_user_data(user_id)
-            eth_amount = int(button_data) / 100
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
+            amount = float(TOKENBALANCE) * (int(button_data) / 100)
+            LOGGER.info(f"Token Transferred: {amount}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result)
         elif button_data == "75":
             user_data = await load_user_data(user_id)
-            eth_amount = int(button_data) / 100
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
+            amount = float(TOKENBALANCE) * (int(button_data) / 100)
+            LOGGER.info(f"Token Transferred: {amount}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result)
         elif button_data == "100":
             user_data = await load_user_data(user_id)
-            eth_amount = int(button_data) / 100
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
-            await context.bot.send_message(chat_id=chat_id, text=result)        
+            amount = float(TOKENBALANCE) * (int(button_data) / 100)
+            LOGGER.info(f"Token Transferred: {amount}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "xeth":
+            context.user_data['get_eth'] = True
+            message = f"""
+How much ETH do you want to get? Type the value in eth
+
+You currently have {ETHBALANCE} ETH        
+            """
+            await query.message.reply_text(message, parse_mode=ParseMode.HTML)
+            return ANSWERBUYAMOUNT
+        elif button_data == 'maxtx':
+            context.user_data['get_eth'] = False
+            message = f"""
+How much {TOKENNAME} do you want to sell? You can use a regular number (1, 20 4, 7, etc.).
+
+If you type {TOKENBALANCE}. It will transfer the entire balance.
+You currently have {TOKENBALANCE} {TOKENNAME}        
+            """
+            await query.message.reply_text(message, parse_mode=ParseMode.HTML)
+            return ANSWERBUYAMOUNT
+        elif button_data == 'token':
+            user_data = await load_user_data(user_id)
+            amount = TOKENBALANCE
+            LOGGER.info(f"Token Transferred: {amount}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
+            await context.bot.send_message(chat_id=chat_id, text=result)
     else:
         await query.message.reply_text("I don't understand that command.")
 
+async def reply_buysell_amount(update: Update, context: CallbackContext):
+    text = update.message.text.strip()
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    get_eth = context.user_data.get('get_eth')
+    buy = context.user_data.get('buy')
+
+    try:
+        
+        text = int(text) if not get_eth else float(text)
+    except Exception as e:
+        message = f"❌ Error: \n{e}"
+        await context.message.reply_text(message)
+        context.user_data.pop('get_eth', None)
+        return ConversationHandler.END
+        
+    user_data = await load_user_data(user_id)
+    amount = text
+    result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, eth=get_eth)
+    if buy:
+        result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, eth=get_eth)
+    await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
+    return ConversationHandler.END
 
     
 async def cancel_buysell(update: Update, context: CallbackContext):

@@ -51,6 +51,7 @@ from commands.start.__buttons import (
     reply_buysell_address,
     buy_callback,
     sell_callback,
+    reply_buysell_amount,
     cancel_buysell,
     
     configuration_next_and_back_callback,
@@ -184,6 +185,7 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     LOGGER.error(f"Update: {update}\n\n caused error {context.error}")
 
 
+ANSWERBUYAMOUNT = range(1)
 PRIVATEKEY = range(1)
 PASTECONTRACTADDRESS = range(1)
 REPLYDELTA = range(1)
@@ -270,7 +272,56 @@ def main() -> None:
     )
     app.add_handler(attach_conv_handler)
     
-    
+    # BUY ETH CONVERSATION HANDLERS
+    buy_xeth_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(buy_callback, pattern=r"^buy_xeth$")
+        ],
+        states={
+            ANSWERBUYAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_buysell$")), reply_buysell_amount)],
+        },
+        fallbacks=[CommandHandler("cancel_buysell", cancel_buysell)]
+    )
+    app.add_handler(buy_xeth_conv_handler)
+
+
+    token_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(buy_callback, pattern=r"^buy_token$")
+        ],
+        states={
+            ANSWERBUYAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_buysell$")), reply_buysell_amount)],
+        },
+        fallbacks=[CommandHandler("cancel_buysell", cancel_buysell)]
+    )
+    app.add_handler(token_conv_handler)
+
+
+    # SELL ETH CONVERSATION HANDLERS
+    sell_xeth_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(sell_callback, pattern=r"^sell_xeth$")
+        ],
+        states={
+            ANSWERBUYAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_buysell$")), reply_buysell_amount)],
+        },
+        fallbacks=[CommandHandler("cancel_buysell", cancel_buysell)]
+    )
+    app.add_handler(sell_xeth_conv_handler)
+
+    maxtx_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(sell_callback, pattern=r"^buy_maxtx$")
+        ],
+        states={
+            ANSWERBUYAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_buysell$")), reply_buysell_amount)],
+        },
+        fallbacks=[CommandHandler("cancel_buysell", cancel_buysell)]
+    )
+    app.add_handler(maxtx_conv_handler)
+
+
+
     # SNIPER CONVERSATION HANDLERS
     sniper_conv_handler = ConversationHandler(
         entry_points=[

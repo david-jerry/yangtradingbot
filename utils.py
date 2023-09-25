@@ -20,12 +20,13 @@ ETHERAPI: Final = config('ETHERSCAN')
 BINANCEAPI: Final = config('BINANCE_API')
 CONTRACTABI: Final = config('CONTRACT_ABI')
 UNISWAPABI: Final = config('UNISWAP_ABI')
+UNISWAP_ROUTER: Final = config('UNISWAP_ROUTER')
 # exchange = cctx.binance({
 #     'apiKey': BINANCEAPI,
 #     'enableRateLimit': True,
 # })
-eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
-
+eth: Final = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' #config('WETH', default='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2')
+web3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
 
 
 
@@ -65,12 +66,13 @@ async def get_token_full_information(token_address, user_data):
     provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
     checksum_address = token_address
     if not w3.is_address(checksum_address.strip().lower()):
-        return f"An error occurred: Invalid address format\n\n{e}", "", "", "", "", ""
+        return f"An error occurred: Invalid address format", '', '', '', '', '', '', '', '', ''
     
     if not w3.is_checksum_address(checksum_address.strip().lower()):
         checksum_address = w3.to_checksum_address(token_address.strip().lower())
-        
+                
     abi = await get_contract_abi(checksum_address)
+
     eth_abi = await get_contract_abi(eth)
     
     token_contract = w3.eth.contract(address=checksum_address, abi=abi)
@@ -125,7 +127,7 @@ async def get_token_full_information(token_address, user_data):
         token_liquidity_positions = uniswap3.get_liquidity_positions()
         token_metadata = token_contract.functions.name().call()
         token_symbol = token_contract.functions.symbol().call()
-        return token_balance, token_symbol, token_decimals, eth_balance, token_price, token_metadata, token_liquidity_positions, owner_address, token_age_seconds, market_cap
+        return token_balance, token_symbol, token_decimals, eth_balance / 10**token_decimals, token_price, token_metadata, token_liquidity_positions, owner_address, token_age_seconds, market_cap
     except Exception as e:
         LOGGER.info(e)
         return "Error retrieving token informations.", '', '', '', '', '', '', '', '', ''
@@ -144,7 +146,7 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     
     checksum_address = token_address
     if not w3.is_address(checksum_address.strip().lower()):
-        return f"An error occurred: Invalid address format\n\n{e}", "", "", "", "", ""
+        return f"An error occurred: Invalid address format", "", "", "", "", ""
     
     if not w3.is_checksum_address(checksum_address.strip().lower()):
         checksum_address = w3.to_checksum_address(token_address.strip().lower())
@@ -475,7 +477,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             transaction = {
                 'to': fmt_address,
                 'from': user_data.wallet_address,
-                'nonce': nonce,
+                'nonce': web3.eth.get_transaction_count(user_data.wallet_address),
                 'chainId': int(chain_id),
                 'value': w3.to_wei(amount, 'ether'),
                 'gas': 21000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
@@ -540,7 +542,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                     # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
                     'maxFeePerGas': w3.to_wei(53, 'gwei'),
                     'maxPriorityFeePerGas': w3.to_wei(50, 'gwei'),
-                    'nonce': nonce,
+                    'nonce': web3.eth.get_transaction_count(user_data.wallet_address),
                 })
 
                 signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
@@ -658,12 +660,7 @@ async def processs_buy_or_sell_only(eth_amount, user_data, token_address, decima
     if not w3.is_checksum_address(checksum_address.strip().lower()):
         checksum_address = w3.to_checksum_address(token_address)
 
-    eth_checksum_address = "0x0000000000000000000000000000000000000000"
-    if not w3.is_address(eth_checksum_address.strip().lower()):
-        return f"Error Trasferring: Invalid address format"
-
-    if not w3.is_checksum_address(eth_checksum_address.strip().lower()):
-        eth_checksum_address = w3.to_checksum_address(token_address)
+    eth_checksum_address = eth
         
     uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
     try:
@@ -693,24 +690,231 @@ Approving your sale of: {eth_in_wei / 10**decimals} {token_name}
             
 {sell_result}
             """
+        elif buy == "buymaxtoken":
+            eth_in_wei = (eth_amount * float(balance)) * 10**decimals
+            LOGGER.info(f"FMT Amount: {w3.from_wei(eth_in_wei, 'ether')} {token_name}")
+            eth_to_get_from_token = uniswap.get_price_input(eth, checksum_address, int(eth_in_wei))
+            LOGGER.info(f"ETH To Get: {eth_to_get_from_token / 10**decimals}")
+            LOGGER.info(buy)
+            buy_result = buy_token(eth_in_wei, uniswap, checksum_address, user_data.wallet_address, eth=eth)
+            LOGGER.info(buy_result)
+            return f"""
+Approving your purchase of: {eth_in_wei / 10**decimals} {token_name}
+            
+{sell_result}
+            """
+        elif buy == "sellmaxtoken":
+            eth_in_wei = (eth_amount * float(balance)) * 10**decimals
+            LOGGER.info(f"FMT Amount: {w3.from_wei(eth_in_wei, 'ether')} {token_name}")
+            eth_to_get_from_token = uniswap.get_price_output(checksum_address, eth, int(eth_in_wei))
+            LOGGER.info(f"ETH To Get: {eth_to_get_from_token / 10**decimals}")
+            LOGGER.info(buy)
+            sell_result = sell_token(eth_in_wei, uniswap, checksum_address, user_data.wallet_address, eth=eth)
+            LOGGER.info(sell_result)
+            return f"""
+Approving your purchase of: {eth_in_wei / 10**decimals} {token_name}
+            
+{sell_result}
+            """
     except Exception as e:
-        return f"{e}"
+        return f"❌ {e}"
         
         
 
-def buy_token(amount, uniswap, token_contract, sending_to, eth='0x0000000000000000000000000000000000000000'):
+def buy_token(amount, uniswap, token_contract, sending_to, eth=eth):
     # Returns the amount of DAI you get for 1 ETH (10^18 wei)
     swap_result = uniswap.make_trade_output(token_contract, eth, amount, sending_to)
     LOGGER.info(swap_result)
     return swap_result
     
     
-def sell_token(amount, uniswap, token_contract, sending_to, eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'):
+def sell_token(amount, uniswap, token_contract, sending_to, eth=eth):
     # Returns the amount of ETH you need to pay (in wei) to get 1000 DAI
     swap_result = uniswap.make_trade(token_contract, eth, amount, sending_to)
     LOGGER.info(swap_result)
     return swap_result
 
+
+async def buyTokenWithEth(user_data, amount, token_address, botname="Yang Bot", token_name='Yangbot', eth=True):
+    try:       
+        nonce = web3.eth.get_transaction_count(user_data.wallet_address)
+        user_address = user_data.wallet_address
+        private_key = user_data.wallet_private_key
+        gas = web3.eth.gas_price
+        gasPrice = user_data.max_gas + gas
+        slippage = user_data.slippage
+        
+        checksum_address = token_address
+        if not web3.is_address(checksum_address.strip().lower()):
+            return f"Error Trasferring: Invalid address format"
+
+        if not web3.is_checksum_address(checksum_address.strip().lower()):
+            checksum_address = web3.to_checksum_address(token_address)
+            
+        contract_abi = await get_contract_abi(checksum_address)
+        contract = web3.eth.contract(address=checksum_address, abi=contract_abi)
+        
+        tx_amount = amount
+        amount = web3.to_wei(amount, 'ether')
+        userBalance = web3.eth.get_balance(user_address)
+        tokenBalance = contract.functions.balanceOf(user_address).call()
+        if userBalance < amount:
+            LOGGER.info("Insufficient Balance")
+            return f"""
+<strong>{botname} Response</strong>        
+❌ Insufficient Balance
+
+Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for {web3.from_wei(amount, 'ether')} ETH        
+        """
+        else:
+            uniswapRouter = UNISWAP_ROUTER
+            uniswapRouter = uniswapRouter.lower()
+            uniswapRouter = web3.to_checksum_address(uniswapRouter)
+            uniswapABI = UNISWAPABI
+            uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
+            weth = eth.lower()
+            weth = web3.to_checksum_address(weth)
+            amountOutMin = uniContract.functions.getAmountsOut(amount, [weth, checksum_address]).call()#[1]
+            tx_token_amount = amountOutMin
+            LOGGER.info(amountOutMin)
+            amountOutMin = amount - (amount * slippage/100)
+            amountOutMin = int(amountOutMin)
+            uniswap_txn = uniContract.functions.swapExactETHForTokens(
+                amountOutMin,
+                [weth, checksum_address],
+                user_address,
+                int(time.time()) + 10000,
+                ).build_transaction({
+                    'from': user_address,
+                    'value': amount,
+                    'gas': 10000000,
+                    'gasPrice': int(gasPrice),
+                    'nonce': web3.eth.get_transaction_count(user_address),
+                })
+            signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
+            tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            web3.eth.wait_for_transaction_receipt(tx_token)
+            new_userBalance = contract.functions.balanceOf(user_address).call()
+            amount = new_userBalance - tokenBalance
+            amount = web3.from_wei(amount, 'ether')
+            LOGGER.info(amount)
+            tx_hash = tx_token.hex()
+            return f"""
+<strong>{botname} Response</strong>        
+Purchase of <pre>{tx_amount} ETH</pre> for <pre>{tx_token_amount} {token_name}</pre>  
+
+Transaction Hash: <pre>https://etherscan/tx/{tx_hash}</pre>   
+        """
+    except Exception as e:
+        print(e)
+        return f"""
+<strong>{botname} Response</strong>        
+❌ There was an error.
+
+Error Details: <pre>{e}</pre>    
+    """
+
+
+async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", token_name='Yangbot', eth=False):
+    try:
+        nonce = web3.eth.get_transaction_count(user_data.wallet_address)
+        user_address = user_data.wallet_address
+        private_key = user_data.wallet_private_key
+        gas = web3.eth.gas_price
+        gasPrice = user_data.max_gas + gas
+        slippage = user_data.slippage
+        
+        checksum_address = token_address
+        if not web3.is_address(checksum_address.strip().lower()):
+            return f"Error Trasferring: Invalid address format"
+
+        if not web3.is_checksum_address(checksum_address.strip().lower()):
+            checksum_address = web3.to_checksum_address(token_address)
+            
+        contract_abi = await get_contract_abi(checksum_address)
+        contract = web3.eth.contract(address=checksum_address, abi=contract_abi)
+        
+                    
+        tx_token_amount = amount
+        amount = web3.to_wei(amount, 'ether')
+        
+        ethBalance = web3.eth.get_balance(user_address)
+        userBalance = contract.functions.balanceOf(user_address).call()
+        if userBalance <= 0:
+            LOGGER.info("Insufficient Balance")
+            return f"""
+<strong>{botname} Response</strong>        
+❌ Insufficient Balance
+
+Your token balance is {web3.from_wei(userBalance, 'ether')} {botname} and you requested for {web3.from_wei(amount, 'ether')} {botname}        
+"""
+        else:
+            uniswapRouter = UNISWAP_ROUTER
+            uniswapRouter = uniswapRouter.lower()
+            uniswapRouter = web3.to_checksum_address(uniswapRouter)
+            uniswapABI = UNISWAPABI
+            uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
+            weth = web3.to_checksum_address(eth.lower())
+            amountOutMin = amount
+            if not eth:
+                amountOutMin = uniContract.functions.getAmountsOut(amount, [checksum_address, weth]).call()#[1]
+            tx_amount = amountOutMin
+            LOGGER.info(amountOutMin)
+            amountOutMin = amount - (amount * slippage/100)
+            amountOutMin = int(amountOutMin)
+            allowance = contract.functions.allowance(user_address, uniswapRouter).call()
+            approve_tx = contract.functions.approve(
+                uniswapRouter,
+                amount).build_transaction({
+                'gas': 10000000,
+                'gasPrice':int(gasPrice),
+                'nonce': web3.eth.get_transaction_count(user_address),
+                'from': user_address,
+                })
+            signed_txn = web3.eth.account.sign_transaction(approve_tx, private_key)
+            tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            print(tx_token.hex())
+            allowance = contract.functions.allowance(user_address, uniswapRouter).call()
+            print(allowance)                                                     
+            web3.eth.wait_for_transaction_receipt(tx_token)
+            uniswap_txn = uniContract.functions.swapExactTokensForETH(
+                amount,
+                amountOutMin,
+                [checksum_address, weth],
+                user_address,
+                int(time.time()) + 10000,
+                ).build_transaction({
+                    'from': user_address,
+                    'gas': 10000000,
+                    'gasPrice': int(gasPrice),
+                    'nonce': web3.eth.get_transaction_count(user_address),
+                })
+            signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
+            tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            web3.eth.wait_for_transaction_receipt(tx_token)
+            new_userBalance = web3.eth.get_balance(user_address)
+            amount = new_userBalance - ethBalance
+            LOGGER.info(f"{new_userBalance}, {ethBalance}")
+            amount = web3.from_wei(amount, 'ether')
+            LOGGER.info(amount)
+            LOGGER.info(tx_token.hex())
+            tx_hash = tx_token.hex()
+            return f"""
+<strong>{botname} Response</strong>        
+Sale of <pre>{tx_token_amount} {token_name}</pre> for <pre>{tx_amount} ETH</pre>  
+
+Transaction Hash: <pre>https://etherscan/tx/{tx_hash}</pre>   
+        """
+    except Exception as e:
+        print(e)
+        return f"""
+<strong>{botname} Response</strong>        
+❌ There was an error.
+
+Error Details: <pre>{e}</pre>    
+    """
+    
+    
 async def approve_token(token_address, user_data, balance, decimals):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
     provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
@@ -728,4 +932,4 @@ async def approve_token(token_address, user_data, balance, decimals):
         return result
     except Exception as e:
         LOGGER.info(e)
-        return f"{e}"
+        return f"❌ {e}"
