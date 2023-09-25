@@ -25,7 +25,7 @@ weth = web3.to_checksum_address(WETH).lower()
 #     return "Cac"
 
 def copytrade(data): 
-    # print(data)
+    print('worker running')
     hash_record = {"Txhash": data['_hash']}
     check_duplicate = load_txhash_data(hash_record['Txhash'])
     pair_contract = data["_path"]

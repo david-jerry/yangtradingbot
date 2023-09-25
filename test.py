@@ -13,13 +13,9 @@ contract_abi = [{"inputs":[{"internalType":"address","name":"account","type":"ad
 def main():
 
     # buy token
-    gas = web3.eth.gas_price
-    print(gas)
-    gas = web3.from_wei(gas, 'gwei')
-    print(gas)
     path = []
     user_address = web3.to_checksum_address('0xfa7a0232958938202039f4e35216cea65971f876')
-    slipage = 0.5
+    slipage = 0.9
     gasLimit = 10000000
     gasPrice = web3.to_wei(5, 'gwei')
     tokenAddress = web3.to_checksum_address('0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984')
@@ -57,7 +53,7 @@ def main():
     contractsell = web3.eth.contract(address=tokenAddress, abi=contract_abi)
     allowance = contractsell.functions.allowance(user_address, uniswapRouter).call()
     print(allowance)
-    amountToBuy = web3.to_wei(0.01110, 'ether')  
+    amountToBuy = contract.functions.balanceOf(user_address).call()
     approve_tx = contractsell.functions.approve(
         uniswapRouter,
         amountToBuy).build_transaction({

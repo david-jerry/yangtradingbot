@@ -43,7 +43,7 @@ async def log_loop(event_filter, poll_interval):
                     "module": "account",
                     "action": "txlist",
                     "address": address,
-                    "startblock": startblock-1,
+                    "startblock": startblock-2,
                     "endblock": latest_block,
                     "page": 1,
                     "offset": 50,

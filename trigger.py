@@ -35,8 +35,12 @@ async def checkDatabase(bot_token,contract_ab):
                     txhash = EXPLORER_URL + txhash
                     botname = copytradetxhash[i]['bot_name']
                     symbol = contract.functions.symbol().call()
+                    if(symbol == 'WETH'):
+                        symbol = 'ETH'
                     name = contract.functions.name().call()
-                    amount = int(copytradetxhash[i]['amount'])
+                    if (name == 'Wrapped Ether'):
+                        name = 'Ether'
+                    amount = copytradetxhash[i]['amount']
                     fullmessage = f'Copy trade of {botname} - Swap to {amount} ${symbol} ${name} \n Transaction hash : {txhash}'
                     await send_message(bot_token, chat_id, fullmessage)
                     currentcopytradetxhash = copytradetxhash
