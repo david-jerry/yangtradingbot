@@ -18,7 +18,8 @@ INFURA_ID: Final = config("INFURA_ID")
 MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
 ETHERAPI: Final = config('ETHERSCAN')
 BINANCEAPI: Final = config('BINANCE_API')
-
+CONTRACTABI: Final = config('CONTRACT_ABI')
+UNISWAPABI: Final = config('UNISWAP_ABI')
 # exchange = cctx.binance({
 #     'apiKey': BINANCEAPI,
 #     'enableRateLimit': True,
@@ -87,17 +88,23 @@ async def get_token_full_information(token_address, user_data):
     token_age_seconds = current_timestamp - creation_timestamp
     token_decimals = token_contract.functions.decimals().call()
     
-    market_price = uniswap.get_price_output(eth, checksum_address, 1 * 10**18)
-    total_supply = token_contract.functions.totalSupply().call()
+    market_price = uniswap.get_price_input(eth, checksum_address, 1 * 10**token_decimals)
+    current_exchange_rate = uniswap1.get_exchange_rate(checksum_address)
+    total_supply = token_contract.functions.totalSupply().call() / 10**token_decimals
+    LOGGER.info(total_supply)
+    LOGGER.info(current_exchange_rate)
     crypto_price_usd = 0.0
     try:
         response = requests.get('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd')
         data = response.json()
         crypto_price_usd = data['ethereum']['usd']
+        token_price = (crypto_price_usd * total_supply)# / (10**token_decimals))
+        LOGGER.info(token_price)
     except Exception as e:
         print(f'Error fetching price data: {e}')
         
-    market_cap = round(total_supply * crypto_price_usd, 8) * round(market_price * crypto_price_usd, 8)
+    market_cap = token_price * total_supply
+    LOGGER.info(market_cap)
 
     
     try:
@@ -105,10 +112,9 @@ async def get_token_full_information(token_address, user_data):
         
         eth_balance = uniswap.get_eth_balance()
         token_liquidity_positions = uniswap3.get_liquidity_positions()
-        current_exchange_rate = uniswap1.get_exchange_rate(checksum_address)
         token_metadata = token_contract.functions.name().call()
         token_symbol = token_contract.functions.symbol().call()
-        return token_balance, token_symbol, token_decimals, eth_balance, current_exchange_rate, token_metadata, token_liquidity_positions, owner_address, token_age_seconds, market_cap
+        return token_balance, token_symbol, token_decimals, eth_balance, token_price, token_metadata, token_liquidity_positions, owner_address, token_age_seconds, market_cap
     except Exception as e:
         LOGGER.info(e)
         return "Error retrieving token informations.", '', '', '', '', '', '', '', '', ''
@@ -630,7 +636,7 @@ async def snipping_run(user_data, token_address, buy_price_threshold, sell_price
 
 
 
-async def processs_buy_or_sell_only(eth_amount, user_data, token_address, decimals,  token_name='Yangbot', buy=True):
+async def processs_buy_or_sell_only(eth_amount, user_data, token_address, decimals,  token_name='Yangbot', balance=0.00, buy=True):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
     provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
     
@@ -649,23 +655,33 @@ async def processs_buy_or_sell_only(eth_amount, user_data, token_address, decima
         eth_checksum_address = w3.to_checksum_address(token_address)
         
     uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
-    eth_in_wei = eth_amount * 10**decimals
-    LOGGER.info(f"FMT Amount: {int(eth_in_wei)}")
     try:
         if buy:
+            eth_in_wei = eth_amount * 10**decimals
+            LOGGER.info(f"FMT Amount: {int(eth_in_wei)}")
             token_in_eth = uniswap.get_price_input(eth, checksum_address, int(eth_in_wei))
             LOGGER.info(f"Token Amount: {token_in_eth}")
             LOGGER.info(buy)
             buy_result = buy_token(eth_in_wei, uniswap, checksum_address, user_data.wallet_address, eth=eth)
             LOGGER.info(buy_result)
-            return f"You are buying: {eth_in_wei / 10**decimals} {token_name}"
-        else:
-            token_in_eth = uniswap.get_price_input(eth, checksum_address, int(eth_in_wei))
-            LOGGER.info(f"Token Amount: {token_in_eth}")
+            return f"""
+Approving your purchase of: {eth_in_wei / 10**decimals} {token_name}
+            
+{buy_result}
+            """
+        elif not buy:
+            eth_in_wei = (eth_amount * float(balance)) * 10**decimals
+            LOGGER.info(f"FMT Amount: {w3.from_wei(eth_in_wei, 'ether')} {token_name}")
+            eth_to_get_from_token = uniswap.get_price_output(checksum_address, eth, int(eth_in_wei))
+            LOGGER.info(f"ETH To Get: {eth_to_get_from_token / 10**decimals}")
             LOGGER.info(buy)
             sell_result = sell_token(eth_in_wei, uniswap, checksum_address, user_data.wallet_address, eth=eth)
             LOGGER.info(sell_result)
-            return f"You are selling: {eth_in_wei / 10**decimals} {token_name} "
+            return f"""
+Approving your sale of: {eth_in_wei / 10**decimals} {token_name}
+            
+{sell_result}
+            """
     except Exception as e:
         return f"{e}"
         
@@ -683,3 +699,22 @@ def sell_token(amount, uniswap, token_contract, sending_to, eth='0xC02aaA39b223F
     swap_result = uniswap.make_trade(token_contract, eth, amount, sending_to)
     LOGGER.info(swap_result)
     return swap_result
+
+async def approve_token(token_address, user_data, balance, decimals):
+    w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
+    
+    checksum_address = token_address
+    if not w3.is_address(checksum_address.strip().lower()):
+        return f"Error Trasferring: Invalid address format"
+
+    if not w3.is_checksum_address(checksum_address.strip().lower()):
+        checksum_address = w3.to_checksum_address(token_address)
+    uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
+    try:
+        result = uniswap.approve(checksum_address, balance * 10**decimals)
+        LOGGER.info(result)
+        return result
+    except Exception as e:
+        LOGGER.info(e)
+        return f"{e}"

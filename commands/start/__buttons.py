@@ -25,7 +25,7 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, processs_buy_or_sell_only, trasnfer_currency
+from utils import approve_token, attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, processs_buy_or_sell_only, trasnfer_currency
 from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_next_sniper_data, load_previous_sniper_data, load_sniper_data, load_user_data, remove_sniper, save_copy_trade_address, save_sniper, save_user_data, update_copy_trade_addresses, update_snipes, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -349,7 +349,7 @@ async def language_button_callback(update: Update, context: ContextTypes.DEFAULT
 def build_buy_sel_keyboard(buy=True):
     switch_sell = InlineKeyboardButton(f"Buy ↔ Sell", callback_data=f"buy_sell")
     switch_buy = InlineKeyboardButton(f"Sell ↔ Buy", callback_data=f"sell_buy")
-    chart = InlineKeyboardButton(f"📉 Chart", callback_data=f"buy_chart")
+    chart = InlineKeyboardButton(f"📉 Chart", callback_data=f"buy_chart", url=f"https://etherscan.io/dex/uniswapv2/{TOKENADDRESS}")
     
     buy001 = InlineKeyboardButton(f"Buy 0.01 ETH", callback_data=f"buy_0_01")
     buy005 = InlineKeyboardButton(f"Buy 0.05 ETH", callback_data=f"buy_0_05")
@@ -946,7 +946,7 @@ async def buy_callback(update: Update, context: CallbackContext):
             eth_amount = float(button_data.replace('_', '.'))
             result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
             await context.bot.send_message(chat_id=chat_id, text=result)
-        elif button_data == "0.2":
+        elif button_data == "0_2":
             user_data = await load_user_data(user_id)
             eth_amount = float(button_data.replace('_', '.'))
             result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
@@ -994,35 +994,34 @@ async def sell_callback(update: Update, context: CallbackContext):
                 reply_markup=markup,
             )
             context.user_data['caption_id'] = query.message.message_id
-        elif button_data == "0_01":
+        elif button_data == "approve":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data / 100)
+            result = await approve_token(TOKENADDRESS, user_data, TOKENBALANCE, TOKENDECIMAL)
+            await context.bot.send_message(chat_id=chat_id, text=result)
+        elif button_data == "haz":
+            user_data = await load_user_data(user_id)
             result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
             await context.bot.send_message(chat_id=chat_id, text=result)
-        elif button_data == "0_05":
+        elif button_data == "25":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data / 100)
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            eth_amount = int(button_data) / 100
+            LOGGER.info(f"Percentage: {eth_amount}")
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
             await context.bot.send_message(chat_id=chat_id, text=result)
-        elif button_data == "0_1":
+        elif button_data == "50":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data / 100)
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            eth_amount = int(button_data) / 100
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
             await context.bot.send_message(chat_id=chat_id, text=result)
-        elif button_data == "0.2":
+        elif button_data == "75":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data / 100)
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            eth_amount = int(button_data) / 100
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
             await context.bot.send_message(chat_id=chat_id, text=result)
-        elif button_data == "0_5":
+        elif button_data == "100":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data / 100)
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
-            await context.bot.send_message(chat_id=chat_id, text=result)
-        elif button_data == "1":
-            user_data = await load_user_data(user_id)
-            eth_amount = float(button_data / 100)
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
+            eth_amount = int(button_data) / 100
+            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
             await context.bot.send_message(chat_id=chat_id, text=result)        
     else:
         await query.message.reply_text("I don't understand that command.")
