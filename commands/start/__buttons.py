@@ -1028,37 +1028,37 @@ async def sell_callback(update: Update, context: CallbackContext):
         elif button_data == "approve":
             user_data = await load_user_data(user_id)
             result = await approve_token(TOKENADDRESS, user_data, TOKENBALANCE, TOKENDECIMAL)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "haz":
             user_data = await load_user_data(user_id)
             amount = TOKENBALANCE
             LOGGER.info(f"Token Transferred: {amount}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "25":
             user_data = await load_user_data(user_id)
             amount = float(TOKENBALANCE) * (int(button_data) / 100)
             LOGGER.info(f"Token Transferred: {amount}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "50":
             user_data = await load_user_data(user_id)
             amount = float(TOKENBALANCE) * (int(button_data) / 100)
             LOGGER.info(f"Token Transferred: {amount}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "75":
             user_data = await load_user_data(user_id)
             amount = float(TOKENBALANCE) * (int(button_data) / 100)
             LOGGER.info(f"Token Transferred: {amount}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "100":
             user_data = await load_user_data(user_id)
             amount = float(TOKENBALANCE) * (int(button_data) / 100)
             LOGGER.info(f"Token Transferred: {amount}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "xeth":
             context.user_data['get_eth'] = True
             message = f"""
@@ -1083,7 +1083,7 @@ You currently have {TOKENBALANCE} {TOKENNAME}
             amount = TOKENBALANCE
             LOGGER.info(f"Token Transferred: {amount}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
     else:
         await query.message.reply_text("I don't understand that command.")
 
