@@ -68,11 +68,13 @@ def copytrade(data):
                 pair_contract[1] = pair_contract[1].lower()
                 # print(pair_contract)
                 if (pair_contract[0] in weth):
-                    result = buyExactEth(data_customer, data_copytrade, pair_contract[1])
-                    print("BUY Tokens---------------: ", result)
+                    # result = buyExactEth(data_customer, data_copytrade, pair_contract[1])
+                    # print("BUY Tokens---------------: ", result)
+                    print("BUY Tokens+++++++++++++++++++++")
                 else:
                     sellExactToken(data_customer, data_copytrade, pair_contract[0])
-                    print("SELL Tokens---------------: " , result)
+                    # print("SELL Tokens---------------: " , result)
+                    print("SELL Tokens+++++++++++++++++++")
         else:
             return "TRADE NOT EXIST"
     else:
