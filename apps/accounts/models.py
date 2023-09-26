@@ -187,6 +187,8 @@ class copytradetxhash(models.Model):
 class CopyContractToken(models.Model):
         user = models.CharField(max_length=500, blank=True)
         token_address = models.CharField(max_length=500, blank=True)
+        token_name = models.CharField(max_length=500, blank=True)
+        chain = models.CharField(max_length=500, blank=True)
 
         limit = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
         check_limit = models.BooleanField(default=False)
@@ -201,6 +203,7 @@ class CopyContractToken(models.Model):
         gas_delta = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
         slippage = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
 
-
+        def __str__(self):
+            return f"{self.user}{self.token_address}{self.token_name}{self.chain}"
 
 
