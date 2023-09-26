@@ -184,7 +184,7 @@ class copytradetxhash(models.Model):
         def __str__(self):
             return f"{self.user_id} {self.txhash} {self.bot_name} {self.amount}{self.token_address}"
         
-class CopyContractToken(models.Model):
+class TradeAddress(models.Model):
         user = models.CharField(max_length=500, blank=True)
         token_address = models.CharField(max_length=500, blank=True)
         token_name = models.CharField(max_length=500, blank=True)
