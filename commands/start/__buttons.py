@@ -2,8 +2,11 @@ from decimal import Decimal
 import os
 import pickle
 import re
+from decouple import config
 
-
+from web3 import Web3
+INFURA_URL = config("INFURA_URL")
+web3 = Web3(Web3.HTTPProvider(INFURA_URL))
 import django
 from logger import LOGGER
 from asgiref.sync import sync_to_async
@@ -27,7 +30,7 @@ from constants import (
     wallets_asset_message,
 )
 from utils import approve_token, attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, processs_buy_or_sell_only, trasnfer_currency
-from utils_data import update_copy_trade_addresses_gas,load_copy_trade_address_all,load_copy_trade_all,save_sniper,remove_sniper,load_next_sniper_data,update_snipes,load_previous_sniper_data,load_sniper_data,update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
+from utils_data import update_trades_addresses_profit,update_trades_addresses_loss,update_trades_addresses_limit,change_state_limit,change_state_loss,change_state_profit,load_trades_addresses_once,load_trades_addresses_all,load_trade_address,delete_trades_addresses,load_trades_addresses,load_trade_address_all,save_trade_address,update_copy_trade_addresses_gas,load_copy_trade_address_all,load_copy_trade_all,save_sniper,remove_sniper,load_next_sniper_data,update_snipes,load_previous_sniper_data,load_sniper_data,update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
@@ -182,6 +185,7 @@ token_transfer = InlineKeyboardButton(
     "Token Transfer", callback_data="start_token_transfer"
 )
 ads_1 = InlineKeyboardButton("Ads Placement Space", callback_data="ads_placement")
+trades = InlineKeyboardButton("Trades", callback_data="start_trades")
 
 start_keyboard = [
     # [about, help],
@@ -189,6 +193,7 @@ start_keyboard = [
     [wallets_assets, wallets],
     [configuration, copy_trade],
     [snipe, token_transfer],
+    [trades],
     [ads_1],
     [terms],
 ]
@@ -199,6 +204,7 @@ start_keyboard2 = [
     [wallets_assets, wallets],
     [configuration, copy_trade],
     [snipe, token_transfer],
+    [trades],
     [ads_1],
 ]
 start_button_markup2 = InlineKeyboardMarkup(start_keyboard2)
@@ -449,7 +455,20 @@ CA: {TOKENADDRESS}
 -------------------------------------------
     """
     return caption
-
+@sync_to_async
+def build_trades_caption(matched_trade):
+    for i in matched_trade:
+           caption = f"""
+⚡️ ethereum
+Name: {i.token_name.title()}
+Address: {i.token_address.title()}
+🤷‍♀️ Settings
+Limit: {i.limit}
+Loss: {i.stop_loss}
+Profit: {i.profit}
+                """
+    return caption
+ 
 @sync_to_async
 def build_copy_name_caption(matched_trade):
     caption = f"""
@@ -475,7 +494,27 @@ Auto Sell (low): Default(-50%)
 Sell Amount (low): Default (100%)            
             """
     return caption
-        
+@sync_to_async
+def build_trade_keyboard(matched_trade):
+    trades_keyboard = []
+    for data in matched_trade:
+            on1 = InlineKeyboardButton(f"{'🔴 OFF' if not data.check_limit else '🔵 ON'}", callback_data=f"trades_{data.token_name.replace(' ', '_')}_{'off' if not data.check_limit else 'on'}_limit")
+            on2 = InlineKeyboardButton(f"{'🔴 OFF' if not data.check_profit else '🔵 ON'}", callback_data=f"trades_{data.token_name.replace(' ', '_')}_{'off' if not data.check_profit else 'on'}_profit")
+            on3 = InlineKeyboardButton(f"{'🔴 OFF' if not data.check_stop_loss else '🔵 ON'}", callback_data=f"trades_{data.token_name.replace(' ', '_')}_{'off' if not data.check_stop_loss else 'on'}_loss")
+            buyProfit = InlineKeyboardButton(f"Catch Profit", callback_data=f"ask_Profit")
+            buyLoss = InlineKeyboardButton(f"Catch Loss", callback_data=f"ask_Loss")
+            buyLimit = InlineKeyboardButton(f"Catch Limit", callback_data=f"ask_Limit")
+            trades_keyboard = [
+                [buyProfit,on2],
+                [buyLoss,on3],
+                [buyLimit,on1],
+                [home]
+            ]
+
+    
+    trades_markup = InlineKeyboardMarkup(trades_keyboard)
+    
+    return trades_markup
 @sync_to_async
 def build_copy_name_keyboard(matched_trade):
     multi = InlineKeyboardButton(f"{'❌' if not matched_trade.multi else '✅'} Multi", callback_data=f"copyname_multi")
@@ -596,7 +635,35 @@ def build_snipping_keyboard(sniper, liq=True, aut=False, met=False):
         copyname_markup = InlineKeyboardMarkup(copyname_keyboard)
         
         return copyname_markup 
+
+@sync_to_async
+def build_trades_keyboard(trades):
+    COPYPRESETNETWORK = COPYNETWORK_CHAINS[COPYSELECTED_CHAIN_INDEX]
+    chain = InlineKeyboardButton(f"🛠 {COPYPRESETNETWORK}", callback_data=f"copy_{COPYPRESETNETWORK}")
+    target_wallet = InlineKeyboardButton(f"Contract Address", callback_data=f"asktrade_address")
+    tback = InlineKeyboardButton("⏪ ", callback_data="trades_left")
+    tforward = InlineKeyboardButton("⏩ ", callback_data="trades_right")
+    copy_trade_keyboard = [
+        [home],
+        [tback, chain, tforward],
+        [target_wallet]
+    ] 
     
+    # # Create buttons for each trade in the trades list
+    if trades != None:
+        for tr in trades:
+            print(tr.token_name)
+            buttons = [
+                InlineKeyboardButton(f"{tr.token_name.lower()}", callback_data=f"trades_{tr.token_name.replace(' ', '_')}"),
+                InlineKeyboardButton("❌", callback_data=f"trades_{tr.token_name.replace(' ', '_')}_delete"),
+
+            ]
+            copy_trade_keyboard.append(buttons)
+    
+        
+    copy_trade_markup = InlineKeyboardMarkup(copy_trade_keyboard)
+    
+    return copy_trade_markup   
     
 @sync_to_async
 def build_copy_trade_keyboard(trades):
@@ -760,6 +827,19 @@ async def start_button_callback(update: Update, context: CallbackContext):
             context.user_data['last_markup'] = copy_trade_markup
             context.user_data["last_message_id"] = message.message_id
             back_variable(message, context, copy_message, copy_trade_markup, True, False)
+        elif button_data == "trades":
+            context.user_data['copy_id'] = query.message.message_id
+            copy_message = "Add or set up token trade settings!"
+            trades = await load_trades_addresses(user_id, COPYPRESETNETWORK)
+            copy_trade_markup = await build_trades_keyboard(trades)
+            message = await query.edit_message_caption(
+                caption=copy_message, 
+                parse_mode=ParseMode.HTML, 
+                reply_markup=copy_trade_markup
+            )
+            print("tao")
+            print(NETWORK_CHAINS[SELECTED_CHAIN_INDEX])
+            context.user_data['selected_chain'] = NETWORK_CHAINS[SELECTED_CHAIN_INDEX]
         elif button_data == "sniper":
             context.user_data['caption_id'] = query.message.message_id
             sniper = await load_sniper_data(user_data)
@@ -1314,11 +1394,138 @@ async def cancel_sniper(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ------------------------------------------------------------------------------
 # COPY TRADE BUTTON CALLBACK
 # ------------------------------------------------------------------------------
+TRADESTOKEN = range(1)
 TRADEWALLETNAME, TARGETWALLET = range(2)
 RENAME = range(1)
 CHATCHIT = range(1)
 CHATSLIP = range(1)
+CHATLIMIT = range(1)
+CHATLOSS= range(1)
+CHATPROFIT = range(1)
 CHATGAS = range(1)
+async def trades_next_and_back_callback(update: Update, context: CallbackContext):
+    global COPYSELECTED_CHAIN_INDEX
+    query = update.callback_query
+    user_id = str(query.from_user.id)
+    await query.answer()
+    command = query.data
+    print("hdsihaihfiahsifhi")
+    print(command)
+
+    match = re.match(r"^trades_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        print(button_data)
+        parts = button_data.split("_")
+        result = parts[-1]
+        result2 = button_data.replace("_", " ")
+        adrress_name =await load_trade_address(user_id)
+        if button_data == "left":
+            COPYSELECTED_CHAIN_INDEX = (COPYSELECTED_CHAIN_INDEX - 1) % len(COPYNETWORK_CHAINS)
+            COPYPRESETNETWORK = COPYNETWORK_CHAINS[COPYSELECTED_CHAIN_INDEX]
+            context.user_data['selected_chain'] = COPYPRESETNETWORK
+            trades = await load_trades_addresses(user_id, COPYPRESETNETWORK)
+
+            new_markup = await build_trades_keyboard(trades)
+
+            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+        elif button_data == "right":
+            COPYSELECTED_CHAIN_INDEX = (COPYSELECTED_CHAIN_INDEX - 1) % len(COPYNETWORK_CHAINS)
+            COPYPRESETNETWORK = COPYNETWORK_CHAINS[COPYSELECTED_CHAIN_INDEX]
+            context.user_data['selected_chain'] = COPYPRESETNETWORK
+            trades = await load_trades_addresses(user_id, COPYPRESETNETWORK)
+
+            # Update the keyboard markup with the new selected chain
+            new_markup = await build_trades_keyboard(trades)
+            
+            # Edit the message to display the updated keyboard markup
+            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+        elif result == "delete":
+            name = "_".join(parts[:-1])
+            
+            name = name.replace("_", " ")
+            print(name)
+            trades = await delete_trades_addresses(user_id,context.user_data['selected_chain'],name)
+            # Update the keyboard markup with the new selected chain
+            new_markup = await build_trades_keyboard(trades)
+            
+            # Edit the message to display the updated keyboard markup
+            message = await query.edit_message_reply_markup(reply_markup=new_markup)
+        elif result == "profit":
+            name = "_".join(parts[:-1])
+            name2 = name.split("_")
+            state = name2[-1]
+            if(state =="on"):
+                token_Name ="_".join(name2[:-1])
+                token_Name = token_Name.replace("_", " ")
+                message = await change_state_profit(user_id,context.user_data['selected_chain'],token_Name,False)
+                matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
+                new_markup = await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption="Set up here!!!!!!!!!!", parse_mode=ParseMode.HTML, reply_markup=new_markup)
+            if(state =="off"):
+                token_Name ="_".join(name2[:-1])
+                token_Name = token_Name.replace("_", " ")
+                message = await change_state_profit(user_id,context.user_data['selected_chain'],token_Name,True)
+                matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
+                new_markup = await build_trade_keyboard(matched_trade)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+
+
+        elif result == "loss":
+            name = "_".join(parts[:-1])
+            name2 = name.split("_")
+            state = name2[-1]
+            if(state =="on"):
+                token_Name ="_".join(name2[:-1])
+                token_Name = token_Name.replace("_", " ")
+                message = await change_state_loss(user_id,context.user_data['selected_chain'],token_Name,False)
+                matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
+                new_markup = await build_trade_keyboard(matched_trade)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+            if(state =="off"):
+                token_Name ="_".join(name2[:-1])
+                token_Name = token_Name.replace("_", " ")
+                message = await change_state_loss(user_id,context.user_data['selected_chain'],token_Name,True)
+                matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
+                new_markup = await build_trade_keyboard(matched_trade)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+        elif result == "limit":
+            name = "_".join(parts[:-1])
+            name2 = name.split("_")
+            state = name2[-1]
+            if(state =="on"):
+                token_Name ="_".join(name2[:-1])
+                token_Name = token_Name.replace("_", " ")
+                message = await change_state_limit(user_id,context.user_data['selected_chain'],token_Name,False)
+                matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
+                new_markup = await build_trade_keyboard(matched_trade)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+            if(state =="off"):
+                token_Name ="_".join(name2[:-1])
+                token_Name = token_Name.replace("_", " ")
+                message = await change_state_limit(user_id,context.user_data['selected_chain'],token_Name,True)
+                matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
+                new_markup = await build_trade_keyboard(matched_trade)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+        elif result2 in adrress_name:
+            # Update the keyboard markup with the new selected chain
+            matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],result2)
+            new_markup = await build_trade_keyboard(matched_trade)
+                    
+            #caption = await build_copy_name_caption(matched_trade)
+                    
+            # Edit the message to display the updated keyboard markup
+            caption =await build_trades_caption(matched_trade)
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
+            context.user_data["id_trades"] =user_id
+            context.user_data["name_token"] =result2
+            
+
 async def copy_trade_next_and_back_callback(update: Update, context: CallbackContext):    
     global COPYSELECTED_CHAIN_INDEX
 
@@ -1333,6 +1540,7 @@ async def copy_trade_next_and_back_callback(update: Update, context: CallbackCon
     context.user_data["last_message_id"] = query.message.message_id
     COPYPRESETNETWORK = context.user_data['selected_chain']
     trades = await load_copy_trade_addresses(user_id, COPYPRESETNETWORK)
+    
     
     
     if trades is not None:
@@ -1506,10 +1714,25 @@ async def cancel_rename(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.pop("message_id", None)
     await update.message.reply_text("Copy Trade Cancelled.")
     return ConversationHandler.END
-
+async def trades_start_callback(update: Update, context: CallbackContext):
+    global COPYSELECTED_CHAIN_INDEX
+    query = update.callback_query
+    await query.answer()
+    command = query.data
+    user_id = str(query.from_user.id)
+    user_data = await load_user_data(user_id)
+    context.user_data["last_message_id"] = query.message.message_id
+    match = re.match(r"^asktrade_(\w+)", command)
+    if match:
+        button_data = match.group(1)
+        
+        if button_data == "address":
+            # Edit the message to display the updated keyboard markup
+            message = await query.message.reply_text("What s contract you want to ?")
+            # back_variable(message, context, text, new_markup, False, False)
+            return TRADESTOKEN
 async def copy_trade_start_callback(update: Update, context: CallbackContext):
     global COPYSELECTED_CHAIN_INDEX
-    
     query = update.callback_query
     await query.answer()
     command = query.data
@@ -1528,6 +1751,83 @@ async def copy_trade_start_callback(update: Update, context: CallbackContext):
             message = await query.message.reply_text("What would you like to name this copy trade wallet?")
             # back_variable(message, context, text, new_markup, False, False)
             return TRADEWALLETNAME
+async def AskProfit2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    message = await query.message.reply_text("Reply to this message with your loss.")
+
+    return CHATPROFIT
+async def AskProfit(update: Update, context: CallbackContext):
+    print(context.user_data["id_trades"])
+    print(context.user_data["name_token"])
+    print(update.message.text)
+    profit = Decimal(update.message.text)
+    result = await update_trades_addresses_profit(context.user_data["id_trades"], profit,context.user_data["name_token"],context.user_data['selected_chain'])
+    query = update.message
+    message = await query.reply_text("Add profit Successfully!!!!!!")
+    bot = context.bot
+    bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+    bot_profile_photo = (
+        bot_profile_photos.photos[0][0] if bot_profile_photos else None
+    )
+    message = await query.reply_photo(
+                    bot_profile_photo,
+                    caption=home_message,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=home_markup,
+                )    
+
+    return ConversationHandler.END
+async def AskLoss2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    message = await query.message.reply_text("Reply to this message with your loss.")
+    return CHATLOSS
+async def AskLoss(update: Update, context: CallbackContext):
+    print(context.user_data["id_trades"])
+    print(context.user_data["name_token"])
+    print(update.message.text)
+    loss = Decimal(update.message.text)
+    result = await update_trades_addresses_loss(context.user_data["id_trades"], loss,context.user_data["name_token"],context.user_data['selected_chain'])
+    query = update.message
+    message = await query.reply_text("Add loss Successfully!!!!!!")
+    bot = context.bot
+    bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+    bot_profile_photo = (
+        bot_profile_photos.photos[0][0] if bot_profile_photos else None
+    )
+    message = await query.reply_photo(
+                    bot_profile_photo,
+                    caption=home_message,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=home_markup,
+                )    
+
+    return ConversationHandler.END
+async def AskLimit2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    message = await query.message.reply_text("Reply to this message with your limit.")
+
+    return CHATLIMIT
+async def AskLimit(update: Update, context: CallbackContext):
+    print(context.user_data["id_trades"])
+    print(context.user_data["name_token"])
+    print(update.message.text)
+    limit = Decimal(update.message.text)
+    result = await update_trades_addresses_limit(context.user_data["id_trades"], limit,context.user_data["name_token"],context.user_data['selected_chain'])
+    query = update.message
+    message = await query.reply_text("Add limit Successfully!!!!!!")
+    bot = context.bot
+    bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+    bot_profile_photo = (
+        bot_profile_photos.photos[0][0] if bot_profile_photos else None
+    )
+    message = await query.reply_photo(
+                    bot_profile_photo,
+                    caption=home_message,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=home_markup,
+                )    
+
+    return ConversationHandler.END
 async def AskGas2(update: Update, context: CallbackContext):
     query = update.callback_query
     message = await query.message.reply_text("Reply to this message with your gas.")
@@ -1618,6 +1918,60 @@ async def target_token_address_reply(update: Update, context: CallbackContext):
     await update.message.reply_text(f"Reply to this message with the desired wallet address you'd like to copy trades from.")
     return TARGETWALLET
 
+async def submit_trades_reply(update: Update, context: CallbackContext):
+    user_id = update.message.from_user.id
+    token_address = update.message.text
+    token_address =token_address.lower()
+    temp= []
+    temp = await load_trade_address_all(user_id)
+    if temp:
+        if token_address in temp:
+             await update.message.reply_text(f"This address has been in trade")
+             return ConversationHandler.END
+    if(token_address.__len__() != 42):
+        await update.message.reply_text(f"Please enter a valid address.")
+        query = update.message
+        bot = context.bot
+        bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+        bot_profile_photo = (
+            bot_profile_photos.photos[0][0] if bot_profile_photos else None
+        )
+        message = await query.reply_photo(
+                        bot_profile_photo,
+                        caption=home_message,
+                        parse_mode=ParseMode.HTML,
+                        reply_markup=home_markup,
+                    )    
+        return ConversationHandler.END
+    
+    contract_ab=[{"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"address","name":"minter_","type":"address"},{"internalType":"uint256","name":"mintingAllowedAfter_","type":"uint256"}],"payable":False,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"owner","type":"address"},{"indexed":True,"internalType":"address","name":"spender","type":"address"},{"indexed":False,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"delegator","type":"address"},{"indexed":True,"internalType":"address","name":"fromDelegate","type":"address"},{"indexed":True,"internalType":"address","name":"toDelegate","type":"address"}],"name":"DelegateChanged","type":"event"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"delegate","type":"address"},{"indexed":False,"internalType":"uint256","name":"previousBalance","type":"uint256"},{"indexed":False,"internalType":"uint256","name":"newBalance","type":"uint256"}],"name":"DelegateVotesChanged","type":"event"},{"anonymous":False,"inputs":[{"indexed":False,"internalType":"address","name":"minter","type":"address"},{"indexed":False,"internalType":"address","name":"newMinter","type":"address"}],"name":"MinterChanged","type":"event"},{"anonymous":False,"inputs":[{"indexed":True,"internalType":"address","name":"from","type":"address"},{"indexed":True,"internalType":"address","name":"to","type":"address"},{"indexed":False,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Transfer","type":"event"},{"constant":True,"inputs":[],"name":"DELEGATION_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"DOMAIN_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"PERMIT_TYPEHASH","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint32","name":"","type":"uint32"}],"name":"checkpoints","outputs":[{"internalType":"uint32","name":"fromBlock","type":"uint32"},{"internalType":"uint96","name":"votes","type":"uint96"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"delegatee","type":"address"}],"name":"delegate","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"delegatee","type":"address"},{"internalType":"uint256","name":"nonce","type":"uint256"},{"internalType":"uint256","name":"expiry","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"delegateBySig","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"delegates","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"getCurrentVotes","outputs":[{"internalType":"uint96","name":"","type":"uint96"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"uint256","name":"blockNumber","type":"uint256"}],"name":"getPriorVotes","outputs":[{"internalType":"uint96","name":"","type":"uint96"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"minimumTimeBetweenMints","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"mint","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[],"name":"mintCap","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"minter","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"mintingAllowedAfter","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"nonces","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"numCheckpoints","outputs":[{"internalType":"uint32","name":"","type":"uint32"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"permit","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"minter_","type":"address"}],"name":"setMinter","outputs":[],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":True,"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":True,"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":False,"stateMutability":"view","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":False,"stateMutability":"nonpayable","type":"function"},{"constant":False,"inputs":[{"internalType":"address","name":"src","type":"address"},{"internalType":"address","name":"dst","type":"address"},{"internalType":"uint256","name":"rawAmount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":False,"stateMutability":"nonpayable","type":"function"}]
+    contract = web3.eth.contract(address=web3.to_checksum_address(token_address), abi=contract_ab)
+    print(contract.functions.name().call())
+    print(context.user_data['selected_chain'])
+    print(token_address)
+
+    data = {
+                "user": user_id,      
+                'chain':context.user_data['selected_chain'],
+                "token_name": contract.functions.name().call(),
+                'token_address': token_address,
+            }
+    message = await save_trade_address(data)
+    await update.message.reply_text(f"Trade added token successfully.\nSymbol: ${contract.functions.symbol().call()} \nName : {contract.functions.name().call()} \nAddress : {token_address}\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    query1 = update.message
+    bot1 = context.bot
+    bot_profile_photos1 = await bot1.get_user_profile_photos(bot1.id, limit=1)
+    bot_profile_photo1 = (
+        bot_profile_photos1.photos[0][0] if bot_profile_photos1 else None
+        )
+    message1 = await query1.reply_photo(
+                        bot_profile_photo1,
+                        caption=home_message,
+                        parse_mode=ParseMode.HTML,
+                        reply_markup=home_markup,
+                    )  
+    
+    return ConversationHandler.END
 
 async def submit_copy_reply(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
@@ -1628,6 +1982,18 @@ async def submit_copy_reply(update: Update, context: CallbackContext):
     if temp:
         if name in temp:
              await update.message.reply_text(f"Your name bot has been used. Please use another name.")
+             query = update.message
+             bot = context.bot
+             bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+             bot_profile_photo = (
+             bot_profile_photos.photos[0][0] if bot_profile_photos else None
+                )
+             message = await query.reply_photo(
+                                bot_profile_photo,
+                                caption=home_message,
+                                parse_mode=ParseMode.HTML,
+                                reply_markup=home_markup,
+                            )    
              return ConversationHandler.END
     
   
@@ -1641,6 +2007,18 @@ async def submit_copy_reply(update: Update, context: CallbackContext):
              return ConversationHandler.END
     if(token_address.__len__() != 42):
         await update.message.reply_text(f"Please enter a valid wallet address.")
+        query = update.message
+        bot = context.bot
+        bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+        bot_profile_photo = (
+            bot_profile_photos.photos[0][0] if bot_profile_photos else None
+        )
+        message = await query.reply_photo(
+                        bot_profile_photo,
+                        caption=home_message,
+                        parse_mode=ParseMode.HTML,
+                        reply_markup=home_markup,
+                    )    
         return ConversationHandler.END
     chat_id = update.message.chat_id
     #copy_trade_main_id = context.user_data["copy_trade_message_id"]

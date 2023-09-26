@@ -7,16 +7,62 @@ import os
 import django
 
 from asgiref.sync import sync_to_async
-from apps.accounts.models import CustomUser, CopyTradeAddresses, Sniper, Txhash, copytradetxhash
+from apps.accounts.models import CustomUser, CopyTradeAddresses, Sniper, Txhash, copytradetxhash,TradeAddress
 
 from logger import LOGGER
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'yangbot.settings')
 django.setup()
 
+@sync_to_async
+def delete_trades_addresses(user_id,chain,name):
+        TradeAddress.objects.get(user=user_id, chain=chain, token_name=name).delete()
+        trades = TradeAddress.objects.filter(user=user_id, chain=chain) or None
+        return trades
 
-
-
+@sync_to_async
+def load_trades_addresses_all(user_id, chain):
+        trades = TradeAddress.objects.filter(user=user_id, chain=chain) or None
+        return trades
+@sync_to_async
+def load_trades_addresses_once(user_id, chain, name):
+        trades = TradeAddress.objects.filter(user=user_id, chain=chain,token_name=name) or None
+        return trades
+@sync_to_async
+def change_state_limit(user_id, chain, name, state):
+    my_object = TradeAddress.objects.get(user=user_id, token_name=name,chain=chain)
+    my_object.check_limit =state
+    my_object.save()
+    return my_object
+@sync_to_async
+def change_state_loss(user_id, chain, name, state):
+    my_object = TradeAddress.objects.get(user=user_id, token_name=name,chain=chain)
+    my_object.check_stop_loss =state
+    my_object.save()
+    return my_object
+@sync_to_async
+def change_state_profit(user_id, chain, name, state):
+    my_object = TradeAddress.objects.get(user=user_id, token_name=name,chain=chain)
+    my_object.check_profit =state
+    my_object.save()
+    return my_object
+@sync_to_async
+def load_trade_address(user_id1):
+    user_data = TradeAddress.objects.filter(user=user_id1)
+    if user_data:
+        temp =[]
+        for i in user_data:
+            temp.append(i.token_name)
+        return temp
+    else:
+        return None 
+@sync_to_async
+def save_trade_address(user_data):
+    temp = TradeAddress.objects.create(
+        **user_data
+    )
+    LOGGER.info(temp)
+    return temp
 def save_txhash_copy_data(user_data):
     temp = copytradetxhash.objects.create(
         **user_data
@@ -212,7 +258,17 @@ def load_previous_sniper_data(sniper_id):
     except FileNotFoundError:
         previous_sniper = None
         return previous_sniper  
- 
+@sync_to_async
+def load_trade_address_all(user_id1):
+    user_data = TradeAddress.objects.filter(user=user_id1)
+    if user_data:
+        temp =[]
+        for i in user_data:
+            temp.append(i.token_address)
+        print(temp)
+        return temp
+    else:
+        return None 
 @sync_to_async
 def load_copy_trade_address_all(user_id1):
     user = CustomUser.objects.get(user_id=user_id1)
@@ -253,7 +309,11 @@ def remove_sniper(user_data, sniper_id):
         LOGGER.info("Snipers not found")
         return None
     
-    
+@sync_to_async
+def load_trades_addresses(user_id, chain):
+    trades = TradeAddress.objects.filter(user=user_id, chain=chain) or None
+    print(user_id)
+    return trades
 @sync_to_async
 def load_copy_trade_addresses(user_id, chain):
     user = CustomUser.objects.get(user_id=user_id)
@@ -293,7 +353,24 @@ def update_copy_trade_addresses_gas(id1, gas1,name1):
     my_object.gas_delta =Decimal(gas1)
     my_object.save()
     return my_object
-
+@sync_to_async
+def update_trades_addresses_loss(id1, loss,name1,chain):
+    my_object = TradeAddress.objects.get(user=id1,token_name=name1,chain=chain)
+    my_object.stop_loss =Decimal(loss)
+    my_object.save()
+    return my_object
+@sync_to_async
+def update_trades_addresses_profit(id1, profit,name1,chain):
+    my_object = TradeAddress.objects.get(user=id1,token_name=name1,chain=chain)
+    my_object.profit =Decimal(profit)
+    my_object.save()
+    return my_object
+@sync_to_async
+def update_trades_addresses_limit(id1, limit,name1,chain):
+    my_object = TradeAddress.objects.get(user=id1,token_name=name1,chain=chain)
+    my_object.limit =Decimal(limit)
+    my_object.save()
+    return my_object
 @sync_to_async
 def update_copy_trade_addresses(user_id, name, chain, updated_data):
     try:
