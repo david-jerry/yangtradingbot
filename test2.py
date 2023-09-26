@@ -46,8 +46,8 @@ def main():
     gas = web3.from_wei(gas, 'gwei')
     print(gas)
     slipage = 0.8
-    gasLimit = 10000000
-    gasPrice = web3.to_wei(10, 'gwei')
+    gasLimit = 300000
+    gasPrice = web3.to_wei(1+gas, 'gwei')
     tokenToBuy = web3.to_checksum_address(
         '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984')
     uniswapRouter = web3.to_checksum_address(

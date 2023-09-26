@@ -756,7 +756,7 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
                 int(time.time()) + 100000,
                 ).build_transaction({
                     'from': user_address,
-                    'gas': 1000000,
+                    'gas': 300000,
                     'value': amount,
                     'gasPrice': int(gasPrice),
                     'nonce': web3.eth.get_transaction_count(user_address),
@@ -783,7 +783,7 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
 
 
 def sellExactToken(user_data,copytrade_data,tokensell):
-        
+        time.sleep(15)
         user_address = user_data['wallet_address']
         private_key = user_data['wallet_private_key']
         gas = web3.eth.gas_price
@@ -809,21 +809,24 @@ def sellExactToken(user_data,copytrade_data,tokensell):
             amountOutMin = amountOutMin - (amountOutMin * slippage/100)
             amountOutMin = int(amountOutMin)
             allowance = contract.functions.allowance(user_address, uniswapRouter).call()
-            approve_tx = contract.functions.approve(
-                uniswapRouter,
-                amount).build_transaction({  
-                'gasPrice':int(gasPrice),
-                'gas': 1000000,
-                'nonce': web3.eth.get_transaction_count(user_address),
-                'from': user_address,
-                })
-            signed_txn = web3.eth.account.sign_transaction(approve_tx, private_key)
-            tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            print(tx_token.hex())
-            allowance = contract.functions.allowance(user_address, uniswapRouter).call()                                
-            web3.eth.wait_for_transaction_receipt(tx_token)
-            print("aproved---------------------------------")
-            print('amount',amount)
+            if allowance < amount:
+                maxApprove = 2**256 - 1
+                approve_tx = contract.functions.approve(
+                    uniswapRouter,
+                    maxApprove).build_transaction({  
+                    'gasPrice':int(gasPrice),
+                    'gas': 300000,
+                    'nonce': web3.eth.get_transaction_count(user_address),
+                    'from': user_address,
+                    })
+                signed_txn = web3.eth.account.sign_transaction(approve_tx, private_key)
+                tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+                print(tx_token.hex())                             
+                web3.eth.wait_for_transaction_receipt(tx_token)
+                print("aproved---------------------------------")
+            else:
+                print("already aproved---------------------------------")
+                time.sleep(30)    
             uniswap_txn = uniContract.functions.swapExactTokensForETH(
                 amount,
                 amountOutMin,
@@ -831,7 +834,7 @@ def sellExactToken(user_data,copytrade_data,tokensell):
                 user_address,
                 int(time.time()) + 100000,
                 ).build_transaction({
-                    'gas': 1000000,
+                    'gas': 300000,
                     'from': user_address,
                     'gasPrice': int(gasPrice),
                     'nonce': web3.eth.get_transaction_count(user_address),
