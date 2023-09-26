@@ -51,7 +51,11 @@ designed to assist and enhance various aspects of human life.
 This cutting-edge robot blends futuristic technology with 
 user-friendly design, offering a wide range of functionalities
 """
+home_message = """
+<strong>☯ Home ☯ </strong>
+-------------------------------------------
 
+"""
 
 language_message = """
 <strong>☯ Language Choice ☯ </strong>

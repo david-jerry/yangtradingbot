@@ -72,6 +72,7 @@ from commands.start.__buttons import (
     AskGas2,
     submit_copy_reply,
     cancel_copy,
+    cancel_ammount,
     
     transfer_callback,
     token_callback,
@@ -261,7 +262,7 @@ def main() -> None:
         states={
             CHATGAS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskGas)],
         },
-        fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
     )
     app.add_handler(Ask_gas)
 
@@ -274,7 +275,7 @@ def main() -> None:
         states={
             CHATSLIP: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskSlippage)],
         },
-        fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
     )
     app.add_handler(Ask_slippage)
     # Ammount
@@ -286,7 +287,7 @@ def main() -> None:
         states={
             CHATCHIT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskAmmount)],
         },
-        fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
     )
     app.add_handler(Ask_ammount)
     # TRANSFER HANDLERS
