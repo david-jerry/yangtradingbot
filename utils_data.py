@@ -49,20 +49,54 @@ def save_txhash_data(user_data):
     return txhash
 
 # @sync_to_async
-def load_txhash_data(Txhash1):
+def load_txhash_data(Txhash1, user_id):
     try:
-        LOGGER.info("Loading user data")
+        LOGGER.info("Loading txhash data")
         LOGGER.info(Txhash)
-        user_data = Txhash.objects.filter(Txhash=Txhash1).first()
+        user_data = Txhash.objects.filter(Txhash=Txhash1, user_id=user_id).first()
         LOGGER.info(user_data)
         return user_data
     except FileNotFoundError:
         user_data = None
         return user_data
 
+def load_txhash_data_user_id(Txhash1, user_id):
+    try:
+        LOGGER.info("Loading txhash data")
+        LOGGER.info(Txhash)
+        user_data = Txhash.objects.filter(Txhash=Txhash1, user_id=user_id).first()
+        LOGGER.info(user_data)
+        return user_data
+    except FileNotFoundError:
+        user_data = None
+        return user_data
+
+def load_txhash_data_check(user_id,check_txhash1):
+    try:
+        LOGGER.info("Loading txhash data")
+        LOGGER.info(Txhash)
+        user_data = Txhash.objects.filter(check_txhash=check_txhash1, user_id=user_id).first()
+        LOGGER.info(user_data)
+        return user_data
+    except FileNotFoundError:
+        user_data = None
+        return user_data
+
+def update_txhash_user_id(Txhash1, user_id):
+    my_object = Txhash.objects.get(Txhash=Txhash1)
+    my_object.user_id = user_id
+    my_object.save()
+    return my_object
+
+def update_txhash_check_txhash(Txhash1, user_id, check_txhash1):
+    my_object = load_txhash_data_user_id(Txhash1, user_id)
+    my_object.check_txhash = check_txhash1
+    my_object.save()
+    return my_object
+
 def load_copy_trade_addresses_copy(address):
     try:
-        LOGGER.info("Loading user data")
+        LOGGER.info("Loading copy trade data")
         LOGGER.info(CopyTradeAddresses)
         print(address)
         trade = CopyTradeAddresses.objects.filter(contract_address=address).first()

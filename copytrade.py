@@ -27,20 +27,18 @@ contract_abi = config("CONTRACT_ABI")
 
 async def log_loop(event_filter, poll_interval):
     startblock = latest_block = web3.eth.get_block("latest")["number"]
-    startblock = 0
-    # latest_block = 18219263
+    startblock = 18219168 
     # latest_block = 
     while True:
         try:
-            objet_userid_address_list = await load_copy_trade_addresses_chain("ETH")
-            user_id_list = []
+            objet_userid_address_list = await load_copy_trade_addresses_chain("ETH") 
             address_list = []
-            for object_userid_address in objet_userid_address_list:
-                user_id_list.append(object_userid_address.user_id)
-                address_list.append(object_userid_address.contract_address)
-            # print(user_id_list, address_list)
+            for object_userid_address in objet_userid_address_list: 
+                address_list.append(object_userid_address.contract_address.lower()) 
+            address_list = list(set(address_list))
+            print(address_list)
 
-            latest_block = web3.eth.get_block("latest")["number"]
+            latest_block = web3.eth.get_block("latest")["number"] 
             print("startBlock: ", startblock, "latest_block: ", latest_block)
             for i in range(len(address_list)):
                 retries = 0
@@ -54,6 +52,7 @@ async def log_loop(event_filter, poll_interval):
                     "endblock": latest_block,
                     "page": 1,
                     "offset": 50,
+                    "sort": "asc",
                     "apikey": ETHERAPI,
                 }
                 print("address:", address_list[i])

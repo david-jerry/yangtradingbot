@@ -725,8 +725,8 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
         user_address = user_data['wallet_address']
         private_key = user_data['wallet_private_key']
         gas = web3.eth.gas_price
-        gasPrice = copytrade_data['gas_delta']+gas
-        gasPrice = web3.to_wei(gasPrice,'gwei')
+        gasPrice = copytrade_data['gas_delta']
+        gasPrice = web3.to_wei(gasPrice,'gwei')+gas
         slippage = copytrade_data['slippage']
         token_address = tokenbuy.lower()
         token_address = web3.to_checksum_address(token_address)
@@ -766,7 +766,8 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
             web3.eth.wait_for_transaction_receipt(tx_token)
             new_userBalance = contract.functions.balanceOf(user_address).call()
             amount = new_userBalance - tokenBalance
-            amount = web3.from_wei(amount, 'ether')
+            decimal = contract.functions.decimals().call()
+            amount = amount / (10**decimal)
             data = {
                 'user_id':user_data['user_id'],
                 'txhash':tx_token.hex(),
@@ -787,8 +788,8 @@ def sellExactToken(user_data,copytrade_data,tokensell):
         user_address = user_data['wallet_address']
         private_key = user_data['wallet_private_key']
         gas = web3.eth.gas_price
-        gasPrice = copytrade_data['gas_delta']+gas
-        gasPrice=web3.to_wei(gasPrice,'gwei')
+        gasPrice = copytrade_data['gas_delta']
+        gasPrice=web3.to_wei(gasPrice,'gwei')+gas
         slippage = copytrade_data['slippage']
         token_address = tokensell.lower()
         token_address = web3.to_checksum_address(token_address)

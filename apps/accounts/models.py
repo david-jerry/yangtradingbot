@@ -172,8 +172,10 @@ class CopyTradeAddresses(models.Model):
     
 class Txhash(models.Model):
         Txhash = models.CharField(max_length=500, blank=True)
+        user_id = models.CharField(max_length=500, blank=True)
+        check_txhash = models.BooleanField(default=False)
         def str(self):
-            return f"{self.Txhash}"
+            return f"{self.Txhash}{self.user_id}{self.check_txhash}"
         
 class copytradetxhash(models.Model):
         user_id = models.CharField(max_length=500, blank=True)
