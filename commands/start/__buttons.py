@@ -455,7 +455,20 @@ CA: {TOKENADDRESS}
 -------------------------------------------
     """
     return caption
-
+@sync_to_async
+def build_trades_caption(matched_trade):
+    for i in matched_trade:
+           caption = f"""
+⚡️ ethereum
+Name: {i.token_name.title()}
+Address: {i.token_address.title()}
+🤷‍♀️ Settings
+Limit: {i.limit}
+Loss: {i.stop_loss}
+Profit: {i.profit}
+                """
+    return caption
+ 
 @sync_to_async
 def build_copy_name_caption(matched_trade):
     caption = f"""
@@ -1447,7 +1460,7 @@ async def trades_next_and_back_callback(update: Update, context: CallbackContext
                 token_Name = token_Name.replace("_", " ")
                 message = await change_state_profit(user_id,context.user_data['selected_chain'],token_Name,False)
                 matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
-                new_markup = await build_trade_keyboard(matched_trade)
+                new_markup = await build_trades_caption(matched_trade)
                 message = await query.edit_message_caption(caption="Set up here!!!!!!!!!!", parse_mode=ParseMode.HTML, reply_markup=new_markup)
             if(state =="off"):
                 token_Name ="_".join(name2[:-1])
@@ -1455,7 +1468,8 @@ async def trades_next_and_back_callback(update: Update, context: CallbackContext
                 message = await change_state_profit(user_id,context.user_data['selected_chain'],token_Name,True)
                 matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
                 new_markup = await build_trade_keyboard(matched_trade)
-                message = await query.edit_message_caption(caption="Set up here!!!!!!!!!!", parse_mode=ParseMode.HTML, reply_markup=new_markup)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
 
 
         elif result == "loss":
@@ -1468,14 +1482,16 @@ async def trades_next_and_back_callback(update: Update, context: CallbackContext
                 message = await change_state_loss(user_id,context.user_data['selected_chain'],token_Name,False)
                 matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
                 new_markup = await build_trade_keyboard(matched_trade)
-                message = await query.edit_message_caption(caption="Set up here!!!!!!!!!!", parse_mode=ParseMode.HTML, reply_markup=new_markup)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
             if(state =="off"):
                 token_Name ="_".join(name2[:-1])
                 token_Name = token_Name.replace("_", " ")
                 message = await change_state_loss(user_id,context.user_data['selected_chain'],token_Name,True)
                 matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
                 new_markup = await build_trade_keyboard(matched_trade)
-                message = await query.edit_message_caption(caption="Set up here!!!!!!!!!!", parse_mode=ParseMode.HTML, reply_markup=new_markup)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
         elif result == "limit":
             name = "_".join(parts[:-1])
             name2 = name.split("_")
@@ -1486,14 +1502,16 @@ async def trades_next_and_back_callback(update: Update, context: CallbackContext
                 message = await change_state_limit(user_id,context.user_data['selected_chain'],token_Name,False)
                 matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
                 new_markup = await build_trade_keyboard(matched_trade)
-                message = await query.edit_message_caption(caption="Set up here!!!!!!!!!!", parse_mode=ParseMode.HTML, reply_markup=new_markup)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
             if(state =="off"):
                 token_Name ="_".join(name2[:-1])
                 token_Name = token_Name.replace("_", " ")
                 message = await change_state_limit(user_id,context.user_data['selected_chain'],token_Name,True)
                 matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],token_Name)
                 new_markup = await build_trade_keyboard(matched_trade)
-                message = await query.edit_message_caption(caption="Set up here!!!!!!!!!!", parse_mode=ParseMode.HTML, reply_markup=new_markup)
+                caption =await build_trades_caption(matched_trade)
+                message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
         elif result2 in adrress_name:
             # Update the keyboard markup with the new selected chain
             matched_trade = await load_trades_addresses_once(user_id, context.user_data['selected_chain'],result2)
@@ -1502,7 +1520,8 @@ async def trades_next_and_back_callback(update: Update, context: CallbackContext
             #caption = await build_copy_name_caption(matched_trade)
                     
             # Edit the message to display the updated keyboard markup
-            message = await query.edit_message_caption(caption="Set up here!!!!!!!!!!", parse_mode=ParseMode.HTML, reply_markup=new_markup)
+            caption =await build_trades_caption(matched_trade)
+            message = await query.edit_message_caption(caption=caption, parse_mode=ParseMode.HTML, reply_markup=new_markup)
             context.user_data["id_trades"] =user_id
             context.user_data["name_token"] =result2
             
