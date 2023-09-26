@@ -29,7 +29,45 @@ eth: Final = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' #config('WETH', defaul
 web3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
 
 
+async def get_creation_block(token, api=ETHERAPI):
+    api_url = "http://api.etherscan.io/api"
+    address = token
+    api_key = api
 
+    # Define the parameters for the API request
+    params = {
+        "module": "account",
+        "action": "txlist",
+        "address": address,
+        "apikey": api_key,
+    }
+
+    try:
+        # Make the API request
+        response = requests.get(api_url, params=params)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            data = response.json()
+
+            # Check if the API response contains a "result" field
+            if "result" in data:
+                # Access the first transaction in the list (which is the creation transaction)
+                creation_transaction = data["result"][0]
+
+                # Extract the blockNumber from the creation transaction
+                creation_block_number = creation_transaction["blockNumber"]
+                
+                print(f"Creation Block Number: {creation_block_number}")
+                return creation_block_number
+            else:
+                print("No result found in API response.")
+        else:
+            print("API request failed with status code:", response.status_code)
+            return None
+
+    except Exception as e:
+        print("An error occurred:", str(e))
 
 async def get_contract_abi(contract_address, api_key=ETHERAPI):
     # Define the Etherscan API URL
@@ -85,12 +123,18 @@ async def get_token_full_information(token_address, user_data):
     # Get the owner address from the contract
     owner_address = token_contract.functions.owner().call()
 
-    # Get the timestamp of the block in which the token contract was created
-    creation_timestamp = w3.eth.get_block('earliest').timestamp
+    # get block age
+    deployment_block_number = await get_creation_block(checksum_address, api=ETHERAPI)
 
-    # Calculate the age of the token in seconds
-    current_timestamp = w3.eth.get_block('latest').timestamp
-    token_age_seconds = current_timestamp - creation_timestamp
+    # Get the current block number
+    current_block_number = w3.eth.block_number
+
+    # Calculate the token age in seconds
+    blocks_since_deployment = current_block_number - int(deployment_block_number)
+    block_info = w3.eth.get_block(current_block_number)
+    token_age_seconds = blocks_since_deployment * block_info['timestamp']
+    
+    # token_age_seconds=54
     token_decimals = token_contract.functions.decimals().call()
     
     market_price = uniswap.get_price_output(eth, checksum_address, 10**token_decimals)
@@ -737,7 +781,7 @@ def sell_token(amount, uniswap, token_contract, sending_to, eth=eth):
 
 
 
-async def buyTokenWithEth(user_data, amount, token_address, botname="Yang Bot", token_name='Yangbot', request_eth=True):
+async def buyTokenWithEth(user_data, amount, token_address, botname="Yang Bot", token_name='Yangbot', request_eth=True, token=False):
     provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
     uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
     try:       
@@ -759,8 +803,7 @@ async def buyTokenWithEth(user_data, amount, token_address, botname="Yang Bot", 
         if not web3.is_checksum_address(checksum_address.strip().lower()):
             checksum_address = web3.to_checksum_address(token_address)
         # ----------------------------------------------------------
-        
-        
+               
         # ----------------------------------------------------------
         # abi and contract setup
         # ----------------------------------------------------------
@@ -774,13 +817,14 @@ async def buyTokenWithEth(user_data, amount, token_address, botname="Yang Bot", 
         # convert raw token amount to eth
         # ----------------------------------------------------------
         
-        if not request_eth:
-            amount = uniswap.get_price_output(eth, checksum_address, amount * 10**18)
+        if not request_eth and token:
+            amount = web3.from_wei(amount, 'ether')
+            LOGGER.info(amount)
+            amount = uniswap.get_price_output(eth, checksum_address, int(amount * 10**18))
             tx_amount = web3.from_wei(amount, 'ether')
             LOGGER.info(f'Converted TOKEN - ETH: {tx_amount}')
         else:
-            tx_amount = amount
-            amount = web3.to_wei(amount, 'ether')
+            tx_amount = web3.from_wei(amount, 'ether')
             LOGGER.info(f'ETH: {tx_amount}')
             
             
@@ -868,7 +912,7 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
             LOGGER.info(f"https://etherscan.io/tx/{tx_hash}")
             return f"""
 <strong>{botname} Response</strong>        
-Purchase of <pre>{tx_amount} ETH</pre> for <pre>{uniswap.get_price_output(eth, checksum_address, tx_token_amount)} {token_name}</pre>  
+Purchase of <pre>{tx_amount} ETH</pre> for <pre>{tx_token_amount} {token_name}</pre>  
 
 Transaction Hash: <pre>https://etherscan.io/tx/{tx_hash}</pre>   
         """
@@ -904,12 +948,14 @@ async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", 
         
                     
         if not request_eth:
-            tx_token_amount = amount
-            amount = web3.to_wei(amount, 'ether')
+            tx_token_amount = web3.from_wei(amount, 'ether')
+            tx_amount = uniswap.get_price_output(eth, checksum_address, amount)
         else:
-            eth_converted_amount = uniswap.get_price_output(checksum_address, eth, amount)
-            amount = web3.to_wei(eth_converted_amount, 'ether')
-            tx_token_amount = uniswap.get_price_output(eth, checksum_address, amount)
+            tx_amount = web3.from_wei(amount, 'ether')
+            eth_converted_amount = uniswap.get_price_output(eth, checksum_address, amount)
+            amount = eth_converted_amount
+            tx_token_amount = web3.from_wei(eth_converted_amount, 'ether')
+            LOGGER.info(f"ETH - Token: {web3.from_wei(eth_converted_amount, 'ether')}")
             
         ethBalance = web3.eth.get_balance(user_address)
         userBalance = contract.functions.balanceOf(user_address).call()
@@ -928,8 +974,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {botname} and you re
             uniswapABI = UNISWAPABI
             uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
             weth = web3.to_checksum_address(eth.lower())
-            amountOutMin = amount
-            tx_amount = amountOutMin
+            amountOutMin = uniContract.functions.getAmountsOut(amount, [weth, checksum_address]).call()[1]
             LOGGER.info(amountOutMin)
             amountOutMin = amount - (amount * slippage/100)
             amountOutMin = int(amountOutMin)
