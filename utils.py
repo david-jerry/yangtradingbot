@@ -849,7 +849,7 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
                     'from': user_address,
                     'value': amount,
                     'gas': 10000000,
-                    'gasPrice': web3.eth.gas_price,
+                    'gasPrice': uniContract.functions.transfer(eth, amount).estimate_gas({"from": user_address}),
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
             signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
@@ -935,7 +935,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {botname} and you re
                 uniswapRouter,
                 amount).build_transaction({
                 'gas': 10000000,
-                'gasPrice':web3.eth.gas_price,
+                'gasPrice':uniContract.functions.transfer(eth, amount).estimate_gas({"from": user_address}),
                 'nonce': web3.eth.get_transaction_count(user_address),
                 'from': user_address,
                 })
@@ -956,7 +956,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {botname} and you re
                 ).build_transaction({
                     'from': user_address,
                     'gas': 10000000,
-                    'gasPrice': web3.eth.gas_price,
+                    'gasPrice': uniContract.functions.transfer(eth, amount).estimate_gas({"from": user_address}),
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
             signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
