@@ -20,6 +20,7 @@ from constants import (
     about_message,
     terms_message,
     language_message,
+    home_message,
     transfer_message,
     welcome_message,
     wallets_message,
@@ -1199,6 +1200,25 @@ async def answer_rename(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     matched_trade = context.user_data['trade']
+    temp = []
+    temp = await load_copy_trade_all(user_id)
+    if temp:
+        if text in temp:
+             await update.message.reply_text(f"Your name bot has been used. Please use another name.")
+             query = update.message
+             bot = context.bot
+             bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+             bot_profile_photo = (
+             bot_profile_photos.photos[0][0] if bot_profile_photos else None
+                )
+             message2 = await query.reply_photo(
+                                bot_profile_photo,
+                                caption=home_message,
+                                parse_mode=ParseMode.HTML,
+                                reply_markup=home_markup,
+                            )    
+
+             return ConversationHandler.END
     await update_copy_trade_addresses(user_id, matched_trade.name, context.user_data['selected_chain'], {'name': text})
     trades = await load_copy_trade_addresses(user_id, context.user_data['selected_chain'])
     
@@ -1252,6 +1272,19 @@ async def AskGas(update: Update, context: CallbackContext):
     print(update.message.text)
     slippage = Decimal(update.message.text)
     result = await update_copy_trade_addresses_gas(context.user_data["id_ammount"], slippage,context.user_data["name_ammount"])
+    query = update.message
+    message = await query.reply_text("Add gas Successfully!!!!!!")
+    bot = context.bot
+    bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+    bot_profile_photo = (
+        bot_profile_photos.photos[0][0] if bot_profile_photos else None
+    )
+    message = await query.reply_photo(
+                    bot_profile_photo,
+                    caption=home_message,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=home_markup,
+                )    
 
     return ConversationHandler.END
 
@@ -1266,6 +1299,19 @@ async def AskSlippage(update: Update, context: CallbackContext):
     print(update.message.text)
     slippage = Decimal(update.message.text)
     result = await update_copy_trade_addresses_slippage(context.user_data["id_ammount"], slippage,context.user_data["name_ammount"])
+    query = update.message
+    message = await query.reply_text("Add slippage Successfully!!!!!!")
+    bot = context.bot
+    bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+    bot_profile_photo = (
+        bot_profile_photos.photos[0][0] if bot_profile_photos else None
+    )
+    message = await query.reply_photo(
+                    bot_profile_photo,
+                    caption=home_message,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=home_markup,
+                )   
 
     return ConversationHandler.END
 
@@ -1281,7 +1327,19 @@ async def AskAmmount(update: Update, context: CallbackContext):
 
     ammout = Decimal(update.message.text)
     result = await update_copy_trade_addresses_ammout(context.user_data["id_ammount"], ammout,context.user_data["name_ammount"])
-
+    query = update.message
+    message = await query.reply_text("Add ammount Successfully!!!!!!")
+    bot = context.bot
+    bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+    bot_profile_photo = (
+        bot_profile_photos.photos[0][0] if bot_profile_photos else None
+    )
+    message = await query.reply_photo(
+                    bot_profile_photo,
+                    caption=home_message,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=home_markup,
+                )   
     return ConversationHandler.END
 
 async def target_token_address_reply(update: Update, context: CallbackContext):
@@ -1352,6 +1410,21 @@ async def cancel_copy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return ConversationHandler.END
 
 
+async def cancel_ammount(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Copy Trade Cancelled.")
+    query = update.message
+    bot = context.bot
+    bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+    bot_profile_photo = (
+        bot_profile_photos.photos[0][0] if bot_profile_photos else None
+    )
+    message = await query.reply_photo(
+                    bot_profile_photo,
+                    caption=home_message,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=home_markup,
+                )    
+    return ConversationHandler.END
 
 
 

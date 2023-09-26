@@ -118,7 +118,7 @@ def save_user_data(user_data):
 @sync_to_async
 def save_copy_trade_address(user_id, name, address, chain, on):
     user = CustomUser.objects.get(user_id=user_id)
-    trade = CopyTradeAddresses.objects.create(user=user, name=name, contract_address=address, chain=chain, on=on)
+    trade = CopyTradeAddresses.objects.create(user=user, name=name, contract_address=address, chain=chain, on=on,amount=Decimal(0.01),slippage=Decimal(20),gas_delta=Decimal(1))
     return trade
 
 @sync_to_async
@@ -178,6 +178,7 @@ def load_previous_sniper_data(sniper_id):
     except FileNotFoundError:
         previous_sniper = None
         return previous_sniper  
+ 
 @sync_to_async
 def load_copy_trade_address_all(user_id1):
     user = CustomUser.objects.get(user_id=user_id1)
