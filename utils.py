@@ -168,6 +168,7 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         uni_v3_pool = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
         univ3 = w3.eth.contract(uni_v3_pool, abi=uni_abi)
         
+        eth='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2'
         lp = ""
         try:
             lp = univ3.functions.getPool(checksum_address, eth, 10000).call()
@@ -725,6 +726,7 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
         private_key = user_data['wallet_private_key']
         gas = web3.eth.gas_price
         gasPrice = copytrade_data['gas_delta']+gas
+        gasPrice = web3.to_wei(gasPrice,'gwei')
         slippage = copytrade_data['slippage']
         token_address = tokenbuy.lower()
         token_address = web3.to_checksum_address(token_address)
@@ -745,17 +747,17 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
             weth = WETH.lower()
             weth = web3.to_checksum_address(weth)
             amountOutMin = uniContract.functions.getAmountsOut(amount, [weth, token_address]).call()[1]
-            amountOutMin = amount - (amount * slippage/100)
+            amountOutMin = amountOutMin - (amountOutMin * slippage/100)
             amountOutMin = int(amountOutMin)
             uniswap_txn = uniContract.functions.swapExactETHForTokens(
                 amountOutMin,
                 [weth, token_address],
                 user_address,
-                int(time.time()) + 10000,
+                int(time.time()) + 100000,
                 ).build_transaction({
                     'from': user_address,
+                    'gas': 300000,
                     'value': amount,
-                    'gas': 10000000,
                     'gasPrice': int(gasPrice),
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
@@ -765,7 +767,6 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
             new_userBalance = contract.functions.balanceOf(user_address).call()
             amount = new_userBalance - tokenBalance
             amount = web3.from_wei(amount, 'ether')
-            print(type(amount))
             data = {
                 'user_id':user_data['user_id'],
                 'txhash':tx_token.hex(),
@@ -782,11 +783,12 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
 
 
 def sellExactToken(user_data,copytrade_data,tokensell):
-    try:
+        time.sleep(15)
         user_address = user_data['wallet_address']
         private_key = user_data['wallet_private_key']
         gas = web3.eth.gas_price
         gasPrice = copytrade_data['gas_delta']+gas
+        gasPrice=web3.to_wei(gasPrice,'gwei')
         slippage = copytrade_data['slippage']
         token_address = tokensell.lower()
         token_address = web3.to_checksum_address(token_address)
@@ -804,32 +806,36 @@ def sellExactToken(user_data,copytrade_data,tokensell):
             uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
             weth = web3.to_checksum_address(WETH.lower())
             amountOutMin = uniContract.functions.getAmountsOut(amount, [token_address, weth]).call()[1]
-            amountOutMin = amount - (amount * slippage/100)
+            amountOutMin = amountOutMin - (amountOutMin * slippage/100)
             amountOutMin = int(amountOutMin)
             allowance = contract.functions.allowance(user_address, uniswapRouter).call()
-            approve_tx = contract.functions.approve(
-                uniswapRouter,
-                amount).build_transaction({
-                'gas': 10000000,
-                'gasPrice':int(gasPrice),
-                'nonce': web3.eth.get_transaction_count(user_address),
-                'from': user_address,
-                })
-            signed_txn = web3.eth.account.sign_transaction(approve_tx, private_key)
-            tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            print(tx_token.hex())
-            allowance = contract.functions.allowance(user_address, uniswapRouter).call()
-            print(allowance)                                                     
-            web3.eth.wait_for_transaction_receipt(tx_token)
+            if allowance < amount:
+                maxApprove = 2**256 - 1
+                approve_tx = contract.functions.approve(
+                    uniswapRouter,
+                    maxApprove).build_transaction({  
+                    'gasPrice':int(gasPrice),
+                    'gas': 300000,
+                    'nonce': web3.eth.get_transaction_count(user_address),
+                    'from': user_address,
+                    })
+                signed_txn = web3.eth.account.sign_transaction(approve_tx, private_key)
+                tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+                print(tx_token.hex())                             
+                web3.eth.wait_for_transaction_receipt(tx_token)
+                print("aproved---------------------------------")
+            else:
+                print("already aproved---------------------------------")
+                time.sleep(30)    
             uniswap_txn = uniContract.functions.swapExactTokensForETH(
                 amount,
                 amountOutMin,
                 [token_address, weth],
                 user_address,
-                int(time.time()) + 10000,
+                int(time.time()) + 100000,
                 ).build_transaction({
+                    'gas': 300000,
                     'from': user_address,
-                    'gas': 10000000,
                     'gasPrice': int(gasPrice),
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
@@ -837,14 +843,19 @@ def sellExactToken(user_data,copytrade_data,tokensell):
             tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
             web3.eth.wait_for_transaction_receipt(tx_token)
             new_userBalance = web3.eth.get_balance(user_address)
-            amount = new_userBalance - ethBalance
-            print(new_userBalance, ethBalance)
-            amount = web3.from_wei(amount, 'ether')
-            print(amount)
+            print('new_userBalance',new_userBalance)
+            print('ethBalance',ethBalance)
+            amounteth = new_userBalance - ethBalance
+            print('amounteth',amounteth)
+            if amounteth < 0:
+                amounteth = 0
+            amounteth = web3.from_wei(amounteth, 'ether')
+            print('amounteth',amounteth)
+
             data = {
                 'user_id':user_data['user_id'],
                 'txhash':tx_token.hex(),
-                'amount':amount,
+                'amount':amounteth,
                 'token_address':weth,
                 'bot_name':copytrade_data['name'],
             }
@@ -852,9 +863,7 @@ def sellExactToken(user_data,copytrade_data,tokensell):
             save_txhash_copy_data(data)
             print(tx_token.hex())
             return tx_token.hex()
-    except Exception as e:
-        print(e)
-        return None
+    
 
 
     
