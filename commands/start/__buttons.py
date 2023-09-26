@@ -1957,7 +1957,7 @@ async def submit_trades_reply(update: Update, context: CallbackContext):
                 'token_address': token_address,
             }
     message = await save_trade_address(data)
-    await update.message.reply_text(f"Trade added token successfully. \nName : {contract.functions.name().call()} \nAddress : {token_address}\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    await update.message.reply_text(f"Trade added token successfully.\nSymbol: ${contract.functions.symbol().call()} \nName : {contract.functions.name().call()} \nAddress : {token_address}\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     query1 = update.message
     bot1 = context.bot
     bot_profile_photos1 = await bot1.get_user_profile_photos(bot1.id, limit=1)
