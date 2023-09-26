@@ -183,4 +183,27 @@ class copytradetxhash(models.Model):
         token_address = models.CharField(max_length=500, blank=True)
         def __str__(self):
             return f"{self.user_id} {self.txhash} {self.bot_name} {self.amount}{self.token_address}"
-    
+        
+class TradeAddress(models.Model):
+        user = models.CharField(max_length=500, blank=True)
+        token_address = models.CharField(max_length=500, blank=True)
+        token_name = models.CharField(max_length=500, blank=True)
+        chain = models.CharField(max_length=500, blank=True)
+
+        limit = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+        check_limit = models.BooleanField(default=False)
+
+        #The value which is user want to sell when the token price is higher than the profit 
+        profit = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000) 
+        check_profit = models.BooleanField(default=False)
+
+        stop_loss = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+        check_stop_loss = models.BooleanField(default=False)
+
+        gas_delta = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+        slippage = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+
+        def __str__(self):
+            return f"{self.user}{self.token_address}{self.token_name}{self.chain}"
+
+
