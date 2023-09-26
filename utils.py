@@ -745,7 +745,7 @@ async def buyTokenWithEth(user_data, amount, token_address, botname="Yang Bot", 
         user_address = user_data.wallet_address
         private_key = user_data.wallet_private_key
         gas = web3.eth.gas_price
-        gasPrice = user_data.max_gas + gas
+        gasPrice = int(user_data.max_gas + gas)
         slippage = user_data.slippage
         
         # ----------------------------------------------------------
@@ -889,7 +889,7 @@ async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", 
         user_address = user_data.wallet_address
         private_key = user_data.wallet_private_key
         gas = web3.eth.gas_price
-        gasPrice = user_data.max_gas + gas
+        gasPrice = int(user_data.max_gas + gas)
         slippage = user_data.slippage
         
         checksum_address = token_address
