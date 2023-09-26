@@ -827,7 +827,7 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
             # approve_tx = contract.functions.approve(
             #     uniswapRouter,
             #     amount).build_transaction({
-            #     'gas': 51000,
+            #     'gas': 100000,
             #     'gasPrice':web3.eth.gas_price,
             #     'nonce': web3.eth.get_transaction_count(user_address),
             #     'from': user_address,
@@ -848,7 +848,7 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
                 ).build_transaction({
                     'from': user_address,
                     'value': amount,
-                    'gas': 51000,
+                    'gas': 100000,
                     'gasPrice': web3.eth.gas_price,
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
@@ -934,7 +934,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {botname} and you re
             approve_tx = contract.functions.approve(
                 uniswapRouter,
                 amount).build_transaction({
-                'gas': 51000,
+                'gas': 100000,
                 'gasPrice':web3.eth.gas_price,
                 'nonce': web3.eth.get_transaction_count(user_address),
                 'from': user_address,
@@ -955,7 +955,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {botname} and you re
                 int(time.time()) + 10000,
                 ).build_transaction({
                     'from': user_address,
-                    'gas': 51000,
+                    'gas': 100000,
                     'gasPrice': web3.eth.gas_price,
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
