@@ -47,12 +47,12 @@ from commands.start.__buttons import (
     language_button_callback,
     home_button_callback,
     back_button_callback,
-    
+    trades_start_callback,
     reply_buysell_address,
     buy_callback,
     sell_callback,
     cancel_buysell,
-    
+    trades_next_and_back_callback,
     configuration_next_and_back_callback,
     configuration_button_callback,
     reply_preset_response,
@@ -73,7 +73,13 @@ from commands.start.__buttons import (
     submit_copy_reply,
     cancel_copy,
     cancel_ammount,
-    
+    submit_trades_reply,
+    AskLimit,
+    AskLimit2,
+    AskLoss2,
+    AskLoss,
+    AskProfit,
+    AskProfit2,
     transfer_callback,
     token_callback,
     token_address_reply,
@@ -190,7 +196,7 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     LOGGER.error(f"Update: {update}\n\n caused error {context.error}")
 
-
+TRADESTOKEN =range(1)
 PRIVATEKEY = range(1)
 PASTECONTRACTADDRESS = range(1)
 REPLYDELTA = range(1)
@@ -199,6 +205,9 @@ TRADEWALLETNAME, TARGETWALLET = range(2)
 CHATCHIT = range(1)
 CHATSLIP = range(1)
 CHATGAS = range(1)
+CHATLIMIT =range(1)
+CHATPROFIT = range(1)
+CHATLOSS = range(1)
 RENAME = range(1)
 SNIPERADDRESS, EDITGASDELTA, EDITETHAMOUNT, EDITTOKENAMOUNT, EDITSLIPPAGE, EDITBLOCKDELAY = range(6)
 def main() -> None:
@@ -251,8 +260,48 @@ def main() -> None:
     # TRANSFER TOKEN CALLBACK
     app.add_handler(CallbackQueryHandler(transfer_callback, pattern=r"^transfer_chain_*"))
     
+
+    #
+    app.add_handler(CallbackQueryHandler(trades_next_and_back_callback, pattern=r"^trades_*"))
+
     # Copy Trading callback
     app.add_handler(CallbackQueryHandler(copy_trade_next_and_back_callback, pattern=r"^copy_*"))
+    #profit
+    Ask_Profit = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskProfit2, pattern=r"^ask_Profit$")
+
+        ],
+        states={
+            CHATPROFIT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskProfit)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_Profit)
+    #loss
+    Ask_Loss = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskLoss2, pattern=r"^ask_Loss$")
+
+        ],
+        states={
+            CHATLOSS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskLoss)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_Loss)
+    #limit
+    Ask_Limit = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskLimit2, pattern=r"^ask_Limit$")
+
+        ],
+        states={
+            CHATLIMIT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskLimit)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_Limit)
     #gas
     Ask_gas = ConversationHandler(
         entry_points=[
@@ -302,7 +351,18 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
     )
     app.add_handler(copytrade_conv_handler)
-    
+    #TRADES HANDLERS
+    trades_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(trades_start_callback, pattern=r"^asktrade_address$")
+        ],
+        states={
+            TRADESTOKEN: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), submit_trades_reply)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
+    )
+    app.add_handler(trades_handler)
+
     # CONVERSATION HANDLERS
     attach_conv_handler = ConversationHandler(
         entry_points=[
