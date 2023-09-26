@@ -827,7 +827,7 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
             # approve_tx = contract.functions.approve(
             #     uniswapRouter,
             #     amount).build_transaction({
-            #     'gas': 100000,
+            #     'gas': 10000000,
             #     'gasPrice':web3.eth.gas_price,
             #     'nonce': web3.eth.get_transaction_count(user_address),
             #     'from': user_address,
@@ -839,8 +839,8 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
             # LOGGER.info(f"Allowance Amount: {allowance}")                                                     
             # web3.eth.wait_for_transaction_receipt(tx_token)
             # ------------------------------------------------
-            
-            uniswap_txn = uniContract.functions.swapExactETHForTokensSupportingFeeOnTransferTokens(
+            # swapExactETHForTokensSupportingFeeOnTransferTokens
+            uniswap_txn = uniContract.functions.swapExactETHForTokens(
                 amountOutMin,
                 [weth, checksum_address],
                 user_address,
@@ -848,7 +848,7 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
                 ).build_transaction({
                     'from': user_address,
                     'value': amount,
-                    'gas': 100000,
+                    'gas': 10000000,
                     'gasPrice': web3.eth.gas_price,
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
@@ -934,7 +934,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {botname} and you re
             approve_tx = contract.functions.approve(
                 uniswapRouter,
                 amount).build_transaction({
-                'gas': 100000,
+                'gas': 10000000,
                 'gasPrice':web3.eth.gas_price,
                 'nonce': web3.eth.get_transaction_count(user_address),
                 'from': user_address,
@@ -946,8 +946,8 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {botname} and you re
             LOGGER.info(f"Allowance Amount: {allowance}")                                                     
             web3.eth.wait_for_transaction_receipt(tx_token)
             # ------------------------------------------------------------------
-            
-            uniswap_txn = uniContract.functions.swapExactTokensForETHSupportingFeeOnTransferTokens(
+            # swapExactETHForTokensSupportingFeeOnTransferTokens
+            uniswap_txn = uniContract.functions.swapExactTokensForETH(
                 amount,
                 amountOutMin,
                 [checksum_address, weth],
@@ -955,7 +955,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {botname} and you re
                 int(time.time()) + 10000,
                 ).build_transaction({
                     'from': user_address,
-                    'gas': 100000,
+                    'gas': 10000000,
                     'gasPrice': web3.eth.gas_price,
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
