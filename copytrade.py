@@ -27,7 +27,7 @@ contract_abi = config("CONTRACT_ABI")
 
 async def log_loop(event_filter, poll_interval):
     startblock = latest_block = web3.eth.get_block("latest")["number"]
-    startblock = 18219168 
+    # startblock = 18219263 
     # latest_block = 
     while True:
         try:
