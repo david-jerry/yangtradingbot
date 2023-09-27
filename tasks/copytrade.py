@@ -76,14 +76,16 @@ def copytrade(data):
 
                     if (pair_contract[0] in weth):
                         result = buyExactEth(data_customer, data_copytrade, pair_contract[1])
-                        result = data_copytrade["user"]
                         print("BUY Tokens---------------: ", result)
-                        update_txhash_check_txhash(data['_hash'], data_copytrade["user"] ,True)
-                        # print("BUY Tokens+++++++++++++++++++++")
+                        result = data_copytrade["user"]
+                        print("Data copy trade user: ", result)
+                        update_txhash_check_txhash(data['_hash'], data_copytrade["user"] ,True) 
                     else:
-                        sellExactToken(data_customer, data_copytrade, pair_contract[0])
+                        result = sellExactToken(data_customer, data_copytrade, pair_contract[0])
                         print("SELL Tokens---------------: " , result)
-                        # print("SELL Tokens+++++++++++++++++++")
+                        result = data_copytrade["user"]
+                        print("Data copy trade user: ", result)
+                        update_txhash_check_txhash(data['_hash'], data_copytrade["user"] ,True) 
                         
             else:
                 return "TXHASH EXIST!"
