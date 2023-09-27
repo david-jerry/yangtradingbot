@@ -981,7 +981,7 @@ async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", 
 
         perc = tx_amount * 0.004
         
-        if ethBalance <= 0 + perc or ethBalance < 250000 + perc:
+        if ethBalance <= (0 + perc) or ethBalance < (250000 + perc):
             LOGGER.info("Insufficient Balance")
             return f"""
 <strong>{botname} Response</strong>        
@@ -993,17 +993,22 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             uniswapRouter = UNISWAP_ROUTER
             uniswapRouter = uniswapRouter.lower()
             uniswapRouter = web3.to_checksum_address(uniswapRouter)
+            LOGGER.info(uniswapRouter)
             uniswapABI = UNISWAPABI
             uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
             weth = web3.to_checksum_address(eth.lower())
-            amountOutMin = uniContract.functions.getAmountsOut(amount, [weth, checksum_address]).call()[1]
-            LOGGER.info(amountOutMin)
-            amountOutMin = amountOutMin - (amountOutMin * slippage/100)
-            amountOutMin = int(amountOutMin)
-            LOGGER.info(amountOutMin)
+            # amountOutMin = uniContract.functions.getAmountsIn(amount, [weth, checksum_address]).call()[0]
+            # LOGGER.info(amountOutMin)
+            # # amountOutMin = amountOutMin - (amountOutMin * slippage/100) if slippage > 0.000000000000 else amountOutMin
+            # amountOutMin = int(amountOutMin)
+            # LOGGER.info(amountOutMin)
+            amountInMin = uniContract.functions.getAmountsIn(amount, [weth, checksum_address]).call()[0]
+            amountInEth = float(web3.from_wei(amountInMin, 'ether'))
+            amountInMin = web3.to_wei(amountInEth - ((amountInEth * float(slippage))/100), 'ether')
+            amountOutMin = amountInMin
+            # LOGGER.info(f"Amount Out: {amountOutMin}")
             
             tx_fee = web3.to_wei((float(web3.from_wei(tx_amount, 'ether')) * 0.004), 'ether')
-            gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
 
             # allowance approval
             allowance = contract.functions.allowance(user_address, uniswapRouter).call()
@@ -1011,13 +1016,15 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             
             if allowance < amount:
                 maxApprove = 2**256 - 1
+                gas_est = contract.functions.approve(uniswapRouter, maxApprove).estimate_gas({"from": user_data.wallet_address})
+                
                 approve_tx = contract.functions.approve(
                     uniswapRouter,
                     maxApprove).build_transaction({
-                    'gas': 300000,
-                    'gasPrice': gas_est,
-                    # 'maxFeePerGas': web3.to_wei(53, 'gwei'),
-                    # 'maxPriorityFeePerGas': web3.to_wei(50, 'gwei'),
+                    'gas': gas_est,
+                    # 'gasPrice': gas_est,
+                    'maxFeePerGas': web3.to_wei(33, 'gwei'),
+                    'maxPriorityFeePerGas': web3.to_wei(20, 'gwei'),
                     'nonce': web3.eth.get_transaction_count(user_address),
                     'from': user_address,
                     })
@@ -1030,27 +1037,27 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
                 LOGGER.info("Already approved")
             # ------------------------------------------------------------------
             
+            print("Hello print statement::: ", amount, amountOutMin, [checksum_address, weth], user_address)
             
-            gas_est = uniContract.functions.swapExactTokensForETH(
+            gas_est = uniContract.functions.swapExactTokensForETHSupportingFeeOnTransferTokens(
                 amount,
                 amountOutMin,
                 [checksum_address, weth],
                 user_address,
                 int(time.time()) + 10000,
-            ).estimate_gas({"from": user_address, 'value':amount})
-            
-            uniswap_txn = uniContract.functions.swapExactTokensForETH(
+            ).estimate_gas({"from": user_address})
+            uniswap_txn = uniContract.functions.swapExactTokensForETHSupportingFeeOnTransferTokens(
                 amount,
                 amountOutMin,
                 [checksum_address, weth],
                 user_address,
                 int(time.time()) + 100000,
                 ).build_transaction({
-                    'gas': 800000,
+                    'gas': 300000,
                     'from': user_address,
-                    'gasPrice': gas_est,
-                    # 'maxFeePerGas': web3.to_wei(53, 'gwei'),
-                    # 'maxPriorityFeePerGas': web3.to_wei(50, 'gwei'),
+                    # 'gasPrice': gas_est,
+                    'maxFeePerGas': web3.to_wei(23, 'gwei'),
+                    'maxPriorityFeePerGas': web3.to_wei(20, 'gwei'),
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
             signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
@@ -1062,9 +1069,10 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             # -------------------------------------
             # gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
             LOGGER.info("Initiating fee transfer")
+            gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas()
             transaction = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).build_transaction({
                 'chainId': 1,  # Mainnet
-                'gas': gas_est,  # Gas limit (adjust as needed)
+                'gas': 30000,  # Gas limit (adjust as needed)
                 'gasPrice': gas_est,
                 # 'maxFeePerGas': web3.to_wei(53, 'gwei'),
                 # 'maxPriorityFeePerGas': web3.to_wei(50, 'gwei'),
