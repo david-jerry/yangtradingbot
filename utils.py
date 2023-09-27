@@ -1031,6 +1031,14 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             # ------------------------------------------------------------------
             
             
+            gas_est = uniContract.functions.swapExactTokensForETH(
+                amount,
+                amountOutMin,
+                [checksum_address, weth],
+                user_address,
+                int(time.time()) + 10000,
+            ).estimate_gas({"from": user_address, 'value':amount})
+            
             uniswap_txn = uniContract.functions.swapExactTokensForETH(
                 amount,
                 amountOutMin,
@@ -1040,7 +1048,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
                 ).build_transaction({
                     'gas': 800000,
                     'from': user_address,
-                    'gasPrice': int(gas_est)*3,
+                    'gasPrice': gas_est,
                     # 'maxFeePerGas': web3.to_wei(53, 'gwei'),
                     # 'maxPriorityFeePerGas': web3.to_wei(50, 'gwei'),
                     'nonce': web3.eth.get_transaction_count(user_address),
