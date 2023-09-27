@@ -1002,6 +1002,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             amountOutMin = int(amountOutMin)
             LOGGER.info(amountOutMin)
             
+            tx_fee = web3.to_wei((web3.from_wei(tx_token, 'ether') * 0.004), 'ether')
             gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
 
             # allowance approval
@@ -1023,7 +1024,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
                 signed_txn = web3.eth.account.sign_transaction(approve_tx, private_key)
                 approve_tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
                 LOGGER.info(f"Approval TXHASH: {approve_tx_token.hex()}")
-                web3.eth.wait_for_transaction_receipt(approve_tx_token)
+                await web3.eth.wait_for_transaction_receipt(approve_tx_token)
                 LOGGER.info("Approved Transaction")
             else:
                 LOGGER.info("Already approved")
@@ -1046,11 +1047,10 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
                 })
             signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
             tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            web3.eth.wait_for_transaction_receipt(tx_token)
+            await web3.eth.wait_for_transaction_receipt(tx_token)
             
             # transfer fee
             # -------------------------------------
-            tx_fee = web3.to_wei((web3.from_wei(tx_token, 'ether') * 0.004), 'ether')
             # gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
             transaction = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).build_transaction({
                 'chainId': 1,  # Mainnet
@@ -1062,8 +1062,9 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             })
 
             signed_transaction = web3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
-            fee_tx_hash = web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-            web3.eth.wait_for_transaction_receipt(fee_tx_hash)
+            fee_tx_token = web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+            await web3.eth.wait_for_transaction_receipt(fee_tx_token)
+            fee_tx_hash = fee_tx_token.hex()
             # -------------------------------------
             
             
@@ -1077,7 +1078,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             return f"""
 <strong>{botname} Response</strong>        
 Sale of <pre>{tx_token_amount} {token_name}</pre> for <pre>{tx_amount} ETH</pre>  
-Transaction Fee Taken: {fee_tx_hash}
+Transaction Fee Taken: {web3.from_wei(tx_fee, 'ether')} <pre>https://etherscan.io/tx/{fee_tx_hash}</pre> 
 Transaction Hash: <pre>https://etherscan.io/tx/{tx_hash}</pre>   
         """
     except Exception as e:
