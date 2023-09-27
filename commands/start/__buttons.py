@@ -369,8 +369,8 @@ def build_buy_sel_keyboard(buy=True):
     sell75 = InlineKeyboardButton(f"Sell 75%", callback_data=f"sell_75")
     sell100 = InlineKeyboardButton(f"Sell 100%", callback_data=f"sell_100")
     sellmax = InlineKeyboardButton(f"Sell Max TX", callback_data=f"sell_maxtx")
-    sellxeth = InlineKeyboardButton(f"Sell X ETH", callback_data=f"buy_xeth")
-    sellxtoken = InlineKeyboardButton(f"Sell X {TOKENNAME}", callback_data=f"sell_token")
+    sellxeth = InlineKeyboardButton(f"Sell X ETH", callback_data=f"sell_xeth")
+    sellxtoken = InlineKeyboardButton(f"Sell X {TOKENNAME}", callback_data=f"sell_selltoken")
     
     preset_keyboard = [
             [home, snipe],
@@ -443,7 +443,7 @@ CA: {TOKENADDRESS}
 
 ⛽️ Gas: {GASGWEI} GWEI Ξ ${GASETHER}
 
-🕰 Age: {round(TOKENAGE / (60 * 60 * 24))} Days
+🕰 Age: {round(TOKENAGE / (60 * 60 * 7))} Days
 -------------------------------------------
 ⚠️ Market cap includes locked tokens, excluding burned
 -------------------------------------------
@@ -941,32 +941,32 @@ async def buy_callback(update: Update, context: CallbackContext):
             )
         elif button_data == "0_01":
             user_data = await load_user_data(user_id)
-            amount = float(button_data.replace('_', '.'))
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
             result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_05":
             user_data = await load_user_data(user_id)
-            amount = float(button_data.replace('_', '.'))
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
             result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_1":
             user_data = await load_user_data(user_id)
-            amount = float(button_data.replace('_', '.'))
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
             result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_2":
             user_data = await load_user_data(user_id)
-            amount = float(button_data.replace('_', '.'))
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
             result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_5":
             user_data = await load_user_data(user_id)
-            amount = float(button_data.replace('_', '.'))
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
             result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "1":
             user_data = await load_user_data(user_id)
-            amount = float(button_data)
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
             result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         
@@ -978,7 +978,7 @@ How much ETH do you want to buy? Write your value in eth.
 If you type {ETHBALANCE}. It will transfer the entire balance.
 You currently have {ETHBALANCE} ETH        
             """
-            await query.message.reply_text(message, parse_mode=ParseMode.HTML)
+            await context.bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)        
             return ANSWERBUYAMOUNT
                
         elif button_data == 'token':
@@ -990,7 +990,7 @@ How much {TOKENNAME} do you want to buy? You can use a regular number (1, 4, 20,
 If you type {TOKENBALANCE}. It will transfer the entire balance.
 You currently have {TOKENBALANCE} {TOKENNAME}        
             """
-            await query.message.reply_text(message, parse_mode=ParseMode.HTML)
+            await context.bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)        
             return ANSWERBUYAMOUNT
         
         elif button_data == "yangbot":
@@ -1039,31 +1039,31 @@ async def sell_callback(update: Update, context: CallbackContext):
         elif button_data == "haz":
             user_data = await load_user_data(user_id)
             amount = TOKENBALANCE
-            LOGGER.info(f"Token Transferred: {amount}")
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "25":
             user_data = await load_user_data(user_id)
-            amount = web3.to_wei((TOKENBALANCE) * (int(button_data) / 100), 'ether')
-            LOGGER.info(f"Token Transferred: {amount}")
+            amount = web3.to_wei(float(TOKENBALANCE) * (int(button_data) / 100), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "50":
             user_data = await load_user_data(user_id)
-            amount = web3.to_wei((TOKENBALANCE) * (int(button_data) / 100), 'ether')
-            LOGGER.info(f"Token Transferred: {amount}")
+            amount = web3.to_wei(float(TOKENBALANCE) * (int(button_data) / 100), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "75":
             user_data = await load_user_data(user_id)
-            amount = web3.to_wei((TOKENBALANCE) * (int(button_data) / 100), 'ether')
-            LOGGER.info(f"Token Transferred: {amount}")
+            amount = web3.to_wei(float(TOKENBALANCE) * (int(button_data) / 100), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "100":
             user_data = await load_user_data(user_id)
-            amount = web3.to_wei((TOKENBALANCE) * (int(button_data) / 100), 'ether')
-            LOGGER.info(f"Token Transferred: {amount}")
+            amount = web3.to_wei(float(TOKENBALANCE) * (int(button_data) / 100), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "xeth":
@@ -1076,6 +1076,12 @@ You currently have {ETHBALANCE} ETH
             await query.message.reply_text(message, parse_mode=ParseMode.HTML)
             return ANSWERBUYAMOUNT
         elif button_data == 'maxtx':
+            user_data = await load_user_data(user_id)
+            amount = web3.to_wei(float(TOKENBALANCE), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
+        elif button_data == 'selltoken':
             context.user_data['get_eth'] = False
             message = f"""
 How much {TOKENNAME} do you want to sell? You can use a regular number (1, 20 4, 7, etc.).
@@ -1085,12 +1091,6 @@ You currently have {TOKENBALANCE} {TOKENNAME}
             """
             await query.message.reply_text(message, parse_mode=ParseMode.HTML)
             return ANSWERBUYAMOUNT
-        elif button_data == 'token':
-            user_data = await load_user_data(user_id)
-            amount = web3.to_wei(float(TOKENBALANCE), 'ether')
-            LOGGER.info(f"Token Transferred: {amount}")
-            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
-            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
     else:
         await query.message.reply_text("I don't understand that command.")
 

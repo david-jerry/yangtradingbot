@@ -311,7 +311,7 @@ def main() -> None:
 
     maxtx_conv_handler = ConversationHandler(
         entry_points=[
-            CallbackQueryHandler(sell_callback, pattern=r"^buy_maxtx$")
+            CallbackQueryHandler(sell_callback, pattern=r"^sell_selltoken$")
         ],
         states={
             ANSWERBUYAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_buysell$")), reply_buysell_amount)],
