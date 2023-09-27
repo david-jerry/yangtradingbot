@@ -354,6 +354,12 @@ def update_copy_trade_addresses_gas(id1, gas1,name1):
     my_object.save()
     return my_object
 @sync_to_async
+def update_trades_addresses_ammount_limit(id1, ammount_limit1,name1,chain):
+    my_object = TradeAddress.objects.get(user=id1,token_name=name1,chain=chain)
+    my_object.ammount_limit =Decimal(ammount_limit1)
+    my_object.save()
+    return my_object
+@sync_to_async
 def update_trades_addresses_loss(id1, loss,name1,chain):
     my_object = TradeAddress.objects.get(user=id1,token_name=name1,chain=chain)
     my_object.stop_loss =Decimal(loss)

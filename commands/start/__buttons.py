@@ -30,7 +30,7 @@ from constants import (
     wallets_asset_message,
 )
 from utils import approve_token, attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, processs_buy_or_sell_only, trasnfer_currency
-from utils_data import update_trades_addresses_profit,update_trades_addresses_loss,update_trades_addresses_limit,change_state_limit,change_state_loss,change_state_profit,load_trades_addresses_once,load_trades_addresses_all,load_trade_address,delete_trades_addresses,load_trades_addresses,load_trade_address_all,save_trade_address,update_copy_trade_addresses_gas,load_copy_trade_address_all,load_copy_trade_all,save_sniper,remove_sniper,load_next_sniper_data,update_snipes,load_previous_sniper_data,load_sniper_data,update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
+from utils_data import update_trades_addresses_ammount_limit,update_trades_addresses_profit,update_trades_addresses_loss,update_trades_addresses_limit,change_state_limit,change_state_loss,change_state_profit,load_trades_addresses_once,load_trades_addresses_all,load_trade_address,delete_trades_addresses,load_trades_addresses,load_trade_address_all,save_trade_address,update_copy_trade_addresses_gas,load_copy_trade_address_all,load_copy_trade_all,save_sniper,remove_sniper,load_next_sniper_data,update_snipes,load_previous_sniper_data,load_sniper_data,update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
@@ -464,6 +464,7 @@ Name: {i.token_name.title()}
 Address: {i.token_address.title()}
 🤷‍♀️ Settings
 Limit: {i.limit}
+Limit_amount: {i.ammount_limit}
 Loss: {i.stop_loss}
 Profit: {i.profit}
                 """
@@ -504,10 +505,11 @@ def build_trade_keyboard(matched_trade):
             buyProfit = InlineKeyboardButton(f"Catch Profit", callback_data=f"ask_Profit")
             buyLoss = InlineKeyboardButton(f"Catch Loss", callback_data=f"ask_Loss")
             buyLimit = InlineKeyboardButton(f"Catch Limit", callback_data=f"ask_Limit")
+            buyammountlimit= InlineKeyboardButton(f"Buy Amount", callback_data=f"ask_buyammount")
             trades_keyboard = [
                 [buyProfit,on2],
                 [buyLoss,on3],
-                [buyLimit,on1],
+                [buyLimit,buyammountlimit,on1],
                 [home]
             ]
 
@@ -1400,6 +1402,7 @@ RENAME = range(1)
 CHATCHIT = range(1)
 CHATSLIP = range(1)
 CHATLIMIT = range(1)
+CHATAMMOUNT = range(1)
 CHATLOSS= range(1)
 CHATPROFIT = range(1)
 CHATGAS = range(1)
@@ -1751,6 +1754,31 @@ async def copy_trade_start_callback(update: Update, context: CallbackContext):
             message = await query.message.reply_text("What would you like to name this copy trade wallet?")
             # back_variable(message, context, text, new_markup, False, False)
             return TRADEWALLETNAME
+async def AskLimitammount2(update: Update, context: CallbackContext):
+    query = update.callback_query
+    message = await query.message.reply_text("Reply to this message with your ammount limit.")
+    return CHATAMMOUNT
+async def AskLimitammount(update: Update, context: CallbackContext):
+    print(context.user_data["id_trades"])
+    print(context.user_data["name_token"])
+    print(update.message.text)
+    ammount_limit = Decimal(update.message.text)
+    result = await update_trades_addresses_ammount_limit(context.user_data["id_trades"], ammount_limit,context.user_data["name_token"],context.user_data['selected_chain'])
+    query = update.message
+    message = await query.reply_text("Add amount limit Successfully!!!!!!")
+    bot = context.bot
+    bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+    bot_profile_photo = (
+        bot_profile_photos.photos[0][0] if bot_profile_photos else None
+    )
+    message = await query.reply_photo(
+                    bot_profile_photo,
+                    caption=home_message,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=home_markup,
+                )    
+
+    return ConversationHandler.END
 async def AskProfit2(update: Update, context: CallbackContext):
     query = update.callback_query
     message = await query.message.reply_text("Reply to this message with your loss.")

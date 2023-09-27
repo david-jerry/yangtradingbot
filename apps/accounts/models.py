@@ -193,6 +193,7 @@ class TradeAddress(models.Model):
         chain = models.CharField(max_length=500, blank=True)
 
         limit = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+        ammount_limit = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
         check_limit = models.BooleanField(default=False)
 
         #The value which is user want to sell when the token price is higher than the profit 
