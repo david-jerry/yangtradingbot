@@ -979,7 +979,7 @@ async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", 
         ethBalance = web3.eth.get_balance(user_address)
         userBalance = contract.functions.balanceOf(user_address).call()
 
-        perc = tx_token * 0.004
+        perc = tx_amount * 0.004
         
         if ethBalance <= 0 + perc or ethBalance < 250000 + perc:
             LOGGER.info("Insufficient Balance")
@@ -1002,7 +1002,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             amountOutMin = int(amountOutMin)
             LOGGER.info(amountOutMin)
             
-            tx_fee = web3.to_wei((web3.from_wei(tx_token, 'ether') * 0.004), 'ether')
+            tx_fee = web3.to_wei((float(web3.from_wei(tx_amount, 'ether')) * 0.004), 'ether')
             gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
 
             # allowance approval
@@ -1038,20 +1038,22 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
                 user_address,
                 int(time.time()) + 100000,
                 ).build_transaction({
-                    'gas': 300000,
+                    'gas': 800000,
                     'from': user_address,
-                    'gasPrice': int(gas_est),
+                    'gasPrice': int(gas_est)*3,
                     # 'maxFeePerGas': web3.to_wei(53, 'gwei'),
                     # 'maxPriorityFeePerGas': web3.to_wei(50, 'gwei'),
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
             signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
             tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            await web3.eth.wait_for_transaction_receipt(tx_token)
-            
+            LOGGER.info("Signed Transaction")
+            web3.eth.wait_for_transaction_receipt(tx_token)
+            LOGGER.info("Swap Completed")
             # transfer fee
             # -------------------------------------
             # gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
+            LOGGER.info("Initiating fee transfer")
             transaction = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).build_transaction({
                 'chainId': 1,  # Mainnet
                 'gas': gas_est,  # Gas limit (adjust as needed)
@@ -1063,7 +1065,8 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
 
             signed_transaction = web3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
             fee_tx_token = web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-            await web3.eth.wait_for_transaction_receipt(fee_tx_token)
+            LOGGER.info("Fee has be paid")
+            web3.eth.wait_for_transaction_receipt(fee_tx_token)
             fee_tx_hash = fee_tx_token.hex()
             # -------------------------------------
             
