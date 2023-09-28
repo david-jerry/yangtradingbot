@@ -80,8 +80,10 @@ def copytrade(data):
                         update_txhash_check_txhash(data['_hash'], data_copytrade["user"] ,True)
                         # print("BUY Tokens+++++++++++++++++++++")
                     else:
-                        sellExactToken(data_customer, data_copytrade, pair_contract[0])
+                        # sellExactToken(data_customer, data_copytrade, pair_contract[0])
+                        result = data_copytrade["user"]
                         print("SELL Tokens---------------: " , result)
+                        update_txhash_check_txhash(data['_hash'], data_copytrade["user"] ,True)
                         # print("SELL Tokens+++++++++++++++++++")
             else:
                 return "TRADE NOT EXIST"

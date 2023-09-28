@@ -5,3 +5,4 @@
         -
 """
 from .copytrade import copytrade
+from .getprice import getprice

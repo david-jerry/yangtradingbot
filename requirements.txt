@@ -11,3 +11,4 @@ cctx==1.0.0
 asyncio==3.4.3
 celery==5.2.7
 redis==5.0.0
+uniswap_universal_router_decoder==0.9.1

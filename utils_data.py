@@ -7,7 +7,7 @@ import os
 import django
 
 from asgiref.sync import sync_to_async
-from apps.accounts.models import CustomUser, CopyTradeAddresses, Sniper, Txhash, copytradetxhash,TradeAddress
+from apps.accounts.models import CustomUser, CopyTradeAddresses, Sniper, Txhash, copytradetxhash,TradeAddress, tradetxhash
 
 from logger import LOGGER
 
@@ -24,10 +24,33 @@ def delete_trades_addresses(user_id,chain,name):
 def load_trades_addresses_all(user_id, chain):
         trades = TradeAddress.objects.filter(user=user_id, chain=chain) or None
         return trades
+
+@sync_to_async
+def load_token_addresses_all_from_trade_address(chain1):
+    user_data = TradeAddress.objects.filter(chain=chain1)
+    if user_data:
+        return user_data
+    else:
+        return None
+
 @sync_to_async
 def load_trades_addresses_once(user_id, chain, name):
         trades = TradeAddress.objects.filter(user=user_id, chain=chain,token_name=name) or None
         return trades
+
+def load_trade_address_from_user_id_token_address(user_id, token_address):
+        trades = TradeAddress.objects.filter(user=user_id, token_address=token_address).first() or None
+        result ={
+            'ammount_limit': trades.ammount_limit,
+            'check_limit': trades.check_limit,
+            'check_profit': trades.check_profit,
+            'check_stop_loss': trades.check_stop_loss,
+            'limit': trades.limit,
+            'profit': trades.profit,
+            'stop_loss': trades.stop_loss,
+        }
+        return result
+
 @sync_to_async
 def change_state_limit(user_id, chain, name, state):
     my_object = TradeAddress.objects.get(user=user_id, token_name=name,chain=chain)
@@ -69,9 +92,31 @@ def save_txhash_copy_data(user_data):
     )
     LOGGER.info(temp)
     return temp
+def save_trade_txhash_copy_data(user_data):
+    temp = tradetxhash.objects.create(
+        **user_data
+    )
+    LOGGER.info(temp)
+    return temp
 @sync_to_async
 def Load_txhash_copy_data():
     data = copytradetxhash.objects.filter()
+    if(data is not None):
+        temp = []
+        for i in data:
+            temp.append({
+                'user_id': i.user_id,
+                'txhash': i.txhash,
+                'bot_name': i.bot_name,
+                'amount': i.amount,
+                'token_address': i.token_address,
+            })
+        return temp
+    return 0
+
+@sync_to_async
+def Load_trade_txhash_copy_data():
+    data = tradetxhash.objects.filter()
     if(data is not None):
         temp = []
         for i in data:
@@ -93,6 +138,42 @@ def save_txhash_data(user_data):
     )
     # LOGGER.info()
     return txhash
+
+def save_txhash_data_for_trade(user_data):
+    txhash_data = Txhash.objects.filter(Txhash=user_data["Txhash"], user_id=user_data["user_id"]).first()
+    if (txhash_data is None):
+        txhash = Txhash.objects.create(
+            **user_data
+        )
+        return txhash
+    else:
+        txhash_data.check_txhash = user_data["check_txhash"]
+        txhash_data.save()
+        return txhash_data
+    # LOGGER.info()
+
+def change_trade_state_profit(user_id, chain, token_address, state):
+
+    print("Check trade state user", user_id)
+    my_object = TradeAddress.objects.get(user=user_id, token_address=token_address,chain=chain)
+    my_object.check_profit =state
+    my_object.save()
+    return my_object
+
+def change_trade_state_limit(user_id, chain, token_address, state):
+
+    print("Check trade state user", user_id)
+    my_object = TradeAddress.objects.get(user=user_id, token_address=token_address,chain=chain)
+    my_object.check_limit =state
+    my_object.save()
+    return my_object
+
+def change_trade_state_stop_loss(user_id, chain, token_address, state):
+    print("Check trade state user", user_id)
+    my_object = TradeAddress.objects.get(user=user_id, token_address=token_address,chain=chain)
+    my_object.check_stop_loss =state
+    my_object.save()
+    return my_object
 
 # @sync_to_async
 def load_txhash_data(Txhash1, user_id):
@@ -127,7 +208,7 @@ def load_txhash_data_check(user_id,check_txhash1):
     except FileNotFoundError:
         user_data = None
         return user_data
-
+    
 def update_txhash_user_id(Txhash1, user_id):
     my_object = Txhash.objects.get(Txhash=Txhash1)
     my_object.user_id = user_id
@@ -167,6 +248,17 @@ def load_user_data_id(user_id):
         LOGGER.info("Loading user data")
         LOGGER.info(user_id)
         user_data = CustomUser.objects.filter(id=user_id).first()
+        LOGGER.info(user_data)
+        return user_data
+    except FileNotFoundError:
+        user_data = None
+        return user_data
+
+def load_user_data_from_id(user_id):
+    try:
+        LOGGER.info("Loading user data")
+        LOGGER.info(user_id)
+        user_data = CustomUser.objects.filter(user_id=user_id).first()
         LOGGER.info(user_data)
         return user_data
     except FileNotFoundError:
@@ -314,6 +406,13 @@ def load_trades_addresses(user_id, chain):
     trades = TradeAddress.objects.filter(user=user_id, chain=chain) or None
     print(user_id)
     return trades
+
+# @sync_to_async
+def load_trades_addresses_object(user_id, chain, token_address):
+    trades = TradeAddress.objects.filter(user=user_id, chain=chain, token_address=token_address) or None
+    print(user_id)
+    return trades
+
 @sync_to_async
 def load_copy_trade_addresses(user_id, chain):
     user = CustomUser.objects.get(user_id=user_id)
@@ -383,7 +482,14 @@ def update_copy_trade_addresses(user_id, name, chain, updated_data):
         trades.save()  # Save the changes to the database
     except CustomUser.DoesNotExist:
         LOGGER.info("Copy trade not found")
-        
+
+def chatId_to_id(chat_id1):
+    user_data = CustomUser.objects.filter(user_id=chat_id1).first()
+    if user_data:
+        return user_data.id
+    else:
+        return None
+
 @sync_to_async
 def delete_copy_trade_addresses(user_id, name, chain):
     try:

@@ -10,8 +10,6 @@ web3 = Web3(Web3.HTTPProvider(infura_url))
 import requests
 
 address = "0x8BF2405f5848db6dD2B8041456f73550c8d78E78"
-lastestBlock = web3.eth.get_block("latest")["number"]
-startBlock = 9737693
 import django, os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")
 django.setup()
@@ -27,7 +25,7 @@ contract_abi = config("CONTRACT_ABI")
 
 async def log_loop(event_filter, poll_interval):
     startblock = latest_block = web3.eth.get_block("latest")["number"]
-    # startblock = 18219263 
+    # startblock = 18227936
     # latest_block = 
     while True:
         try:
@@ -43,29 +41,31 @@ async def log_loop(event_filter, poll_interval):
             for i in range(len(address_list)):
                 retries = 0
                 address = address_list[i]
-                # address = "0xfA7A0232958938202039F4E35216cEA65971F876"
+                # address = "0xe09D878d1b6a32b43d3a1A283Eb1e8E970210595"
                 api_params = {
                     "module": "account",
                     "action": "txlist",
                     "address": address,
-                    "startblock": startblock,
+                    "startblock": startblock-1,
                     "endblock": latest_block,
                     "page": 1,
                     "offset": 50,
                     "sort": "asc",
                     "apikey": ETHERAPI,
                 }
-                print("address:", address_list[i])
+                # print(api_params)
+                response = requests.get(ETHERSCAN_ENDPOINT, params=api_params)
+                # print(response.json())
                 while retries < 10:
-                    response = requests.get(ETHERSCAN_ENDPOINT, params=api_params)
-
+                    
+                    # print(response)
                     if response.status_code == 200 and response.content:
                         break  # Request was successful, exit the retry loop
-
+                    response = requests.get(ETHERSCAN_ENDPOINT, params=api_params)
                     print(f"Request {retries} of {address} failed with status code {response.status_code}. Retrying in 0.4 seconds...")
                     retries += 1
                     time.sleep(0.4)
-                
+                # print(response.json())
                 if retries == 10:
                     print(f"Maximum number of retries reached. Request of {address} could not be completed.")
                 elif response.json()["status"] == "1":
@@ -101,22 +101,22 @@ def handle_event(event):
         _hash = event["result"][i]["hash"]
         # print("Hash: ", _hash)
         # print(decoded_trx_input[1]["inputs"][1][0].fn_name)
-        if (decoded_trx_input[1]["inputs"][1][0].fn_name not in ["V2_SWAP_EXACT_IN"]):
-            print("Not SWAP ROUTER V2 method")
-            continue
-        print("-------------------------------------------------------------")
-        data = {
-            "_from": _from,
-            "_to": _to,
-            "_hash": _hash,
-            "_path": decoded_trx_input[1]["inputs"][1][1]['path']
-        }
-        copytrade.apply_async(args=[data], queue="tc-queue1")
-        print(data)
-        # print(result)
-        # return _hash
-        # copytrade.send_task('worker.copytrade', args=[data], queue="tc-queue1")
+        check_V2_SWAP_EXACT_IN = False
+        for i in range(len(decoded_trx_input[1]["inputs"])):  
+            if (decoded_trx_input[1]["inputs"][i][0].fn_name in ["V2_SWAP_EXACT_IN"]): 
+                check_V2_SWAP_EXACT_IN = True
+                print("-------------------------------------------------------------")
+                data = {
+                    "_from": _from,
+                    "_to": _to,
+                    "_hash": _hash,
+                    "_path": decoded_trx_input[1]["inputs"][i][1]['path']
+                }
+                print(data)
+                copytrade.apply_async(args=[data], queue="tc-queue1")
 
+        if (check_V2_SWAP_EXACT_IN == False):
+            print("Not V2_SWAP_EXACT_IN function")
 
 def main():
     print("Listening for events...")
