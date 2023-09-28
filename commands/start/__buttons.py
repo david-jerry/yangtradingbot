@@ -499,9 +499,9 @@ Sell Amount (low): Default (100%)
 def build_trade_keyboard(matched_trade):
     trades_keyboard = []
     for data in matched_trade:
-            on1 = InlineKeyboardButton(f"{'🔴 OFF' if not data.check_limit else '🔵 ON'}", callback_data=f"trades_{data.token_name.replace(' ', '_')}_{'off' if not data.check_limit else 'on'}_limit")
-            on2 = InlineKeyboardButton(f"{'🔴 OFF' if not data.check_profit else '🔵 ON'}", callback_data=f"trades_{data.token_name.replace(' ', '_')}_{'off' if not data.check_profit else 'on'}_profit")
-            on3 = InlineKeyboardButton(f"{'🔴 OFF' if not data.check_stop_loss else '🔵 ON'}", callback_data=f"trades_{data.token_name.replace(' ', '_')}_{'off' if not data.check_stop_loss else 'on'}_loss")
+            on1 = InlineKeyboardButton(f"{'🔴 OFF' if not data.check_limit else '🔵 ON'}", callback_data=f"trades_{data.token_address.replace(' ', '_')}_{'off' if not data.check_limit else 'on'}_limit")
+            on2 = InlineKeyboardButton(f"{'🔴 OFF' if not data.check_profit else '🔵 ON'}", callback_data=f"trades_{data.token_address.replace(' ', '_')}_{'off' if not data.check_profit else 'on'}_profit")
+            on3 = InlineKeyboardButton(f"{'🔴 OFF' if not data.check_stop_loss else '🔵 ON'}", callback_data=f"trades_{data.token_address.replace(' ', '_')}_{'off' if not data.check_stop_loss else 'on'}_loss")
             buyProfit = InlineKeyboardButton(f"Catch Profit", callback_data=f"ask_Profit")
             buyLoss = InlineKeyboardButton(f"Catch Loss", callback_data=f"ask_Loss")
             buyLimit = InlineKeyboardButton(f"Catch Limit", callback_data=f"ask_Limit")
@@ -646,8 +646,8 @@ def build_trades_keyboard(trades):
         for tr in trades:
             print(tr.token_name)
             buttons = [
-                InlineKeyboardButton(f"{tr.token_name.lower()}", callback_data=f"trades_{tr.token_name.replace(' ', '_')}"),
-                InlineKeyboardButton("❌", callback_data=f"trades_{tr.token_name.replace(' ', '_')}_delete"),
+                InlineKeyboardButton(f"{tr.token_name.lower()}", callback_data=f"trades_{tr.token_address.replace(' ', '_')}"),
+                InlineKeyboardButton("❌", callback_data=f"trades_{tr.token_address.replace(' ', '_')}_delete"),
 
             ]
             copy_trade_keyboard.append(buttons)

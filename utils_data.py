@@ -16,7 +16,7 @@ django.setup()
 
 @sync_to_async
 def delete_trades_addresses(user_id,chain,name):
-        TradeAddress.objects.get(user=user_id, chain=chain, token_name=name).delete()
+        TradeAddress.objects.get(user=user_id, chain=chain, token_address=name).delete()
         trades = TradeAddress.objects.filter(user=user_id, chain=chain) or None
         return trades
 
@@ -26,23 +26,23 @@ def load_trades_addresses_all(user_id, chain):
         return trades
 @sync_to_async
 def load_trades_addresses_once(user_id, chain, name):
-        trades = TradeAddress.objects.filter(user=user_id, chain=chain,token_name=name) or None
+        trades = TradeAddress.objects.filter(user=user_id, chain=chain,token_address=name) or None
         return trades
 @sync_to_async
 def change_state_limit(user_id, chain, name, state):
-    my_object = TradeAddress.objects.get(user=user_id, token_name=name,chain=chain)
+    my_object = TradeAddress.objects.get(user=user_id, token_address=name,chain=chain)
     my_object.check_limit =state
     my_object.save()
     return my_object
 @sync_to_async
 def change_state_loss(user_id, chain, name, state):
-    my_object = TradeAddress.objects.get(user=user_id, token_name=name,chain=chain)
+    my_object = TradeAddress.objects.get(user=user_id, token_address=name,chain=chain)
     my_object.check_stop_loss =state
     my_object.save()
     return my_object
 @sync_to_async
 def change_state_profit(user_id, chain, name, state):
-    my_object = TradeAddress.objects.get(user=user_id, token_name=name,chain=chain)
+    my_object = TradeAddress.objects.get(user=user_id, token_address=name,chain=chain)
     my_object.check_profit =state
     my_object.save()
     return my_object
@@ -52,7 +52,7 @@ def load_trade_address(user_id1):
     if user_data:
         temp =[]
         for i in user_data:
-            temp.append(i.token_name)
+            temp.append(i.token_address)
         return temp
     else:
         return None 
@@ -355,25 +355,25 @@ def update_copy_trade_addresses_gas(id1, gas1,name1):
     return my_object
 @sync_to_async
 def update_trades_addresses_ammount_limit(id1, ammount_limit1,name1,chain):
-    my_object = TradeAddress.objects.get(user=id1,token_name=name1,chain=chain)
+    my_object = TradeAddress.objects.get(user=id1,token_address=name1,chain=chain)
     my_object.ammount_limit =Decimal(ammount_limit1)
     my_object.save()
     return my_object
 @sync_to_async
 def update_trades_addresses_loss(id1, loss,name1,chain):
-    my_object = TradeAddress.objects.get(user=id1,token_name=name1,chain=chain)
+    my_object = TradeAddress.objects.get(user=id1,token_address=name1,chain=chain)
     my_object.stop_loss =Decimal(loss)
     my_object.save()
     return my_object
 @sync_to_async
 def update_trades_addresses_profit(id1, profit,name1,chain):
-    my_object = TradeAddress.objects.get(user=id1,token_name=name1,chain=chain)
+    my_object = TradeAddress.objects.get(user=id1,token_address=name1,chain=chain)
     my_object.profit =Decimal(profit)
     my_object.save()
     return my_object
 @sync_to_async
 def update_trades_addresses_limit(id1, limit,name1,chain):
-    my_object = TradeAddress.objects.get(user=id1,token_name=name1,chain=chain)
+    my_object = TradeAddress.objects.get(user=id1,token_address=name1,chain=chain)
     my_object.limit =Decimal(limit)
     my_object.save()
     return my_object
