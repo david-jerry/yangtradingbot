@@ -77,7 +77,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     max_gas = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
     max_gas_price = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
     max_delta = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
-    slippage = models.DecimalField(default=100.00, decimal_places=2, max_digits=20)
+    slippage = models.DecimalField(default=20.00, decimal_places=2, max_digits=20)
     
     buy_tax = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)
     sell_tax = models.DecimalField(default=0.00, decimal_places=2, max_digits=20)

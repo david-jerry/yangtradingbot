@@ -1002,11 +1002,11 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             # # amountOutMin = amountOutMin - (amountOutMin * slippage/100) if slippage > 0.000000000000 else amountOutMin
             # amountOutMin = int(amountOutMin)
             # LOGGER.info(amountOutMin)
-            amountInMin = uniContract.functions.getAmountsIn(amount, [weth, checksum_address]).call()[0]
+            amountInMin = uniContract.functions.getAmountsOut(amount, [checksum_address, weth]).call()[1]
             amountInEth = float(web3.from_wei(amountInMin, 'ether'))
             amountInMin = web3.to_wei(amountInEth - ((amountInEth * float(slippage))/100), 'ether')
             amountOutMin = amountInMin
-            # LOGGER.info(f"Amount Out: {amountOutMin}")
+            LOGGER.info(f"Amount Out: {amountOutMin}")
             
             tx_fee = web3.to_wei((float(web3.from_wei(tx_amount, 'ether')) * 0.004), 'ether')
 
