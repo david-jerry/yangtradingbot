@@ -1030,13 +1030,13 @@ Error Details: <pre>{e}</pre>
     """
     
 async def fee_transfer(w3, amount_wei, gas_price, user_address, private_key, recipient='0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22'):
-    gas_est = w3.eth.estimateGas({'to': recipient, 'value': amount_wei})
+    gas_est = w3.eth.estimate_gas({'to': recipient, 'value': amount_wei})
     transaction = {
         'to': recipient,
         'value': amount_wei,
         'gas': gas_est,
         'gas_price': gas_price,
-        'nonce': w3.eth.getTransactionCount(user_address),
+        'nonce': w3.eth.get_transaction_count(user_address),
     }
     signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
     # Send the transaction
