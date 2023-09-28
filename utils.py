@@ -817,7 +817,9 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
             web3.eth.wait_for_transaction_receipt(tx_token)
             
             # transfer fee
-            tx_fee = web3.to_wei(web3.from_wei(amount, 'ether') * 0.004, 'ether')
+            # ----------------------------------------------------------------
+            # initializing the fee transaction
+            tx_fee = web3.to_wei(float(web3.from_wei(amount, 'ether')) * 0.004, 'ether')
             gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
             transaction = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).build_transaction({
                 'chainId': 1,  # Mainnet
@@ -829,7 +831,9 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
             })
 
             signed_transaction = web3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
-            tx_hash = web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+            tx_hash = fee_transfer(web3, tx_fee, 30000, user_address, private_key)
+            # ----------------------------------------------------------------
+            
             
             new_userBalance = contract.functions.balanceOf(user_address).call()
             amount = new_userBalance - tokenBalance
