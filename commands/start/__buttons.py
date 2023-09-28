@@ -542,18 +542,8 @@ def build_copy_name_keyboard(matched_trade):
     delcopymaxselltax = InlineKeyboardButton(f"⌫ Max Sell Tax", callback_data=f"copyname_delselltax")
     copyname_keyboard = [
         [home, back],
-        [multi],
-        [copyautobuy],
-        [copysmartslippage, copybuyamount],
-        [copyslippage, delcopyslippage],
-        [copygasdelta, delcopygasdelta],
-        [copysell],
-        [copysellhi, delcopysellhi],
-        [copyselllo, delcopyselllo],
-        [copysellhiamount, delcopysellhiamount],
-        [copysellloamount, delcopysellloamount],
-        [copymaxbuytax, delcopymaxbuytax],
-        [copymaxselltax, delcopymaxselltax],
+        [copybuyamount],
+        [copyslippage, copygasdelta],
     ] 
     copyname_markup = InlineKeyboardMarkup(copyname_keyboard)
     
