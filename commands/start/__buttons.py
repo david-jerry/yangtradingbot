@@ -675,7 +675,7 @@ def build_copy_trade_keyboard(trades):
             buttons = [
                 InlineKeyboardButton(f"{tr.name.lower()}", callback_data=f"copy_{tr.name.replace(' ', '_')}"),
                 InlineKeyboardButton(f"Rename", callback_data=f"rename_{tr.id}"),
-                InlineKeyboardButton(f"{'🔴 OFF' if not tr.on else '🔵 ON'}", callback_data=f"copy_{tr.name.replace(' ', '_')}_{'off' if not tr.on else 'on'}"),
+                # InlineKeyboardButton(f"{'🔴 OFF' if not tr.on else '🔵 ON'}", callback_data=f"copy_{tr.name.replace(' ', '_')}_{'off' if not tr.on else 'on'}"),
                 InlineKeyboardButton("❌", callback_data=f"copy_{tr.name.replace(' ', '_')}_delete")
             ]
             copy_trade_keyboard.append(buttons)
@@ -1996,7 +1996,6 @@ async def submit_copy_reply(update: Update, context: CallbackContext):
     name = context.user_data.get('address')
     temp = []
     temp = await load_copy_trade_all(user_id)
-    print(temp)
     if temp:
         if name in temp:
              await update.message.reply_text(f"Your name bot has been used. Please use another name.")
@@ -2017,11 +2016,25 @@ async def submit_copy_reply(update: Update, context: CallbackContext):
   
     chain = context.user_data['selected_chain']
     token_address = update.message.text.replace(' ', '')
+    token_address = token_address.lower()
     temp2= []
     temp2 = await load_copy_trade_address_all(user_id)
+
     if temp2:
         if token_address in temp2:
              await update.message.reply_text(f"This address has been copy")
+             query = update.message
+             bot = context.bot
+             bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+             bot_profile_photo = (
+             bot_profile_photos.photos[0][0] if bot_profile_photos else None
+                )
+             message = await query.reply_photo(
+                                bot_profile_photo,
+                                caption=home_message,
+                                parse_mode=ParseMode.HTML,
+                                reply_markup=home_markup,
+                            )    
              return ConversationHandler.END
     if(token_address.__len__() != 42):
         await update.message.reply_text(f"Please enter a valid wallet address.")
@@ -2062,6 +2075,18 @@ async def submit_copy_reply(update: Update, context: CallbackContext):
     )
     context.user_data.pop("last_message", None)
     back_variable(message, context, copy_message, copy_trade_markup, True, False)
+    query = update.message
+    bot = context.bot
+    bot_profile_photos = await bot.get_user_profile_photos(bot.id, limit=1)
+    bot_profile_photo = (
+    bot_profile_photos.photos[0][0] if bot_profile_photos else None
+                )
+    message = await query.reply_photo(
+                                bot_profile_photo,
+                                caption=home_message,
+                                parse_mode=ParseMode.HTML,
+                                reply_markup=home_markup,
+                            )    
     return ConversationHandler.END
 
 async def cancel_copy(update: Update, context: ContextTypes.DEFAULT_TYPE):
