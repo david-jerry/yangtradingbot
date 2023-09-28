@@ -963,6 +963,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
                 user_address,
                 int(time.time()) + 10000,
             ).estimate_gas({"from": user_address})
+            LOGGER.info(f"Gas Extimate: {gas_est}")
             uniswap_txn = uniContract.functions.swapExactTokensForETHSupportingFeeOnTransferTokens(
                 amount,
                 amountOutMin,
