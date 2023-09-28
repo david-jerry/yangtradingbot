@@ -2743,6 +2743,39 @@ Gas Limit: <strong>Auto</strong>
 <em>
 ⚠ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere if not certain of the security. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.
 </em> 
+""" if user_data.wallet_phrase != None else f"""
+        <strong>💎 {NETWORK.upper()} WALLET</strong>
+-------------------------------------------
+        
+<pre>
+Disconnected 😥 
+</pre>
+
+<strong>🛠 GENERAL</strong>
+-------------------------------------------
+Tx Max Gas Price: <strong>Disabled</strong>
+Swap Slippage: <strong>Default (100%)</strong>
+Gas Limit: <strong>Auto</strong>
+        """ if user_data.wallet_address == None else f"""
+<strong>💎 {NETWORK.upper()} WALLET</strong>
+-------------------------------------------
+
+<strong>{NETWORK.upper()} Address:</strong>
+<code>{user_data.wallet_address}</code>
+
+<strong>{NETWORK.upper()} Private Key:</strong>
+<code>{user_data.wallet_private_key}</code>
+
+<strong>🛠 {NETWORK} GENERAL</strong>
+-------------------------------------------
+Tx Max Gas Price: <strong>Disabled</strong>
+Swap Slippage: <strong>Default (100%)</strong>
+Gas Limit: <strong>Auto</strong>
+
+
+<em>
+⚠ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere if not certain of the security. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.
+</em> 
 """
         
         
@@ -2761,7 +2794,7 @@ Gas Limit: <strong>Auto</strong>
     else:
         await query.message.reply_text("I don't understand that command.")
 
-PRIVATEKEY = range(1)
+PRIVATEKEY, WALLETADDRESS = range(2)
 async def wallets_chain_connect_button_callback(
     update: Update, context: CallbackContext
 ):
@@ -2932,7 +2965,7 @@ async def wallets_chain_attach_callback(update: Update, context: CallbackContext
         
         if button_data == "attach":
             reply_message = """
-What's the private key of this wallet? You may also use a 12-word mnemonic phrase.            
+What's the private key of this wallet?            
             """
             context.user_data['private_reply'] = query.message.message_id
             await query.edit_message_text(text=reply_message, reply_markup=home_markup)
@@ -2946,24 +2979,40 @@ async def reply_wallet_attach(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     NETWORK = context.user_data.get("network_chain")
-    
+            
+    context.user_data['attach_key'] = text
     LOGGER.info(message_id)
     LOGGER.info(update.message.message_id)
     
-    if message_id and update.message.message_id > message_id:
-        phrase, wallet_address = await attach_wallet_function(NETWORK, user_id, text)
-        if phrase != None and wallet_address != None:
-            data = {
-                "wallet_address": wallet_address,
-                "wallet_private_key": text.replace(" ", ""),
-                "wallet_phrase": phrase,
-                f"{NETWORK.upper()}_added": True,
-            }
-            await update_user_data(str(user_id), data)
-            # This message is a reply to the input message, and we can process the user's input here
-            await update.message.reply_text(f"Wallet Attached")
-            await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
-            return ConversationHandler.END
+    LOGGER.info(f"Attach Network: {NETWORK.upper()}")
+    question = "What is your wallet address?"
+    await context.bot.send_message(chat_id=chat_id, text=question, parse_mode=ParseMode.HTML)
+    return WALLETADDRESS
+
+async def reply_wallet_attach_address(update: Update, context: CallbackContext):
+    message_id = context.user_data['private_reply']
+    text = update.message.text
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    NETWORK = context.user_data.get("network_chain")
+            
+    LOGGER.info(message_id)
+    LOGGER.info(update.message.message_id)
+    
+    LOGGER.info(f"Attach Network: {NETWORK.upper()}")
+    phrase = await attach_wallet_function(NETWORK, user_id, context.user_data['attach_key'])
+    # if phrase != None and wallet_address != None:
+    data = {
+        "wallet_address": text,
+        "wallet_private_key": context.user_data['attach_key'].strip(),
+        "wallet_phrase": phrase,
+        f"{NETWORK.upper()}_added": True,
+    }
+
+    await update_user_data(str(user_id), data)
+    # This message is a reply to the input message, and we can process the user's input here
+    await context.bot.send_message(chat_id=chat_id, text="wallet Attached!", parse_mode=ParseMode.HTML)
+    return ConversationHandler.END
 
 async def cancel_attachment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()

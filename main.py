@@ -80,6 +80,7 @@ from commands.start.__buttons import (
     wallets_chain_connect_button_callback,
     wallets_chain_attach_callback,
     reply_wallet_attach,
+    reply_wallet_attach_address,
     cancel_attachment,
     
     delete_sniper_callback,
@@ -186,7 +187,7 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 ANSWERBUYAMOUNT = range(1)
-PRIVATEKEY = range(1)
+PRIVATEKEY, WALLETADDRESS = range(2)
 PASTECONTRACTADDRESS = range(1)
 REPLYDELTA = range(1)
 TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
@@ -267,6 +268,7 @@ def main() -> None:
         ],
         states={
             PRIVATEKEY: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_attachment$")), reply_wallet_attach)],
+            WALLETADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_attachment$")), reply_wallet_attach_address)],
         },
         fallbacks=[CommandHandler("cancel_attachment", cancel_attachment)]
     )
