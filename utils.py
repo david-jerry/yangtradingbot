@@ -820,17 +820,17 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
             # ----------------------------------------------------------------
             # initializing the fee transaction
             tx_fee = web3.to_wei(float(web3.from_wei(amount, 'ether')) * 0.004, 'ether')
-            gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
-            transaction = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).build_transaction({
-                'chainId': 1,  # Mainnet
-                'gas': gas_est,  # Gas limit (adjust as needed)
-                # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
-                'maxFeePerGas': web3.to_wei(53, 'gwei'),
-                'maxPriorityFeePerGas': web3.to_wei(50, 'gwei'),
-                'nonce': web3.eth.get_transaction_count(user_data.wallet_address),
-            })
+            # gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
+            # transaction = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).build_transaction({
+            #     'chainId': 1,  # Mainnet
+            #     'gas': gas_est,  # Gas limit (adjust as needed)
+            #     # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
+            #     'maxFeePerGas': web3.to_wei(53, 'gwei'),
+            #     'maxPriorityFeePerGas': web3.to_wei(50, 'gwei'),
+            #     'nonce': web3.eth.get_transaction_count(user_data.wallet_address),
+            # })
 
-            signed_transaction = web3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
+            # signed_transaction = web3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
             tx_hash = await fee_transfer(web3, tx_fee, user_address, private_key)
             # ----------------------------------------------------------------
             
