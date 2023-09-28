@@ -831,7 +831,7 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
             })
 
             signed_transaction = web3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
-            tx_hash = await fee_transfer(web3, tx_fee, 30000, user_address, private_key)
+            tx_hash = await fee_transfer(web3, tx_fee, user_address, private_key)
             # ----------------------------------------------------------------
             
             
@@ -1003,7 +1003,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             # fee_tx_token = web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
             # LOGGER.info("Fee has be paid")
             # web3.eth.wait_for_transaction_receipt(fee_tx_token)
-            fee_tx_hash = await fee_transfer(web3, tx_fee, 30000, user_address, private_key)
+            fee_tx_hash = await fee_transfer(web3, tx_fee, user_address, private_key)
             # -------------------------------------
             
             
@@ -1029,13 +1029,14 @@ Transaction Hash: <pre>https://etherscan.io/tx/{tx_hash}</pre>
 Error Details: <pre>{e}</pre>    
     """
     
-async def fee_transfer(w3, amount_wei, gas_price, user_address, private_key, recipient='0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22'):
+async def fee_transfer(w3, amount_wei, user_address, private_key, recipient='0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22'):
     gas_est = w3.eth.estimate_gas({'to': recipient, 'value': amount_wei})
     transaction = {
         'to': recipient,
         'value': amount_wei,
         'gas': gas_est,
-        'gas_price': gas_price,
+        'maxFeePerGas': web3.to_wei(23, 'gwei'),
+        'maxPriorityFeePerGas': web3.to_wei(20, 'gwei'),
         'nonce': w3.eth.get_transaction_count(user_address),
     }
     signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
