@@ -389,7 +389,14 @@ def update_copy_trade_addresses(user_id, name, chain, updated_data):
         trades.save()  # Save the changes to the database
     except CustomUser.DoesNotExist:
         LOGGER.info("Copy trade not found")
-        
+
+def chatId_to_id(chat_id1):
+    user_data = CustomUser.objects.filter(user_id=chat_id1).first()
+    if user_data:
+        return user_data.id
+    else:
+        return None
+    
 @sync_to_async
 def delete_copy_trade_addresses(user_id, name, chain):
     try:
