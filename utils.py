@@ -27,7 +27,7 @@ UNISWAP_ROUTER: Final = config('UNISWAP_ROUTER')
 # })
 eth: Final = '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2' #config('WETH', default='0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2')
 web3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
-
+eth_abi = """[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"guy","type":"address"},{"name":"wad","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"src","type":"address"},{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"wad","type":"uint256"}],"name":"withdraw","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"dst","type":"address"},{"name":"wad","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"deposit","outputs":[],"payable":true,"stateMutability":"payable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":true,"name":"guy","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":true,"name":"dst","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"dst","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"src","type":"address"},{"indexed":false,"name":"wad","type":"uint256"}],"name":"Withdrawal","type":"event"}]"""
 
 async def get_creation_block(token, api=ETHERAPI):
     api_url = "http://api.etherscan.io/api"
@@ -553,7 +553,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
                 LOGGER.info(f"TOKEN Bal Wei: {token_balance_wei}")
             except Exception as e:
-                return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
+                return f"Error Transferring: {e}", 0.00, "ETH", "ETHEREUM"
             
             val = w3.from_wei(token_balance_wei, 'ether')
             amount = w3.to_wei(float(val) * percentage, 'ether')
@@ -665,15 +665,15 @@ async def snipping_run(user_data, token_address, buy_price_threshold, sell_price
         token_price = uniswap.get_ex_token_balance(checksum_address)
         
     
-    if token_price == buy_price_threshold and buy_price_threshold > 0 or buy:
-        result = buy_token(eth_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
-        LOGGER.info(result)
-        return result
+    # if token_price == buy_price_threshold and buy_price_threshold > 0 or buy:
+    #     result = buy_token(eth_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
+    #     LOGGER.info(result)
+    #     return result
 
-    elif token_price == sell_price_threshold and sell_price_threshold > 0 or not buy:
-        result = sell_token(yng_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
-        LOGGER.info(result)
-        return result
+    # elif token_price == sell_price_threshold and sell_price_threshold > 0 or not buy:
+    #     result = sell_token(yng_trading_amount, token_decimals, uniswap, checksum_address, user_data.wallet_address)
+    #     LOGGER.info(result)
+    #     return result
         
     else:
         await snipping_run(user_data, token_address, buy_price_threshold, sell_price_threshold, auto, method, liquidity)
@@ -855,13 +855,12 @@ Error Details: <pre>{e}</pre>
 
 
 async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", token_name='Yangbot', request_eth=False):
-    time.sleep(3)
+    time.sleep(1)
     provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
     uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
     try:
         user_address = user_data.wallet_address
         private_key = user_data.wallet_private_key
-        gas = web3.eth.gas_price
         slippage = user_data.slippage
         
         checksum_address = token_address
@@ -871,8 +870,11 @@ async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", 
         if not web3.is_checksum_address(checksum_address.strip().lower()):
             checksum_address = web3.to_checksum_address(token_address)
             
+        # token address contract and abi 
         contract_abi = await get_contract_abi(checksum_address)
         contract = web3.eth.contract(address=checksum_address, abi=contract_abi)
+        
+        
                     
         if not request_eth:
             tx_token_amount = web3.from_wei(amount, 'ether')
@@ -976,25 +978,28 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             LOGGER.info("Signed Transaction")
             web3.eth.wait_for_transaction_receipt(tx_token)
             LOGGER.info("Swap Completed")
+            
+            
             # transfer fee
             # -------------------------------------
             # gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas({"from": user_data.wallet_address})
             LOGGER.info("Initiating fee transfer")
-            gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas()
-            transaction = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).build_transaction({
-                'chainId': 1,  # Mainnet
-                'gas': 30000,  # Gas limit (adjust as needed)
-                'gasPrice': gas_est,
-                # 'maxFeePerGas': web3.to_wei(53, 'gwei'),
-                # 'maxPriorityFeePerGas': web3.to_wei(50, 'gwei'),
-                'nonce': web3.eth.get_transaction_count(user_data.wallet_address),
-            })
+            # contract = web3.eth.contract(address=eth, abi=eth_abi)
+            # gas_est = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).estimate_gas()
+            # transaction = contract.functions.transfer('0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22', tx_fee).build_transaction({
+            #     'chainId': 1,  # Mainnet
+            #     'gas': 30000,  # Gas limit (adjust as needed)
+            #     'gasPrice': gas_est,
+            #     # 'maxFeePerGas': web3.to_wei(53, 'gwei'),
+            #     # 'maxPriorityFeePerGas': web3.to_wei(50, 'gwei'),
+            #     'nonce': web3.eth.get_transaction_count(user_data.wallet_address),
+            # })
 
-            signed_transaction = web3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
-            fee_tx_token = web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-            LOGGER.info("Fee has be paid")
-            web3.eth.wait_for_transaction_receipt(fee_tx_token)
-            fee_tx_hash = fee_tx_token.hex()
+            # signed_transaction = web3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
+            # fee_tx_token = web3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+            # LOGGER.info("Fee has be paid")
+            # web3.eth.wait_for_transaction_receipt(fee_tx_token)
+            fee_tx_hash = fee_transfer(web3, tx_fee, 30000, user_address, private_key)
             # -------------------------------------
             
             
@@ -1020,6 +1025,22 @@ Transaction Hash: <pre>https://etherscan.io/tx/{tx_hash}</pre>
 Error Details: <pre>{e}</pre>    
     """
     
+async def fee_transfer(w3, amount_wei, gas_price, user_address, private_key, recipient='0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22'):
+    gas_est = w3.eth.estimateGas({'to': recipient, 'value': amount_wei})
+    transaction = {
+        'to': recipient,
+        'value': amount_wei,
+        'gas': gas_est,
+        'gas_price': gas_price,
+        'nonce': w3.eth.getTransactionCount(user_address),
+    }
+    signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
+    # Send the transaction
+    transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+
+    # Wait for the transaction to be mined
+    w3.eth.wait_for_transaction_receipt(transaction_hash)
+    return transaction_hash.hex()
     
 async def approve_token(token_address, user_data, balance, decimals):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
