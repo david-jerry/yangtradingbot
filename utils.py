@@ -176,9 +176,7 @@ async def get_token_full_information(token_address, user_data):
     except Exception as e:
         LOGGER.info(e)
         return "Error retrieving token informations.", '', '', '', '', '', '', '', '', ''
-
-
-    
+ 
 async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
     if network.upper() == "ETH" and user_data.wallet_address:
@@ -267,52 +265,19 @@ async def get_token_info_erc20(token_address, network, user_data, api_key=ETHERA
         w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
     
     checksum_address = token_address
-    if not w3.is_address(checksum_address):
-        return f"An error occurred: Invalid address format\n\n{e}", '', "", "", '', ''
+    if not w3.is_address(checksum_address.strip().lower()):
+        return f"An error occurred: Invalid address format\n\n{e}", "", "", "", "", ""
     
-    if not w3.is_checksum_address(token_address):
-        checksum_address = w3.to_checksum_address(token_address)
+    if not w3.is_checksum_address(checksum_address.strip().lower()):
+        checksum_address = w3.to_checksum_address(token_address.strip().lower())
+                
 
-    # # Define the Etherscan API URL
-    # etherscan_api_url = 'https://api.etherscan.io/api'
-
-    # # Define the parameters for the API request
-    # params = {
-    #     'module': 'token',
-    #     'action': 'tokeninfo',
-    #     'contractaddress': contract_address,
-    #     'apikey': api_key,
-    # }
-
-    # try:
-    #     # Send a GET request to Etherscan API
-    #     response = requests.get(etherscan_api_url, params=params)
-
-    #     # Check if the request was successful
-    #     if response.status_code == 200:
-    #         data = response.json()
-    #         if data['status'] == '1':
-    #             info = data['result']
-    #             token_name = info['tokenName']
-    #             token_symbol = info['symbol']
-    #             contract_add = info['contractAddress']
-    #             total_supply = info['totalSupply']
-    #             token_type = info['tokenType']
-    #             prince_usd = info['tokenPriceUSD']
-    #             description = info['description']
-    #             return token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description
-    #         else:
-    #             LOGGER.info(data["message"])
-    #             return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
-    #     else:
-    #         LOGGER.info(response.status_code)
-    #         return f'Failed to retrieve ABI for contract {contract_address}. HTTP Error: {response.status_code}'
     try:
-        LOGGER.info("Initializing the Transfer")
         abi = await get_contract_abi(checksum_address)
         token_contract = w3.eth.contract(address=checksum_address, abi=abi)
-        LOGGER.info(f'Token Contract: {token_contract}')
+        
         provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
+        uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=1, provider=provider)
         
         try:
             uni_abi = """[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint24","name":"fee","type":"uint24"},{"indexed":true,"internalType":"int24","name":"tickSpacing","type":"int24"}],"name":"FeeAmountEnabled","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnerChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token0","type":"address"},{"indexed":true,"internalType":"address","name":"token1","type":"address"},{"indexed":true,"internalType":"uint24","name":"fee","type":"uint24"},{"indexed":false,"internalType":"int24","name":"tickSpacing","type":"int24"},{"indexed":false,"internalType":"address","name":"pool","type":"address"}],"name":"PoolCreated","type":"event"},{"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"}],"name":"createPool","outputs":[{"internalType":"address","name":"pool","type":"address"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"int24","name":"tickSpacing","type":"int24"}],"name":"enableFeeAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint24","name":"","type":"uint24"}],"name":"feeAmountTickSpacing","outputs":[{"internalType":"int24","name":"","type":"int24"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint24","name":"","type":"uint24"}],"name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"parameters","outputs":[{"internalType":"address","name":"factory","type":"address"},{"internalType":"address","name":"token0","type":"address"},{"internalType":"address","name":"token1","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"int24","name":"tickSpacing","type":"int24"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_owner","type":"address"}],"name":"setOwner","outputs":[],"stateMutability":"nonpayable","type":"function"}]"""
@@ -321,6 +286,7 @@ async def get_token_info_erc20(token_address, network, user_data, api_key=ETHERA
         except Exception as e:
             return "Error getting Uniswap V3 Instance", "", "", "", "", ""
         
+        
         lp = ""
         try:
             lp = univ3.functions.getPool(checksum_address, eth, 10000).call()
@@ -328,14 +294,12 @@ async def get_token_info_erc20(token_address, network, user_data, api_key=ETHERA
             if lp == "0x0000000000000000000000000000000000000000":
                 lp = univ3.functions.createPool(checksum_address, eth, 10000).call()
         except Exception as e:     
-            LOGGER.error(f"Error Occured: {e}")  
-                    
-        
+            LOGGER.error(f"Error Occured: {e}")      
 
         # Get the functions for retrieving the name and symbol
         name_function = token_contract.functions.name()
-        token_decimals = token_contract.functions.decimals().call()
         symbol_function = token_contract.functions.symbol()
+        token_decimals = token_contract.functions.decimals().call()
         token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
         val = w3.from_wei(token_balance_wei, 'ether')
         # Call the functions to retrieve the name and symbol
@@ -344,10 +308,7 @@ async def get_token_info_erc20(token_address, network, user_data, api_key=ETHERA
         return token_name, token_symbol, int(token_decimals), lp, val, checksum_address
     except Exception as e:
         LOGGER.info(e)
-        return f'An error occurred: {e}', "", "", "", '', ''
-
-
-
+        return f'An error occurred: {e}', "", "", "", "", ""
     
 async def currency_amount(symbol):
     # API endpoint
@@ -622,11 +583,13 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 'maxPriorityFeePerGas': w3.to_wei(20, 'gwei'),
                 # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
             }
-            
-            signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
-            tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-            LOGGER.info(tx_hash.hex())
-            return tx_hash.hex(), amount, "ETH", "ETHEREUM"
+            try:
+                signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
+                tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+                LOGGER.info(tx_hash.hex())
+                return tx_hash.hex(), amount, "ETH", "ETHEREUM"
+            except Exception as e:
+                return f"You have insufficient gas: {e}", "", "", ""
         else:
             eth_balance = w3.eth.get_balance(user_data.wallet_address)
             checksum_address = token_address
@@ -660,9 +623,9 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(f"Transfer Amount: {w3.from_wei(amount, 'ether')}")
             LOGGER.info(f"Bal Left: {val - w3.from_wei(amount, 'ether')}")
             LOGGER.info(f"ETH Balance: {w3.from_wei(eth_balance, 'ether')}")
-            LOGGER.info(f"Gas Fee in ETH: {w3.from_wei(fmt_gas_est, 'ether')}")
-            exp_gas = w3.from_wei(gas_estimate, 'ether')
-            gas =  exp_gas 
+            LOGGER.info(f"Gas Fee in ETH: {fmt_gas_est}")
+            exp_gas = fmt_gas_est
+            gas = w3.eth.estimate_gas({'to': fmt_address, 'value': amount})
             LOGGER.info(f"Gas Price: {gas}")
             
             
@@ -683,9 +646,13 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
 
                 signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
                 tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-                LOGGER.info(tx_hash.hex())
-                token_name, token_symbol, token_decimals, token_lp, balance, contract_add= await get_token_info(checksum_address, network, user_data)
-                return tx_hash.hex(), fmt_amount, token_symbol, token_name
+                try:
+                    LOGGER.info(tx_hash.hex())
+                    token_name, token_symbol, token_decimals, token_lp, balance, contract_add= await get_token_info(checksum_address, network, user_data)
+                    return tx_hash.hex(), fmt_amount, token_symbol, token_name
+                except Exception as e:
+                    return f"You have insufficient gas: {e}", "", "", ""
+
             except Exception as e:
                 return f"Error Transferring: {e}", 0.00, "ETH", "ETHEREUM"
     except Exception as e:

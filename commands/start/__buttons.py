@@ -2415,14 +2415,15 @@ You have {BALANCE} {NETWORK}
 
 TRANSFERTOKENADDRESS, TRANSFERTOADDRESS, TRANSFERAMOUNT = range(3)
 async def token_callback(update: Update, context: CallbackContext):
+    global TOKEN_NAME
     query = update.callback_query
     await query.answer()
     command = query.data
     user_id = str(query.from_user.id)
     user_data = await load_user_data(user_id)
-    
+    TOKEN_NAME = 'ETH'
     context.user_data["last_message_id"] = query.message.message_id
-
+    context.user_data['token_address'] = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
     match = re.match(r"^transfer_(\w+)", command)
     if match:
         button_data = match.group(1)
@@ -2545,19 +2546,31 @@ async def to_address_reply(update: Update, context: CallbackContext):
     token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['token_address'], context.user_data["network_chain"], user_data) 
 
     if not token_name.startswith('An error occurred:'):
-        text = f"""
-        🪙 CA: {contract_add}
-        
-    How many token do you want to send?
+        if Decimal(balance) > 0.000000:
+            text = f"""
+            🪙 CA: {contract_add}
+            
+        How many token do you want to send?
 
-    If you type 100%, it will transfer the entire balance.
+        If you type 100%, it will transfer the entire balance.
 
-    You currently have <strong>{balance} {token_symbol}    </strong>
-        """
+        You currently have <strong>{balance} {token_symbol}    </strong>
+            """
+            # This message is a reply to the input message, and we can process the user's input here
+            await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+            return TRANSFERAMOUNT
+        else:
+            text = f"""
+            🪙 <strong>INSUFFICIENT BALANCE</strong>
+            
+        You do not have sufficient amount to transfer.
 
-        # This message is a reply to the input message, and we can process the user's input here
-        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
-        return TRANSFERAMOUNT
+        You currently have <strong>{balance} {token_symbol}</strong>
+            """
+            # This message is a reply to the input message, and we can process the user's input here
+            await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+            return ConversationHandler.END
+
     else:
         await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
