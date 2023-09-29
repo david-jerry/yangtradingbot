@@ -673,6 +673,7 @@ def build_approve_keyboard(user_data):
 PASTECONTRACTADDRESS = range(1)    
 async def start_button_callback(update: Update, context: CallbackContext):
     global CAPTION, TOKENADDRESS, TOKENSYMBOL, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
+    CAPTION = True
     query = update.callback_query
     await query.answer()
     command = query.data
