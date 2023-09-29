@@ -1002,6 +1002,7 @@ You currently have {TOKENBALANCE} {TOKENNAME}
     else:
         await query.message.reply_text("I don't understand that command.")
 
+
 async def sell_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
