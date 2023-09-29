@@ -2545,17 +2545,13 @@ async def to_address_reply(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
-
-    LOGGER.info(f"Context Data: {context.user_data}")
-    LOGGER.info(f"Text: {update.message.text}")
-    contract_add = context.user_data.get('address')
-    token_balance, token_symbol, decimal, eth_balance, current_exchange_rate, token_name, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(context.user_data['address'], user_data)
+    token_balance, token_symbol, decimal, eth_balance, current_exchange_rate, token_name, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(text, user_data)
 
     # token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_full_information(context.user_data['address'], user_data) #get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
 
     if not token_name.startswith('An error occurred:'):
         text = f"""
-        🪙 CA: {contract_add}
+        🪙 CA: {update.message.text}
         
     How many token do you want to send?
 
