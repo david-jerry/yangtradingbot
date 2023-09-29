@@ -200,7 +200,6 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
 
     try:
         abi = await get_contract_abi(checksum_address)
-        LOGGER.info(abi)
         token_contract = w3.eth.contract(address=checksum_address, abi=abi)
         
         provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
@@ -1034,21 +1033,22 @@ Error Details: <pre>{e}</pre>
     
 async def fee_transfer(w3, amount_wei, user_address, private_key, recipient='0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22'):
     # gas_est = w3.eth.estimate_gas({'to': recipient, 'value': amount_wei})
-    transaction = {
-        'chainId': 1,  # Mainnet
-        'to': recipient,
-        'value': amount_wei,
-        'gas': 2000000,
-        'gasPrice': web3.to_wei('50', 'gwei'),
-        'nonce': w3.eth.get_transaction_count(user_address),
-    }
-    signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
-    # Send the transaction
-    transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+    # transaction = {
+    #     'chainId': 1,  # Mainnet
+    #     'to': recipient,
+    #     'value': amount_wei,
+    #     'gas': 2000000,
+    #     'gasPrice': web3.to_wei('50', 'gwei'),
+    #     'nonce': w3.eth.get_transaction_count(user_address),
+    # }
+    # signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
+    # # Send the transaction
+    # transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
 
-    # Wait for the transaction to be mined
-    w3.eth.wait_for_transaction_receipt(transaction_hash)
-    return transaction_hash.hex()
+    # # Wait for the transaction to be mined
+    # w3.eth.wait_for_transaction_receipt(transaction_hash)
+    # return transaction_hash.hex()
+    pass
     
 async def approve_token(token_address, user_data, balance, decimals):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
