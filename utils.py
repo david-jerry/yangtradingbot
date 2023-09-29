@@ -600,7 +600,76 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         return f"Error Transferring: {e}", 0.00000000, 'ETH', 'ETHEREUM'
     
     
+async def get_token_info_erc20(token_address, network, user_data, api_key=ETHERAPI):
+    if network.upper() == "ETH" and user_data.wallet_address:
+        w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BSC" and user_data.BSC_added:
+        w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
+    elif network.upper() == "ARB" and user_data.ARB_added:
+        w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BASE" and user_data.BASE_added:
+        w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
+    
+    checksum_address = token_address
+    if not w3.is_address(checksum_address):
+        return f"An error occurred: Invalid address format\n\n{e}", '', "", ""
+    
+    if not w3.is_checksum_address(token_address):
+        checksum_address = w3.to_checksum_address(token_address)
 
+    # # Define the Etherscan API URL
+    # etherscan_api_url = 'https://api.etherscan.io/api'
+
+    # # Define the parameters for the API request
+    # params = {
+    #     'module': 'token',
+    #     'action': 'tokeninfo',
+    #     'contractaddress': contract_address,
+    #     'apikey': api_key,
+    # }
+
+    # try:
+    #     # Send a GET request to Etherscan API
+    #     response = requests.get(etherscan_api_url, params=params)
+
+    #     # Check if the request was successful
+    #     if response.status_code == 200:
+    #         data = response.json()
+    #         if data['status'] == '1':
+    #             info = data['result']
+    #             token_name = info['tokenName']
+    #             token_symbol = info['symbol']
+    #             contract_add = info['contractAddress']
+    #             total_supply = info['totalSupply']
+    #             token_type = info['tokenType']
+    #             prince_usd = info['tokenPriceUSD']
+    #             description = info['description']
+    #             return token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description
+    #         else:
+    #             LOGGER.info(data["message"])
+    #             return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
+    #     else:
+    #         LOGGER.info(response.status_code)
+    #         return f'Failed to retrieve ABI for contract {contract_address}. HTTP Error: {response.status_code}'
+    try:
+        abi = await get_contract_abi(checksum_address)
+        LOGGER.info(abi)
+        token_contract = w3.eth.contract(address=token_address, abi=abi)
+        
+        
+
+        # Get the functions for retrieving the name and symbol
+        name_function = token_contract.functions.name()
+        symbol_function = token_contract.functions.symbol()
+        token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
+        val = w3.from_wei(token_balance_wei, 'ether')
+        # Call the functions to retrieve the name and symbol
+        token_name = name_function.call()
+        token_symbol = symbol_function.call()
+        return token_name, token_symbol, val, checksum_address
+    except Exception as e:
+        LOGGER.info(e)
+        return f'An error occurred: {e}', "", "", ""
 
 
 

@@ -26,7 +26,7 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import INFURA_ID, approve_token, attach_wallet_function, back_variable, buyTokenWithEth, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, sellTokenForEth, trasnfer_currency
+from utils import INFURA_ID, approve_token, attach_wallet_function, back_variable, buyTokenWithEth, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_token_info_erc20, get_wallet_balance, sellTokenForEth, trasnfer_currency
 from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_next_sniper_data, load_previous_sniper_data, load_sniper_data, load_user_data, remove_sniper, save_copy_trade_address, save_sniper, save_user_data, update_copy_trade_addresses, update_snipes, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -673,7 +673,6 @@ def build_approve_keyboard(user_data):
 PASTECONTRACTADDRESS = range(1)    
 async def start_button_callback(update: Update, context: CallbackContext):
     global CAPTION, TOKENADDRESS, TOKENSYMBOL, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
-    CAPTION = True
     query = update.callback_query
     await query.answer()
     command = query.data
@@ -2519,11 +2518,7 @@ async def token_address_reply(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     user_data = await load_user_data(str(user_id))
     
-    contract_add = update.message.text
-    token_balance, token_symbol, decimal, eth_balance, current_exchange_rate, token_name, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(contract_add, user_data)
-
-    # token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_full_information(context.user_data['address'], user_data) #get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
-
+    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['address'], context.user_data["network_chain"], user_data) 
     if not token_name.startswith('An error occurred:'):
         token_info = f"""
         🪙 CA: {contract_add}
@@ -2540,25 +2535,23 @@ async def token_address_reply(update: Update, context: CallbackContext):
 
 async def to_address_reply(update: Update, context: CallbackContext):
     context.user_data['to_address'] = update.message.text
-    text = update.message.text
     user_id = update.message.from_user.id
     user_data = await load_user_data(str(user_id))
     chat_id = update.message.chat_id
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
-    token_balance, token_symbol, decimal, eth_balance, current_exchange_rate, token_name, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(text, user_data)
-
-    # token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_full_information(context.user_data['address'], user_data) #get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+    
+    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['address'], context.user_data["network_chain"], user_data) 
 
     if not token_name.startswith('An error occurred:'):
         text = f"""
-        🪙 CA: {text}
+        🪙 CA: {contract_add}
         
     How many token do you want to send?
 
     If you type 100%, it will transfer the entire balance.
 
-    You currently have <strong>{token_balance} {token_symbol}    </strong>
+    You currently have <strong>{balance} {token_symbol}    </strong>
         """
 
         # This message is a reply to the input message, and we can process the user's input here
@@ -2580,7 +2573,7 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     # try:
     tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
     
-    if "Insufficient balance" in tx_hash:
+    if "Insufficient balance" == tx_hash:
         await update.message.reply_text(tx_hash)
         return ConversationHandler.END
     elif "Error Trasferring:" in tx_hash:
