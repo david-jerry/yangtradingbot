@@ -2412,7 +2412,7 @@ You have {BALANCE} {NETWORK}
         await query.message.reply_text("I don't understand that command.")
 
 
-TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
+TRANSFERTOKENADDRESS, TRANSFERTOADDRESS, TRANSFERAMOUNT = range(3)
 async def token_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
@@ -2429,7 +2429,7 @@ async def token_callback(update: Update, context: CallbackContext):
         if button_data == "token":
             token_message = "What is the token contract address?"
             await query.message.reply_text(token_message, parse_mode=ParseMode.HTML)
-            return TOKENADDRESS
+            return TRANSFERTOKENADDRESS
         elif button_data == "eth":
             NETWORK = "eth"
             NETWORKNAME = "Ethereum"
@@ -2449,7 +2449,7 @@ What wallet address do you wish to send the token to?
                 reply_markup=home_markup,
             )
             message
-            return TOADDRESS
+            return TRANSFERTOADDRESS
         elif button_data == "bsc":
             NETWORK = "bsc"
             NETWORKNAME = "Binance"
@@ -2469,7 +2469,7 @@ What wallet address do you wish to send the token to?
                 reply_markup=home_markup,
             )
             message
-            return TOADDRESS
+            return TRANSFERTOADDRESS
         elif button_data == "arb":
             NETWORK = "arb"
             NETWORKNAME = "Avalance"
@@ -2489,7 +2489,7 @@ What wallet address do you wish to send the token to?
                 reply_markup=home_markup,
             )
             message
-            return TOADDRESS
+            return TRANSFERTOADDRESS
         elif button_data == "base":
             NETWORK = "base"
             NETWORKNAME = "Coinbase"
@@ -2509,7 +2509,7 @@ What wallet address do you wish to send the token to?
                 reply_markup=home_markup,
             )
             message
-            return TOADDRESS
+            return TRANSFERTOADDRESS
 
             
 async def token_address_reply(update: Update, context: CallbackContext):
@@ -2528,7 +2528,7 @@ async def token_address_reply(update: Update, context: CallbackContext):
 
         # This message is a reply to the input message, and we can process the user's input here
         await update.message.reply_text(token_info, parse_mode=ParseMode.HTML)
-        return TOADDRESS
+        return TRANSFERTOADDRESS
     else:
         await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
@@ -2556,7 +2556,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
 
         # This message is a reply to the input message, and we can process the user's input here
         await update.message.reply_text(text, parse_mode=ParseMode.HTML)
-        return AMOUNT
+        return TRANSFERAMOUNT
     else:
         await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
         return ConversationHandler.END

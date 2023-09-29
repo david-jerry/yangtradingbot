@@ -879,8 +879,7 @@ async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", 
         # token address contract and abi 
         contract_abi = await get_contract_abi(checksum_address)
         contract = web3.eth.contract(address=checksum_address, abi=contract_abi)
-        
-        
+
                     
         if not request_eth:
             tx_token_amount = web3.from_wei(amount, 'ether')
@@ -900,7 +899,7 @@ async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", 
 
         perc = tx_amount * 0.004
         
-        if ethBalance <= (0 + perc) or ethBalance < (250000 + perc):
+        if ethBalance <= (0 + perc) or ethBalance < (300000 + perc):
             LOGGER.info("Insufficient Balance")
             return f"""
 <strong>{botname} Response</strong>        
