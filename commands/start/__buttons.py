@@ -443,12 +443,12 @@ CA: {TOKENADDRESS}
 
 ⛽️ Gas: {GASGWEI} GWEI Ξ ${GASETHER}
 
-🕰 Age: {round(TOKENAGE / (60 * 60 * 7))} Days
 -------------------------------------------
 ⚠️ Market cap includes locked tokens, excluding burned
 -------------------------------------------
     """
     return caption
+# 🕰 Age: {round(TOKENAGE / (60 * 60 * 7))} Days
 
 @sync_to_async
 def build_copy_name_caption(matched_trade):
