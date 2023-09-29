@@ -521,6 +521,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 # 'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
                 'maxFeePerGas': w3.to_wei(25, 'gwei'),
                 'maxPriorityFeePerGas': w3.to_wei(20, 'gwei'),
+                'nonce': nonce
                 # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
             }
             
@@ -537,9 +538,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             if not w3.is_checksum_address(checksum_address.strip().lower()):
                 checksum_address = w3.to_checksum_address(token_address)
             
-            abi = await get_contract_abi(checksum_address)
-            LOGGER.info(abi)
-            
+            abi = await get_contract_abi(checksum_address)            
 
             LOGGER.info(checksum_address)
             LOGGER.info(user_data.wallet_address)
