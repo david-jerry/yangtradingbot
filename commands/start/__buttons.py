@@ -1062,8 +1062,8 @@ async def sell_callback(update: Update, context: CallbackContext):
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "100":
             user_data = await load_user_data(user_id)
-            amount = web3.to_wei(float(TOKENBALANCE) * (int(button_data) / 100), 'ether')
-            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
+            amount = web3.to_wei(float(TOKENBALANCE), 'ether')
+            LOGGER.info(f"Token Transferring: {web3.from_wei(amount, 'ether')}")
             result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "xeth":

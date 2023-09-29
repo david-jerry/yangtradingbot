@@ -419,7 +419,6 @@ async def generate_wallet(network, user_id):
 
 async def get_contract_abi(contract_address):
     api_url = f'https://api.etherscan.io/api?module=contract&action=getabi&address={contract_address}&apikey={ETHERAPI}'
-    LOGGER.info(api_url)
 
     # Make the API request
     response = requests.get(api_url)
@@ -427,7 +426,6 @@ async def get_contract_abi(contract_address):
     # Check if the request was successful
     if response.status_code == 200:
         res = response.json()
-        LOGGER.info(res)
         contract_abi = res['result']
         if contract_abi != '':
             return contract_abi
