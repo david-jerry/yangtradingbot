@@ -2518,7 +2518,11 @@ async def token_address_reply(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     user_data = await load_user_data(str(user_id))
     
-    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+    contract_add = context.user_data['address']
+    token_balance, token_symbol, decimal, eth_balance, current_exchange_rate, token_name, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(context.user_data['address'], user_data)
+
+    # token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_full_information(context.user_data['address'], user_data) #get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+
     if not token_name.startswith('An error occurred:'):
         token_info = f"""
         🪙 CA: {contract_add}
@@ -2540,8 +2544,11 @@ async def to_address_reply(update: Update, context: CallbackContext):
     chat_id = update.message.chat_id
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
-    
-    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+
+    contract_add = context.user_data['address']
+    token_balance, token_symbol, decimal, eth_balance, current_exchange_rate, token_name, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(context.user_data['address'], user_data)
+
+    # token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_full_information(context.user_data['address'], user_data) #get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
 
     if not token_name.startswith('An error occurred:'):
         text = f"""
@@ -2551,7 +2558,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
 
     If you type 100%, it will transfer the entire balance.
 
-    You currently have <strong>{balance} {token_symbol}    </strong>
+    You currently have <strong>{token_balance} {token_symbol}    </strong>
         """
 
         # This message is a reply to the input message, and we can process the user's input here
