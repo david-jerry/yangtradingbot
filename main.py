@@ -51,6 +51,7 @@ from commands.start.__buttons import (
     reply_buysell_address,
     buy_callback,
     sell_callback,
+    reply_buysell_amount,
     cancel_buysell,
     trades_next_and_back_callback,
     configuration_next_and_back_callback,
@@ -94,6 +95,7 @@ from commands.start.__buttons import (
     wallets_chain_connect_button_callback,
     wallets_chain_attach_callback,
     reply_wallet_attach,
+    reply_wallet_attach_address,
     cancel_attachment,
     
     delete_sniper_callback,
@@ -199,10 +201,11 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     LOGGER.error(f"Update: {update}\n\n caused error {context.error}")
 
 TRADESTOKEN =range(1)
-PRIVATEKEY = range(1)
+ANSWERBUYAMOUNT = range(1)
+PRIVATEKEY, WALLETADDRESS = range(2)
 PASTECONTRACTADDRESS = range(1)
 REPLYDELTA = range(1)
-TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
+TRANSFERTOKENADDRESS, TRANSFERTOADDRESS, TRANSFERAMOUNT = range(3)
 TRADEWALLETNAME, TARGETWALLET = range(2)
 CHATCHIT = range(1)
 CHATSLIP = range(1)
@@ -385,12 +388,62 @@ def main() -> None:
         ],
         states={
             PRIVATEKEY: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_attachment$")), reply_wallet_attach)],
+            WALLETADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_attachment$")), reply_wallet_attach_address)],
         },
         fallbacks=[CommandHandler("cancel_attachment", cancel_attachment)]
     )
     app.add_handler(attach_conv_handler)
     
-    
+    # BUY ETH CONVERSATION HANDLERS
+    buy_xeth_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(buy_callback, pattern=r"^buy_xeth$")
+        ],
+        states={
+            ANSWERBUYAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_buysell$")), reply_buysell_amount)],
+        },
+        fallbacks=[CommandHandler("cancel_buysell", cancel_buysell)]
+    )
+    app.add_handler(buy_xeth_conv_handler)
+
+
+    token_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(buy_callback, pattern=r"^buy_token$")
+        ],
+        states={
+            ANSWERBUYAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_buysell$")), reply_buysell_amount)],
+        },
+        fallbacks=[CommandHandler("cancel_buysell", cancel_buysell)]
+    )
+    app.add_handler(token_conv_handler)
+
+
+    # SELL ETH CONVERSATION HANDLERS
+    sell_xeth_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(sell_callback, pattern=r"^sell_xeth$")
+        ],
+        states={
+            ANSWERBUYAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_buysell$")), reply_buysell_amount)],
+        },
+        fallbacks=[CommandHandler("cancel_buysell", cancel_buysell)]
+    )
+    app.add_handler(sell_xeth_conv_handler)
+
+    maxtx_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(sell_callback, pattern=r"^sell_selltoken$")
+        ],
+        states={
+            ANSWERBUYAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_buysell$")), reply_buysell_amount)],
+        },
+        fallbacks=[CommandHandler("cancel_buysell", cancel_buysell)]
+    )
+    app.add_handler(maxtx_conv_handler)
+
+
+
     # SNIPER CONVERSATION HANDLERS
     sniper_conv_handler = ConversationHandler(
         entry_points=[
@@ -409,8 +462,6 @@ def main() -> None:
     app.add_handler(sniper_conv_handler)
     
     
-    
-
     # COPY TRADE ADDRESS RENAME HANDLERS
     rename_conv_handler = ConversationHandler(
         entry_points=[
@@ -423,19 +474,23 @@ def main() -> None:
     )
     app.add_handler(rename_conv_handler)
 
+
+
     # TRANSFER HANDLERS
     transfer_conv_handler = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(token_callback, pattern=r"^transfer_*")
         ],
         states={
-            TOKENADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_address_reply)],
-            TOADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), to_address_reply)],
-            AMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_amount_reply)],
+            TRANSFERTOKENADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_address_reply)],
+            TRANSFERTOADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), to_address_reply)],
+            TRANSFERAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_amount_reply)],
         },
         fallbacks=[CommandHandler("cancel_transfer", cancel_transfer)]
     )
     app.add_handler(transfer_conv_handler)
+
+
 
     # PRESETS HANDLERS
     preset_conv_handler = ConversationHandler(

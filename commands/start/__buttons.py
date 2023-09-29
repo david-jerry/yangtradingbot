@@ -8,6 +8,7 @@ from web3 import Web3
 INFURA_URL = config("INFURA_URL")
 web3 = Web3(Web3.HTTPProvider(INFURA_URL))
 import django
+from web3 import Web3
 from logger import LOGGER
 from asgiref.sync import sync_to_async
 
@@ -29,7 +30,7 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import approve_token, attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, processs_buy_or_sell_only, trasnfer_currency
+from utils import INFURA_ID, approve_token, attach_wallet_function, back_variable, buyTokenWithEth, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_token_info_erc20, get_wallet_balance, sellTokenForEth, trasnfer_currency
 from utils_data import update_trades_addresses_ammount_limit,update_trades_addresses_profit,update_trades_addresses_loss,update_trades_addresses_limit,change_state_limit,change_state_loss,change_state_profit,load_trades_addresses_once,load_trades_addresses_all,load_trade_address,delete_trades_addresses,load_trades_addresses,load_trade_address_all,save_trade_address,update_copy_trade_addresses_gas,load_copy_trade_address_all,load_copy_trade_all,save_sniper,remove_sniper,load_next_sniper_data,update_snipes,load_previous_sniper_data,load_sniper_data,update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -366,7 +367,7 @@ def build_buy_sel_keyboard(buy=True):
     buy1 = InlineKeyboardButton(f"Buy 1 ETH", callback_data=f"buy_1")
     buyxeth = InlineKeyboardButton(f"Buy X ETH", callback_data=f"buy_xeth")
     buyyangmax = InlineKeyboardButton(f"Yangbot Max", callback_data=f"buy_yangbot")
-    buyxtoken = InlineKeyboardButton(f"Buy X {TOKENNAME}", callback_data=f"buy_{TOKENNAME}")
+    buyxtoken = InlineKeyboardButton(f"Buy X {TOKENNAME}", callback_data=f"buy_token")
     
     approve = InlineKeyboardButton(f"Approve", callback_data=f"sell_approve")
     sell = InlineKeyboardButton(f"☣ Sell", callback_data=f"sell_haz")
@@ -375,8 +376,8 @@ def build_buy_sel_keyboard(buy=True):
     sell75 = InlineKeyboardButton(f"Sell 75%", callback_data=f"sell_75")
     sell100 = InlineKeyboardButton(f"Sell 100%", callback_data=f"sell_100")
     sellmax = InlineKeyboardButton(f"Sell Max TX", callback_data=f"sell_maxtx")
-    sellxeth = InlineKeyboardButton(f"Sell X ETH", callback_data=f"buy_xeth")
-    sellxtoken = InlineKeyboardButton(f"Sell X {TOKENNAME}", callback_data=f"sell_{TOKENNAME}")
+    sellxeth = InlineKeyboardButton(f"Sell X ETH", callback_data=f"sell_xeth")
+    sellxtoken = InlineKeyboardButton(f"Sell X {TOKENNAME}", callback_data=f"sell_selltoken")
     
     preset_keyboard = [
             [home, snipe],
@@ -449,12 +450,12 @@ CA: {TOKENADDRESS}
 
 ⛽️ Gas: {GASGWEI} GWEI Ξ ${GASETHER}
 
-🕰 Age: {round(TOKENAGE / 86400 / 365)} Days
 -------------------------------------------
 ⚠️ Market cap includes locked tokens, excluding burned
 -------------------------------------------
     """
     return caption
+# 🕰 Age: {round(TOKENAGE / (60 * 60 * 7))} Days
 @sync_to_async
 def build_trades_caption(matched_trade):
     for i in matched_trade:
@@ -732,6 +733,7 @@ def build_approve_keyboard(user_data):
 PASTECONTRACTADDRESS = range(1)    
 async def start_button_callback(update: Update, context: CallbackContext):
     global CAPTION, TOKENADDRESS, TOKENSYMBOL, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
+    CAPTION = True
     query = update.callback_query
     await query.answer()
     command = query.data
@@ -917,6 +919,7 @@ Gas Limit: <strong>{user_data.max_gas if user_data.max_gas > 0.00 else 'Auto'}</
 async def start_quick_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
+    context.user_data["last_message_id"] = query.message.message_id
     command = query.data
     context.user_data["last_message_id"] = query.message.message_id
     match = re.match(r"^buysell_(\w+)", command)
@@ -944,19 +947,21 @@ async def start_quick_callback(update: Update, context: CallbackContext):
 
 
 
+web3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
 
 
 # ------------------------------------------------------------------------------
 # BUYSELL BUTTON CALLBACK
 # ------------------------------------------------------------------------------
 async def reply_buysell_address(update: Update, context: CallbackContext):
-    global CAPTION, TOKENADDRESS, TOKENSYMBOL, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
-    text = update.message.text.strip()
+    global CAPTION, TOKENADDRESS, TOKENSYMBOL, ETHBALANCE, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
+    text = update.message.text.strip().lower()
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     user_data = await load_user_data(user_id)    
     token_balance, symbol, decimal, eth_balance, current_exchange_rate, token_metadata, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(text, user_data)
     
+    ETHBALANCE = eth_balance
     CAPTION = False
     TOKENADDRESS = text
     TOKENSYMBOL = symbol
@@ -975,17 +980,21 @@ async def reply_buysell_address(update: Update, context: CallbackContext):
     markup = build_buy_sel_keyboard()
     
     await context.bot.send_message(chat_id=chat_id, text=caption, parse_mode=ParseMode.HTML, reply_markup=markup)
+    return ConversationHandler.END
 
+ANSWERBUYAMOUNT = range(1)
 async def buy_callback(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     command = query.data
     user_id = str(query.from_user.id)
     chat_id=query.message.chat_id
-    context.user_data.clear()
+    # context.user_data.clear()
     context.user_data["last_message_id"] = query.message.message_id
     # gas_price = await get_default_gas_price_gwei()
-    
+    context.user_data['buy'] = True
+    context.user_data['get_eth'] = get_eth = True
+    context.user_data['token'] = False  
 
     match = re.match(r"^buy_(\w+)", command)
     if match:
@@ -1006,34 +1015,63 @@ async def buy_callback(update: Update, context: CallbackContext):
             )
         elif button_data == "0_01":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_05":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_1":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_2":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "0_5":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data.replace('_', '.'))
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
         elif button_data == "1":
             user_data = await load_user_data(user_id)
-            eth_amount = float(button_data)
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=True)
-            await context.bot.send_message(chat_id=chat_id, text=result)        
+            amount = web3.to_wei(float(button_data.replace('_', '.')), 'ether')
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
+        
+        elif button_data == "xeth":
+            context.user_data['get_eth'] = True
+            message = f"""
+How much ETH do you want to buy? Write your value in eth.
+
+If you type {ETHBALANCE}. It will transfer the entire balance.
+You currently have {ETHBALANCE} ETH        
+            """
+            await context.bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)        
+            return ANSWERBUYAMOUNT
+               
+        elif button_data == 'token':
+            context.user_data['get_eth'] = False
+            context.user_data['token'] = True
+            message = f"""
+How much {TOKENNAME} do you want to buy? You can use a regular number (1, 4, 20, 5, 12, etc).
+
+If you type {TOKENBALANCE}. It will transfer the entire balance.
+You currently have {TOKENBALANCE} {TOKENNAME}        
+            """
+            await context.bot.send_message(chat_id=chat_id, text=message, parse_mode=ParseMode.HTML)        
+            return ANSWERBUYAMOUNT
+        
+        elif button_data == "yangbot":
+            user_data = await load_user_data(user_id)
+            amount = web3.to_wei(float(TOKENBALANCE), 'ether')
+            result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=False, token=True)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)        
     else:
         await query.message.reply_text("I don't understand that command.")
 
@@ -1043,10 +1081,11 @@ async def sell_callback(update: Update, context: CallbackContext):
     command = query.data
     user_id = str(query.from_user.id)
     chat_id=query.message.chat_id
-    context.user_data.clear()
+    # context.user_data.clear()
+    context.user_data['get_eth'] = False
     context.user_data["last_message_id"] = query.message.message_id
     # gas_price = await get_default_gas_price_gwei()
-    
+    context.user_data['buy'] = False
     # user_data = await load_user_data(user_id)
 
     match = re.match(r"^sell_(\w+)", command)
@@ -1070,35 +1109,93 @@ async def sell_callback(update: Update, context: CallbackContext):
         elif button_data == "approve":
             user_data = await load_user_data(user_id)
             result = await approve_token(TOKENADDRESS, user_data, TOKENBALANCE, TOKENDECIMAL)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "haz":
             user_data = await load_user_data(user_id)
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, buy=False)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = web3.to_wei(float(TOKENBALANCE), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "25":
             user_data = await load_user_data(user_id)
-            eth_amount = int(button_data) / 100
-            LOGGER.info(f"Percentage: {eth_amount}")
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = web3.to_wei(float(TOKENBALANCE) * (int(button_data) / 100), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "50":
             user_data = await load_user_data(user_id)
-            eth_amount = int(button_data) / 100
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = web3.to_wei(float(TOKENBALANCE) * (int(button_data) / 100), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "75":
             user_data = await load_user_data(user_id)
-            eth_amount = int(button_data) / 100
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
-            await context.bot.send_message(chat_id=chat_id, text=result)
+            amount = web3.to_wei(float(TOKENBALANCE) * (int(button_data) / 100), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == "100":
             user_data = await load_user_data(user_id)
-            eth_amount = int(button_data) / 100
-            result = await processs_buy_or_sell_only(eth_amount, user_data, TOKENADDRESS, TOKENDECIMAL, token_name=TOKENNAME, balance=TOKENBALANCE, buy=False)
-            await context.bot.send_message(chat_id=chat_id, text=result)        
+            amount = web3.to_wei(float(TOKENBALANCE), 'ether')
+            LOGGER.info(f"Token Transferring: {web3.from_wei(amount, 'ether')}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
+        elif button_data == "xeth":
+            context.user_data['get_eth'] = True
+            message = f"""
+How much ETH do you want to get? Type the value in eth
+
+You currently have {ETHBALANCE} ETH        
+            """
+            await query.message.reply_text(message, parse_mode=ParseMode.HTML)
+            return ANSWERBUYAMOUNT
+        elif button_data == 'maxtx':
+            user_data = await load_user_data(user_id)
+            amount = web3.to_wei(float(TOKENBALANCE), 'ether')
+            LOGGER.info(f"Token Transferred: {web3.from_wei(amount, 'ether')}")
+            result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME)
+            await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
+        elif button_data == 'selltoken':
+            context.user_data['get_eth'] = False
+            message = f"""
+How much {TOKENNAME} do you want to sell? You can use a regular number (1, 20 4, 7, etc.).
+
+If you type {TOKENBALANCE}. It will transfer the entire balance.
+You currently have {TOKENBALANCE} {TOKENNAME}        
+            """
+            await query.message.reply_text(message, parse_mode=ParseMode.HTML)
+            return ANSWERBUYAMOUNT
     else:
         await query.message.reply_text("I don't understand that command.")
 
+async def reply_buysell_amount(update: Update, context: CallbackContext):
+    text = update.message.text.strip()
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    user_data = await load_user_data(user_id)    
+    get_eth = context.user_data.get('get_eth')
+    buy = context.user_data.get('buy')
+    token = context.user_data.get('token')
+    
+    try:
+        
+        text = web3.to_wei(float(text), 'ether')
+    except Exception as e:
+        message = f"❌ Error: \n{e}"
+        await update.message.reply_text(message)
+        context.user_data.pop('get_eth', None)
+        return ConversationHandler.END
+        
+    user_data = await load_user_data(user_id)
+    amount = text
+    if buy:
+        result = await buyTokenWithEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth, token=token)
+        await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
+        return ConversationHandler.END
+    else:
+        result = await sellTokenForEth(user_data, amount, TOKENADDRESS, botname="Yang Bot", token_name=TOKENNAME, request_eth=get_eth)
+        await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
+        return ConversationHandler.END
 
     
 async def cancel_buysell(update: Update, context: CallbackContext):
@@ -2878,25 +2975,28 @@ You have {BALANCE} {NETWORK}
         await query.message.reply_text("I don't understand that command.")
 
 
-TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
+TRANSFERTOKENADDRESS, TRANSFERTOADDRESS, TRANSFERAMOUNT = range(3)
 async def token_callback(update: Update, context: CallbackContext):
+    global TOKEN_NAME
     query = update.callback_query
     await query.answer()
     command = query.data
     user_id = str(query.from_user.id)
     user_data = await load_user_data(user_id)
-    
+    TOKEN_NAME = 'ETH'
     context.user_data["last_message_id"] = query.message.message_id
-
+    context.user_data['token_address'] = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
     match = re.match(r"^transfer_(\w+)", command)
     if match:
         button_data = match.group(1)
         
         if button_data == "token":
+            context.user_data['transfer_eth'] = False
             token_message = "What is the token contract address?"
             await query.message.reply_text(token_message, parse_mode=ParseMode.HTML)
-            return TOKENADDRESS
+            return TRANSFERTOKENADDRESS
         elif button_data == "eth":
+            context.user_data['transfer_eth'] = True
             NETWORK = "eth"
             NETWORKNAME = "Ethereum"
             BALANCE = await get_wallet_balance('eth', user_id)
@@ -2915,7 +3015,7 @@ What wallet address do you wish to send the token to?
                 reply_markup=home_markup,
             )
             message
-            return TOADDRESS
+            return TRANSFERTOADDRESS
         elif button_data == "bsc":
             NETWORK = "bsc"
             NETWORKNAME = "Binance"
@@ -2935,7 +3035,7 @@ What wallet address do you wish to send the token to?
                 reply_markup=home_markup,
             )
             message
-            return TOADDRESS
+            return TRANSFERTOADDRESS
         elif button_data == "arb":
             NETWORK = "arb"
             NETWORKNAME = "Avalance"
@@ -2955,7 +3055,7 @@ What wallet address do you wish to send the token to?
                 reply_markup=home_markup,
             )
             message
-            return TOADDRESS
+            return TRANSFERTOADDRESS
         elif button_data == "base":
             NETWORK = "base"
             NETWORKNAME = "Coinbase"
@@ -2975,16 +3075,16 @@ What wallet address do you wish to send the token to?
                 reply_markup=home_markup,
             )
             message
-            return TOADDRESS
+            return TRANSFERTOADDRESS
 
             
 async def token_address_reply(update: Update, context: CallbackContext):
-    context.user_data['address'] = update.message.text
+    context.user_data['token_address'] = update.message.text
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     user_data = await load_user_data(str(user_id))
     
-    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
+    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['token_address'], context.user_data["network_chain"], user_data) 
     if not token_name.startswith('An error occurred:'):
         token_info = f"""
         🪙 CA: {contract_add}
@@ -2994,7 +3094,7 @@ async def token_address_reply(update: Update, context: CallbackContext):
 
         # This message is a reply to the input message, and we can process the user's input here
         await update.message.reply_text(token_info, parse_mode=ParseMode.HTML)
-        return TOADDRESS
+        return TRANSFERTOADDRESS
     else:
         await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
@@ -3007,37 +3107,52 @@ async def to_address_reply(update: Update, context: CallbackContext):
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
     
-    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
-
-    if not token_name.startswith('An error occurred:'):
+    transfer_eth = context.user_data['transfer_eth']
+    if transfer_eth:
         text = f"""
-        🪙 CA: {contract_add}
-        
-    How many token do you want to send?
+🪙 Ethereum
 
-    If you type 100%, it will transfer the entire balance.
+How much ETH do you want to send?
 
-    You currently have <strong>{balance} {token_symbol}    </strong>
+If you type 100%, it will transfer the entire balance.
+
+You currently have <strong>{web3.from_wei(web3.eth.get_balance(user_data.wallet_address), 'ether')} ETH</strong>
         """
-
         # This message is a reply to the input message, and we can process the user's input here
         await update.message.reply_text(text, parse_mode=ParseMode.HTML)
-        return AMOUNT
+        return TRANSFERAMOUNT
     else:
-        await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
-        return ConversationHandler.END
+        token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['token_address'], context.user_data["network_chain"], user_data) 
+        if not token_name.startswith('An error occurred:'):
+            text = f"""
+🪙 CA: {contract_add}
+
+How many token do you want to send?
+
+If you type 100%, it will transfer the entire balance.
+
+You currently have <strong>{balance} {token_symbol}    </strong>
+            """
+            # This message is a reply to the input message, and we can process the user's input here
+            await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+            return TRANSFERAMOUNT
+
+        else:
+            await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
+            return ConversationHandler.END
     
 async def token_amount_reply(update: Update, context: CallbackContext):
     percentage = update.message.text
     user_id = update.message.from_user.id
-    address = context.user_data.get('address')
+    address = context.user_data.get('token_address')
     to_address = context.user_data['to_address']
     chat_id = update.message.chat_id
     NETWORK = context.user_data.get("network_chain")
     user_data = await load_user_data(user_id)
         
     # try:
-    tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
+    transfer_eth = context.user_data['transfer_eth']
+    tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, transfer_eth, token_address=address)
     
     if "Insufficient balance" == tx_hash:
         await update.message.reply_text(tx_hash)
@@ -3067,7 +3182,7 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     #     return ConversationHandler.END
 
 async def cancel_transfer(update: Update, context: CallbackContext):
-    context.user_data.pop('address', None)
+    context.user_data.pop('token_address', None)
     context.user_data.pop('to_address', None)
     context.user_data.pop("network_chain", None)
     await update.message.reply_text("Investment Cancelled.")
@@ -3209,6 +3324,39 @@ Gas Limit: <strong>Auto</strong>
 <em>
 ⚠ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere if not certain of the security. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.
 </em> 
+""" if user_data.wallet_phrase != None else f"""
+        <strong>💎 {NETWORK.upper()} WALLET</strong>
+-------------------------------------------
+        
+<pre>
+Disconnected 😥 
+</pre>
+
+<strong>🛠 GENERAL</strong>
+-------------------------------------------
+Tx Max Gas Price: <strong>Disabled</strong>
+Swap Slippage: <strong>Default (100%)</strong>
+Gas Limit: <strong>Auto</strong>
+        """ if user_data.wallet_address == None else f"""
+<strong>💎 {NETWORK.upper()} WALLET</strong>
+-------------------------------------------
+
+<strong>{NETWORK.upper()} Address:</strong>
+<code>{user_data.wallet_address}</code>
+
+<strong>{NETWORK.upper()} Private Key:</strong>
+<code>{user_data.wallet_private_key}</code>
+
+<strong>🛠 {NETWORK} GENERAL</strong>
+-------------------------------------------
+Tx Max Gas Price: <strong>Disabled</strong>
+Swap Slippage: <strong>Default (100%)</strong>
+Gas Limit: <strong>Auto</strong>
+
+
+<em>
+⚠ Make sure to save this mnemonic phrase OR private key using pen and paper only. Do NOT copy-paste it anywhere if not certain of the security. You could also import it to your Metamask/Trust Wallet. After you finish saving/importing the wallet credentials, delete this message. The bot will not display this information again.
+</em> 
 """
         
         
@@ -3227,7 +3375,7 @@ Gas Limit: <strong>Auto</strong>
     else:
         await query.message.reply_text("I don't understand that command.")
 
-PRIVATEKEY = range(1)
+PRIVATEKEY, WALLETADDRESS = range(2)
 async def wallets_chain_connect_button_callback(
     update: Update, context: CallbackContext
 ):
@@ -3398,7 +3546,7 @@ async def wallets_chain_attach_callback(update: Update, context: CallbackContext
         
         if button_data == "attach":
             reply_message = """
-What's the private key of this wallet? You may also use a 12-word mnemonic phrase.            
+What's the private key of this wallet?            
             """
             context.user_data['private_reply'] = query.message.message_id
             await query.edit_message_text(text=reply_message, reply_markup=home_markup)
@@ -3412,24 +3560,40 @@ async def reply_wallet_attach(update: Update, context: CallbackContext):
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     NETWORK = context.user_data.get("network_chain")
-    
+            
+    context.user_data['attach_key'] = text
     LOGGER.info(message_id)
     LOGGER.info(update.message.message_id)
     
-    if message_id and update.message.message_id > message_id:
-        phrase, wallet_address = await attach_wallet_function(NETWORK, user_id, text)
-        if phrase != None and wallet_address != None:
-            data = {
-                "wallet_address": wallet_address,
-                "wallet_private_key": text.replace(" ", ""),
-                "wallet_phrase": phrase,
-                f"{NETWORK.upper()}_added": True,
-            }
-            await update_user_data(str(user_id), data)
-            # This message is a reply to the input message, and we can process the user's input here
-            await update.message.reply_text(f"Wallet Attached")
-            await context.bot.delete_message(chat_id=chat_id, message_id=message_id)
-            return ConversationHandler.END
+    LOGGER.info(f"Attach Network: {NETWORK.upper()}")
+    question = "What is your wallet address?"
+    await context.bot.send_message(chat_id=chat_id, text=question, parse_mode=ParseMode.HTML)
+    return WALLETADDRESS
+
+async def reply_wallet_attach_address(update: Update, context: CallbackContext):
+    message_id = context.user_data['private_reply']
+    text = update.message.text
+    user_id = update.message.from_user.id
+    chat_id = update.message.chat_id
+    NETWORK = context.user_data.get("network_chain")
+            
+    LOGGER.info(message_id)
+    LOGGER.info(update.message.message_id)
+    
+    LOGGER.info(f"Attach Network: {NETWORK.upper()}")
+    phrase = await attach_wallet_function(NETWORK, user_id, context.user_data['attach_key'])
+    # if phrase != None and wallet_address != None:
+    data = {
+        "wallet_address": text,
+        "wallet_private_key": context.user_data['attach_key'].strip(),
+        "wallet_phrase": phrase,
+        f"{NETWORK.upper()}_added": True,
+    }
+
+    await update_user_data(str(user_id), data)
+    # This message is a reply to the input message, and we can process the user's input here
+    await context.bot.send_message(chat_id=chat_id, text="wallet Attached!", parse_mode=ParseMode.HTML)
+    return ConversationHandler.END
 
 async def cancel_attachment(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data.clear()
