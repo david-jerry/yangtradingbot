@@ -673,6 +673,7 @@ def build_approve_keyboard(user_data):
 PASTECONTRACTADDRESS = range(1)    
 async def start_button_callback(update: Update, context: CallbackContext):
     global CAPTION, TOKENADDRESS, TOKENSYMBOL, TOKENDECIMAL, GASGWEI, GASETHER, TOKENNAME, TOKENMARKETCAP, TOKENPRICE, TOKENOWNER, TOKENLPLOCKED, TOKENBALANCE, TOKENAGE
+    CAPTION = True
     query = update.callback_query
     await query.answer()
     command = query.data
@@ -2580,7 +2581,7 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     # try:
     tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
     
-    if "Insufficient balance" == tx_hash:
+    if "Insufficient balance" in tx_hash:
         await update.message.reply_text(tx_hash)
         return ConversationHandler.END
     elif "Error Trasferring:" in tx_hash:
