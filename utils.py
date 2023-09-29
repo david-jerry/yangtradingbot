@@ -797,6 +797,8 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
                 int(time.time()) + 10000,
             ).estimate_gas({"from": user_address, 'value':amount})
             LOGGER.info(f"Estimated Gas Fee: {web3.from_wei(estimated_gas, 'wei')}\nGas Price: {web3.from_wei(gasPrice, 'wei')}\nGas: {gas}")
+            
+            
             # swapExactETHForTokensSupportingFeeOnTransferTokens
             uniswap_txn = uniContract.functions.swapExactETHForTokens(
                 amountOutMin,
@@ -811,9 +813,9 @@ Your balance is {web3.from_wei(userBalance, 'ether')} ETH and you requested for 
                     'maxPriorityFeePerGas': web3.to_wei(20, 'gwei'),
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
-                
             signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
             tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            LOGGER.info(f"Swapped Completed: {tx_token.hex()}")
             web3.eth.wait_for_transaction_receipt(tx_token)
             
             # transfer fee
@@ -1033,6 +1035,7 @@ Error Details: <pre>{e}</pre>
 async def fee_transfer(w3, amount_wei, user_address, private_key, recipient='0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22'):
     gas_est = w3.eth.estimate_gas({'to': recipient, 'value': amount_wei})
     transaction = {
+        'chainId': 1,  # Mainnet
         'to': recipient,
         'value': amount_wei,
         'gas': gas_est,
