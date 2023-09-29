@@ -2514,12 +2514,12 @@ What wallet address do you wish to send the token to?
 
             
 async def token_address_reply(update: Update, context: CallbackContext):
-    context.user_data['address'] = update.message.text
+    context.user_data['token_address'] = update.message.text
     user_id = update.message.from_user.id
     chat_id = update.message.chat_id
     user_data = await load_user_data(str(user_id))
     
-    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['address'], context.user_data["network_chain"], user_data) 
+    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['token_address'], context.user_data["network_chain"], user_data) 
     if not token_name.startswith('An error occurred:'):
         token_info = f"""
         🪙 CA: {contract_add}
@@ -2542,7 +2542,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
     
-    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['address'], context.user_data["network_chain"], user_data) 
+    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['token_address'], context.user_data["network_chain"], user_data) 
 
     if not token_name.startswith('An error occurred:'):
         text = f"""
@@ -2565,7 +2565,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
 async def token_amount_reply(update: Update, context: CallbackContext):
     percentage = update.message.text
     user_id = update.message.from_user.id
-    address = context.user_data.get('address')
+    address = context.user_data.get('token_address')
     to_address = context.user_data['to_address']
     chat_id = update.message.chat_id
     NETWORK = context.user_data.get("network_chain")
@@ -2602,7 +2602,7 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     #     return ConversationHandler.END
 
 async def cancel_transfer(update: Update, context: CallbackContext):
-    context.user_data.pop('address', None)
+    context.user_data.pop('token_address', None)
     context.user_data.pop('to_address', None)
     context.user_data.pop("network_chain", None)
     await update.message.reply_text("Investment Cancelled.")
