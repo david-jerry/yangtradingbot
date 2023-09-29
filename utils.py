@@ -256,6 +256,99 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         LOGGER.info(e)
         return f'An error occurred: {e}', "", "", "", "", ""
     
+async def get_token_info_erc20(token_address, network, user_data, api_key=ETHERAPI):
+    if network.upper() == "ETH" and user_data.wallet_address:
+        w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BSC" and user_data.BSC_added:
+        w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
+    elif network.upper() == "ARB" and user_data.ARB_added:
+        w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
+    elif network.upper() == "BASE" and user_data.BASE_added:
+        w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
+    
+    checksum_address = token_address
+    if not w3.is_address(checksum_address):
+        return f"An error occurred: Invalid address format\n\n{e}", '', "", "", '', ''
+    
+    if not w3.is_checksum_address(token_address):
+        checksum_address = w3.to_checksum_address(token_address)
+
+    # # Define the Etherscan API URL
+    # etherscan_api_url = 'https://api.etherscan.io/api'
+
+    # # Define the parameters for the API request
+    # params = {
+    #     'module': 'token',
+    #     'action': 'tokeninfo',
+    #     'contractaddress': contract_address,
+    #     'apikey': api_key,
+    # }
+
+    # try:
+    #     # Send a GET request to Etherscan API
+    #     response = requests.get(etherscan_api_url, params=params)
+
+    #     # Check if the request was successful
+    #     if response.status_code == 200:
+    #         data = response.json()
+    #         if data['status'] == '1':
+    #             info = data['result']
+    #             token_name = info['tokenName']
+    #             token_symbol = info['symbol']
+    #             contract_add = info['contractAddress']
+    #             total_supply = info['totalSupply']
+    #             token_type = info['tokenType']
+    #             prince_usd = info['tokenPriceUSD']
+    #             description = info['description']
+    #             return token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description
+    #         else:
+    #             LOGGER.info(data["message"])
+    #             return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
+    #     else:
+    #         LOGGER.info(response.status_code)
+    #         return f'Failed to retrieve ABI for contract {contract_address}. HTTP Error: {response.status_code}'
+    try:
+        LOGGER.info("Initializing the Transfer")
+        abi = await get_contract_abi(checksum_address)
+        token_contract = w3.eth.contract(address=checksum_address, abi=abi)
+        LOGGER.info(f'Token Contract: {token_contract}')
+        provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
+        
+        try:
+            uni_abi = """[{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint24","name":"fee","type":"uint24"},{"indexed":true,"internalType":"int24","name":"tickSpacing","type":"int24"}],"name":"FeeAmountEnabled","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnerChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token0","type":"address"},{"indexed":true,"internalType":"address","name":"token1","type":"address"},{"indexed":true,"internalType":"uint24","name":"fee","type":"uint24"},{"indexed":false,"internalType":"int24","name":"tickSpacing","type":"int24"},{"indexed":false,"internalType":"address","name":"pool","type":"address"}],"name":"PoolCreated","type":"event"},{"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"}],"name":"createPool","outputs":[{"internalType":"address","name":"pool","type":"address"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"int24","name":"tickSpacing","type":"int24"}],"name":"enableFeeAmount","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint24","name":"","type":"uint24"}],"name":"feeAmountTickSpacing","outputs":[{"internalType":"int24","name":"","type":"int24"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"},{"internalType":"uint24","name":"","type":"uint24"}],"name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"parameters","outputs":[{"internalType":"address","name":"factory","type":"address"},{"internalType":"address","name":"token0","type":"address"},{"internalType":"address","name":"token1","type":"address"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"int24","name":"tickSpacing","type":"int24"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_owner","type":"address"}],"name":"setOwner","outputs":[],"stateMutability":"nonpayable","type":"function"}]"""
+            uni_v3_pool = '0x1F98431c8aD98523631AE4a59f267346ea31F984'
+            univ3 = w3.eth.contract(uni_v3_pool, abi=uni_abi)
+        except Exception as e:
+            return "Error getting Uniswap V3 Instance", "", "", "", "", ""
+        
+        lp = ""
+        try:
+            lp = univ3.functions.getPool(checksum_address, eth, 10000).call()
+            LOGGER.info(lp)
+            if lp == "0x0000000000000000000000000000000000000000":
+                lp = univ3.functions.createPool(checksum_address, eth, 10000).call()
+        except Exception as e:     
+            LOGGER.error(f"Error Occured: {e}")  
+                    
+        
+
+        # Get the functions for retrieving the name and symbol
+        name_function = token_contract.functions.name()
+        token_decimals = token_contract.functions.decimals().call()
+        symbol_function = token_contract.functions.symbol()
+        token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
+        val = w3.from_wei(token_balance_wei, 'ether')
+        # Call the functions to retrieve the name and symbol
+        token_name = name_function.call()
+        token_symbol = symbol_function.call()
+        return token_name, token_symbol, int(token_decimals), lp, val, checksum_address
+    except Exception as e:
+        LOGGER.info(e)
+        return f'An error occurred: {e}', "", "", "", '', ''
+
+
+
+    
 async def currency_amount(symbol):
     # API endpoint
     url = "https://api.coingecko.com/api/v3/simple/price"
@@ -599,79 +692,6 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
         LOGGER.error(e)
         return f"Error Transferring: {e}", 0.00000000, 'ETH', 'ETHEREUM'
     
-    
-async def get_token_info_erc20(token_address, network, user_data, api_key=ETHERAPI):
-    if network.upper() == "ETH" and user_data.wallet_address:
-        w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
-    elif network.upper() == "BSC" and user_data.BSC_added:
-        w3 = Web3(Web3.HTTPProvider("https://bsc-dataseed1.bnbchain.org:443"))
-    elif network.upper() == "ARB" and user_data.ARB_added:
-        w3 = Web3(Web3.HTTPProvider(f"https://avalanche-mainnet.infura.io/v3/{INFURA_ID}"))
-    elif network.upper() == "BASE" and user_data.BASE_added:
-        w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org/"))
-    
-    checksum_address = token_address
-    if not w3.is_address(checksum_address):
-        return f"An error occurred: Invalid address format\n\n{e}", '', "", ""
-    
-    if not w3.is_checksum_address(token_address):
-        checksum_address = w3.to_checksum_address(token_address)
-
-    # # Define the Etherscan API URL
-    # etherscan_api_url = 'https://api.etherscan.io/api'
-
-    # # Define the parameters for the API request
-    # params = {
-    #     'module': 'token',
-    #     'action': 'tokeninfo',
-    #     'contractaddress': contract_address,
-    #     'apikey': api_key,
-    # }
-
-    # try:
-    #     # Send a GET request to Etherscan API
-    #     response = requests.get(etherscan_api_url, params=params)
-
-    #     # Check if the request was successful
-    #     if response.status_code == 200:
-    #         data = response.json()
-    #         if data['status'] == '1':
-    #             info = data['result']
-    #             token_name = info['tokenName']
-    #             token_symbol = info['symbol']
-    #             contract_add = info['contractAddress']
-    #             total_supply = info['totalSupply']
-    #             token_type = info['tokenType']
-    #             prince_usd = info['tokenPriceUSD']
-    #             description = info['description']
-    #             return token_name, token_symbol, contract_add, total_supply, token_type, prince_usd, description
-    #         else:
-    #             LOGGER.info(data["message"])
-    #             return f'Failed to retrieve ABI for contract {contract_address}. Error: {data["message"]}'
-    #     else:
-    #         LOGGER.info(response.status_code)
-    #         return f'Failed to retrieve ABI for contract {contract_address}. HTTP Error: {response.status_code}'
-    try:
-        abi = await get_contract_abi(checksum_address)
-        LOGGER.info(abi)
-        token_contract = w3.eth.contract(address=token_address, abi=abi)
-        
-        
-
-        # Get the functions for retrieving the name and symbol
-        name_function = token_contract.functions.name()
-        symbol_function = token_contract.functions.symbol()
-        token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
-        val = w3.from_wei(token_balance_wei, 'ether')
-        # Call the functions to retrieve the name and symbol
-        token_name = name_function.call()
-        token_symbol = symbol_function.call()
-        return token_name, token_symbol, val, checksum_address
-    except Exception as e:
-        LOGGER.info(e)
-        return f'An error occurred: {e}', "", "", ""
-
-
 
 
 async def check_transaction_status(network, user_data,  tx_hash):
