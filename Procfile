@@ -1,5 +1,5 @@
 release: python manage.py migrate 
-redis: redis-server  # Start the Redis server
+# redis: redis-server  # Start the Redis server
 worker: celery --app worker worker -Q tc-queue1 -l INFO -c 8
 worker2: celery --app worker worker -Q tc-queue2 -l INFO -c 8
 process1: python main.py
