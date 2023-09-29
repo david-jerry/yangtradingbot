@@ -574,21 +574,26 @@ async def trasnfer_currency(network, user_data, percentage, to_address, transfer
                 'nonce': nonce,
                 'chainId': int(chain_id),
                 'value': w3.to_wei(amount, 'ether'),
-                'gas': 40000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+                'gas': 210000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
                 # 'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
                 'maxFeePerGas': w3.to_wei(35, 'gwei'),
                 'maxPriorityFeePerGas': w3.to_wei(30, 'gwei'),
                 # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
             }
+            LOGGER.info("Transaction setup for transfer has been completed")
             try:
                 signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
+                LOGGER.info("Signed Transaction Fixed")
             except Exception as e:
                 return f"You have insufficient gas: {e}", "", "", ""
             tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
             LOGGER.info(tx_hash.hex())
             return tx_hash.hex(), amount, "ETH", "ETHEREUM"
         else:
+            # Get eth balance for the user account
             eth_balance = w3.eth.get_balance(user_data.wallet_address)
+            
+            # verify the address is valid
             checksum_address = token_address
             if not w3.is_address(checksum_address.strip().lower()):
                 return f"Error Trasferring: Invalid address format", 0.00, "ETH", "ETHEREUM"
@@ -596,44 +601,66 @@ async def trasnfer_currency(network, user_data, percentage, to_address, transfer
             if not w3.is_checksum_address(checksum_address.strip().lower()):
                 checksum_address = w3.to_checksum_address(token_address)
             
+            
+            # get token contract abi
             abi = await get_contract_abi(checksum_address)
-            LOGGER.info(abi)
             
-
-            LOGGER.info(checksum_address)
-            LOGGER.info(user_data.wallet_address)
-            
-            # Create a contract instance for the USDT token
+            # Create a contract instance for the token
             token_contract = w3.eth.contract(address=checksum_address, abi=abi)
             LOGGER.info(token_contract)
+            
+            # get the balance for the token address
             try:
                 token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
                 LOGGER.info(f"TOKEN Bal Wei: {token_balance_wei}")
+                LOGGER.info(f"TOKEN Bal: {web3.from_wei(token_balance_wei, 'ether')}")
             except Exception as e:
                 return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
             
+            # get the returned value of the token not in wei
             val = w3.from_wei(token_balance_wei, 'ether')
-            amount = w3.to_wei(float(val) * percentage, 'ether')
-            fmt_gas_est = token_contract.functions.transfer(fmt_address, amount).estimate_gas({"from": user_data.wallet_address})
-            gas_estimate = fmt_gas_est
-            LOGGER.info(f"Token Bal: {val}")
-            LOGGER.info(f"Transfer Amount: {w3.from_wei(amount, 'ether')}")
-            LOGGER.info(f"Bal Left: {val - w3.from_wei(amount, 'ether')}")
+            
+            # set the amount to be transfered calculated by the percentage to be sent to the other party
+            amount = val * Decimal(percentage)
+            LOGGER.info(f"Amount To Transfer: {amount}")
+            
+            # get balance left after the percentage
+            bal_left = val - amount
+            LOGGER.info(f"Balance Left: {bal_left}")
             LOGGER.info(f"ETH Balance: {eth_balance}")
-            LOGGER.info(f"Gas Fee in ETH: {fmt_gas_est}")
-            exp_gas = fmt_gas_est
-            gas = w3.eth.estimate_gas({'to': fmt_address, 'value': amount})
-            tenpercenthighergas = gas * (10/100)
-            LOGGER.info(f"Gas Price: {gas}")
             
             
-            if eth_balance < fmt_gas_est:
-                return f"Insufficient balance\n\nETH Bal: {w3.from_wei(eth_balance, 'ether')}\nGas Required: {w3.from_wei(fmt_gas_est, 'ether')}", w3.from_wei(amount, 'ether'), "ETH", "ETHEREUM"
+            LOGGER.info(f"Token Bal: {val}")
+            LOGGER.info(f"Transfer Amount WEI: {w3.to_wei(amount, 'ether')}")
+            
+
 
             try:
-                fmt_amount = w3.from_wei(amount, 'ether')
+                fmt_amount = w3.to_wei(amount, 'ether')
+                LOGGER.info("Gas Estimate Initialized")
+                try:
+                    gas_estimate = token_contract.functions.transfer(fmt_address, w3.to_wei(amount)).estimate_gas({"from": user_data.wallet_address})
+                except Exception as e:
+                    gas_estimate = gas_price
+
+                LOGGER.info("Generated a gas estimate")
+                try:
+                    gas = w3.eth.estimate_gas({'to': fmt_address, 'value': amount})
+                except Exception as e:
+                    gas = gas_price
+                    
+                    
+                LOGGER.info(f"Gas Fee in ETH: {gas_estimate}")
+                LOGGER.info(f"Gas Price: {gas}")
+                
+                # check if the balance you have is enough for the gas
+                LOGGER.info("Checking if gas works")
+                # if w3.to_wei(amount, 'ether') <= 0 or eth_balance < (int(gas_estimate) + int(gas)):
+                #     return f"""Insufficient balance\n\nETH Bal: {w3.from_wei(eth_balance, 'ether')}\nGas Required: {w3.to_wei(gas_estimate, 'ether')}""", amount, "ETH", "ETHEREUM"
+
                 # Prepare the transaction to transfer USDT tokens
-                transaction = token_contract.functions.transfer(fmt_address, amount).build_transaction({
+                LOGGER.info("Constructing the transaction")
+                transaction = token_contract.functions.transfer(fmt_address, fmt_amount).build_transaction({
                     'chainId': 1,  # Mainnet
                     'gas': 300000,  # Gas limit (adjust as needed)
                     # 'gasPrice': gas_estimate + tenpercenthighergas, #w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
@@ -642,12 +669,17 @@ async def trasnfer_currency(network, user_data, percentage, to_address, transfer
                     'nonce': nonce,
                 })
 
-                signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
-                tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
                 try:
-                    LOGGER.info(tx_hash.hex())
+                    signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
+                    tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+                except Exception as e:
+                    return f"Insufficient balance: {e}", amount, "ETH", "ETHEREUM"
+                
+                
+                try:
+                    LOGGER.info(tx_hash)
                     token_name, token_symbol, token_decimals, token_lp, balance, contract_add= await get_token_info(checksum_address, network, user_data)
-                    return tx_hash.hex(), fmt_amount, token_symbol, token_name
+                    return tx_hash, fmt_amount, token_symbol, token_name
                 except Exception as e:
                     return f"You have insufficient gas: {e}", "", "", ""
 

@@ -2592,10 +2592,10 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     transfer_eth = context.user_data['transfer_eth']
     tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, transfer_eth, token_address=address)
     
-    if "Insufficient balance" == tx_hash:
+    if "Insufficient balance" in tx_hash:
         await update.message.reply_text(tx_hash)
         return ConversationHandler.END
-    elif "Error Trasferring:" in tx_hash:
+    elif "Error Transferring:" in tx_hash:
         await update.message.reply_text(tx_hash)
         return ConversationHandler.END
     
