@@ -2429,10 +2429,12 @@ async def token_callback(update: Update, context: CallbackContext):
         button_data = match.group(1)
         
         if button_data == "token":
+            context.user_data['transfer_eth'] = False
             token_message = "What is the token contract address?"
             await query.message.reply_text(token_message, parse_mode=ParseMode.HTML)
             return TRANSFERTOKENADDRESS
         elif button_data == "eth":
+            context.user_data['transfer_eth'] = True
             NETWORK = "eth"
             NETWORKNAME = "Ethereum"
             BALANCE = await get_wallet_balance('eth', user_id)
@@ -2543,37 +2545,39 @@ async def to_address_reply(update: Update, context: CallbackContext):
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
     
-    token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['token_address'], context.user_data["network_chain"], user_data) 
+    transfer_eth = context.user_data['transfer_eth']
+    if transfer_eth:
+        text = f"""
+🪙 Ethereum
 
-    if not token_name.startswith('An error occurred:'):
-        if Decimal(balance) > 0.000000:
+How much ETH do you want to send?
+
+If you type 100%, it will transfer the entire balance.
+
+You currently have <strong>{web3.from_wei(web3.eth.get_balance(user_data.wallet_address), 'ether')} ETH</strong>
+        """
+        # This message is a reply to the input message, and we can process the user's input here
+        await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        return TRANSFERAMOUNT
+    else:
+        token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_info_erc20(context.user_data['token_address'], context.user_data["network_chain"], user_data) 
+        if not token_name.startswith('An error occurred:'):
             text = f"""
-            🪙 CA: {contract_add}
-            
-        How many token do you want to send?
+🪙 CA: {contract_add}
 
-        If you type 100%, it will transfer the entire balance.
+How many token do you want to send?
 
-        You currently have <strong>{balance} {token_symbol}    </strong>
+If you type 100%, it will transfer the entire balance.
+
+You currently have <strong>{balance} {token_symbol}    </strong>
             """
             # This message is a reply to the input message, and we can process the user's input here
             await update.message.reply_text(text, parse_mode=ParseMode.HTML)
             return TRANSFERAMOUNT
+
         else:
-            text = f"""
-            🪙 <strong>INSUFFICIENT BALANCE</strong>
-            
-        You do not have sufficient amount to transfer.
-
-        You currently have <strong>{balance} {token_symbol}</strong>
-            """
-            # This message is a reply to the input message, and we can process the user's input here
-            await update.message.reply_text(text, parse_mode=ParseMode.HTML)
+            await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
             return ConversationHandler.END
-
-    else:
-        await update.message.reply_text(token_name, parse_mode=ParseMode.HTML)
-        return ConversationHandler.END
     
 async def token_amount_reply(update: Update, context: CallbackContext):
     percentage = update.message.text
@@ -2585,7 +2589,8 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     user_data = await load_user_data(user_id)
         
     # try:
-    tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, token_address=address)
+    transfer_eth = context.user_data['transfer_eth']
+    tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, transfer_eth, token_address=address)
     
     if "Insufficient balance" == tx_hash:
         await update.message.reply_text(tx_hash)

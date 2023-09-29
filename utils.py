@@ -246,9 +246,8 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         token_name = name_function.call()
         token_symbol = symbol_function.call()
         LOGGER.info("Updating the sniper information")
-        if user_data.sniper.exists():
-            token_info = await update_snipes(user_data.user_id, checksum_address, {'name': token_name, 'symbol': token_symbol, 'decimal': token_decimals})
-            LOGGER.info(token_info)
+        token_info = await update_snipes(user_data.user_id, checksum_address, {'name': token_name, 'symbol': token_symbol, 'decimal': token_decimals})
+        LOGGER.info(token_info)
         return token_name, token_symbol, int(token_decimals), lp, val, checksum_address
     except Exception as e:
         LOGGER.info(e)
@@ -522,13 +521,14 @@ async def get_token_balance(network, token_address, user_data):
     balance = w3.from_wei(token_balance_wei, 'ether')
     return balance
             
-async def trasnfer_currency(network, user_data, percentage, to_address, token_address=None):
+async def trasnfer_currency(network, user_data, percentage, to_address, transfer_eth, token_address=None):
     w3 = Web3(Web3.HTTPProvider(f"https://mainnet.infura.io/v3/{INFURA_ID}"))
     chain_id = w3.eth.chain_id
     nonce = w3.eth.get_transaction_count(user_data.wallet_address)
     
-    per = float(percentage.replace(' %', '').replace('%', ''))
+    per = float(percentage.strip().replace('%', ''))
     percentage = float(per / 100)
+    LOGGER.info(f"Percentage: {percentage}")
     if network.upper() == "ETH" and user_data.wallet_address:
         LOGGER.info('Checking status here')
         chain_id = w3.eth.chain_id
@@ -549,27 +549,24 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     if not w3.is_checksum_address(fmt_address.strip().lower()):
         fmt_address = w3.to_checksum_address(to_address.strip().lower())
 
-    LOGGER.info(fmt_address)
-    LOGGER.info(user_data.wallet_address)
 
-    # gas_estimate = w3.eth.estimate_gas({'to': fmt_address, 'from': user_data.wallet_address, 'value': w3.to_int(val)})
-    # LOGGER.info(f"GasEstimate: {w3.to_wei(gas_estimate, 'gwei')}")
-    # LOGGER.info(f"Gas Price: {w3.to_wei((gas_estimate), 'gwei')}")
-    
-    
-    
     try:
-        gas_price = w3.to_wei('20', 'wei')
+        gas_price = w3.to_wei('40', 'gwei')
         
         # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         # Build the transaction
-        if token_address == None:
-            balance = float(w3.from_wei(w3.eth.get_balance(user_data.wallet_address), 'ether'))
-            amount = balance * percentage
+        if transfer_eth:
+            balance = w3.eth.get_balance(user_data.wallet_address)
+            LOGGER.info(f"Gas Price: {gas_price}")
+            LOGGER.info(f"Balance: {web3.from_wei(balance, 'ether')}")
+            amount = web3.from_wei(balance, 'ether') * Decimal(percentage)
+            LOGGER.info(f"Amount: {amount}")
+            
+            
 
-            if balance - amount < float(w3.from_wei(gas_price, 'ether')):
+            if balance - web3.to_wei(amount, 'ether') < gas_price:
                 LOGGER.info('We got here: insufficient funds')
-                return f"Insufficient balance\n\nBal: {balance - amount}\nGas Required: {float(w3.from_wei(gas_price, 'ether'))}", amount, "ETH", "ETHEREUM"
+                return f"Insufficient balance\n\nBal: {web3.from_wei(balance, 'ether')}\nGas Required: {w3.from_wei(gas_price, 'ether')}\nAmount Transferring: {amount}", amount, "ETH", "ETHEREUM"
 
             transaction = {
                 'to': fmt_address,
@@ -577,19 +574,19 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 'nonce': nonce,
                 'chainId': int(chain_id),
                 'value': w3.to_wei(amount, 'ether'),
-                'gas': 21000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
+                'gas': 40000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
                 # 'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
-                'maxFeePerGas': w3.to_wei(25, 'gwei'),
-                'maxPriorityFeePerGas': w3.to_wei(20, 'gwei'),
+                'maxFeePerGas': w3.to_wei(35, 'gwei'),
+                'maxPriorityFeePerGas': w3.to_wei(30, 'gwei'),
                 # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
             }
             try:
                 signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
-                tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-                LOGGER.info(tx_hash.hex())
-                return tx_hash.hex(), amount, "ETH", "ETHEREUM"
             except Exception as e:
                 return f"You have insufficient gas: {e}", "", "", ""
+            tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+            LOGGER.info(tx_hash.hex())
+            return tx_hash.hex(), amount, "ETH", "ETHEREUM"
         else:
             eth_balance = w3.eth.get_balance(user_data.wallet_address)
             checksum_address = token_address
@@ -626,6 +623,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(f"Gas Fee in ETH: {fmt_gas_est}")
             exp_gas = fmt_gas_est
             gas = w3.eth.estimate_gas({'to': fmt_address, 'value': amount})
+            tenpercenthighergas = gas * (10/100)
             LOGGER.info(f"Gas Price: {gas}")
             
             
@@ -638,9 +636,9 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 transaction = token_contract.functions.transfer(fmt_address, amount).build_transaction({
                     'chainId': 1,  # Mainnet
                     'gas': 300000,  # Gas limit (adjust as needed)
-                    'gasPrice': gas_estimate, #w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
-                    # 'maxFeePerGas': w3.to_wei(53, 'gwei'),
-                    # 'maxPriorityFeePerGas': w3.to_wei(50, 'gwei'),
+                    # 'gasPrice': gas_estimate + tenpercenthighergas, #w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
+                    'maxFeePerGas': w3.to_wei(75, 'gwei'),
+                    'maxPriorityFeePerGas': w3.to_wei(60, 'gwei'),
                     'nonce': nonce,
                 })
 
