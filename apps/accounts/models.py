@@ -109,7 +109,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return None
 
     USERNAME_FIELD = 'user_id'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
 
     def __str__(self):
         return self.user_id
@@ -169,3 +169,53 @@ class CopyTradeAddresses(models.Model):
     def __str__(self):
         return f"{self.user.user_id} {self.contract_address}"
     
+    
+class Txhash(models.Model):
+        Txhash = models.CharField(max_length=500, blank=True)
+        user_id = models.CharField(max_length=500, blank=True)
+        check_txhash = models.BooleanField(default=False)
+        def str(self):
+            return f"{self.Txhash}{self.user_id}{self.check_txhash}"
+        
+class copytradetxhash(models.Model):
+        user_id = models.CharField(max_length=500, blank=True)
+        txhash = models.CharField(max_length=500, blank=True)
+        bot_name = models.CharField(max_length=500, blank=True)
+        amount = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+        token_address = models.CharField(max_length=500, blank=True)
+        def __str__(self):
+            return f"{self.user_id} {self.txhash} {self.bot_name} {self.amount}{self.token_address}"
+
+class tradetxhash(models.Model):
+        user_id = models.CharField(max_length=500, blank=True)
+        txhash = models.CharField(max_length=500, blank=True)
+        bot_name = models.CharField(max_length=500, blank=True)
+        amount = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+        token_address = models.CharField(max_length=500, blank=True)
+        def __str__(self):
+            return f"{self.user_id} {self.txhash} {self.bot_name} {self.amount}{self.token_address}"
+        
+class TradeAddress(models.Model):
+        user = models.CharField(max_length=500, blank=True)
+        token_address = models.CharField(max_length=500, blank=True)
+        token_name = models.CharField(max_length=500, blank=True)
+        chain = models.CharField(max_length=500, blank=True)
+
+        limit = models.DecimalField(decimal_places=10, max_digits=20, default=0.0000000000)
+        check_limit = models.BooleanField(default=False)
+
+        #The value which is user want to sell when the token price is higher than the profit 
+        profit = models.DecimalField(decimal_places=10, max_digits=20, default=0.0000000000) 
+        check_profit = models.BooleanField(default=False)
+
+        stop_loss = models.DecimalField(decimal_places=10, max_digits=20, default=0.0000000000)
+        check_stop_loss = models.BooleanField(default=False)
+
+        gas_delta = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+        slippage = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+        ammount_limit = models.DecimalField(decimal_places=6, max_digits=20, default=0.000000)
+
+        def __str__(self):
+            return f"{self.user} {self.token_address} {self.token_name} {self.chain}"
+
+
