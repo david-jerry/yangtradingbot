@@ -629,7 +629,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             LOGGER.info(f"Gas Price: {gas}")
             
             
-            if eth_balance < fmt_gas_est:
+            if (w3.to_wei(eth_balance, 'ether') - amount) < fmt_gas_est:
                 return f"Insufficient balance\n\nETH Bal: {w3.from_wei(eth_balance, 'ether')}\nGas Required: {w3.from_wei(fmt_gas_est, 'ether')}", w3.from_wei(amount, 'ether'), "ETH", "ETHEREUM"
 
             try:
