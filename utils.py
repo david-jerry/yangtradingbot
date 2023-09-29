@@ -515,14 +515,13 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             transaction = {
                 'to': fmt_address,
                 'from': user_data.wallet_address,
-                'nonce': web3.eth.get_transaction_count(user_data.wallet_address),
+                'nonce': nonce,
                 'chainId': int(chain_id),
                 'value': w3.to_wei(amount, 'ether'),
                 'gas': 21000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
                 # 'gasPrice': gas_price if user_data.max_gas_price < 14 else w3.to_wei(str(int(user_data.max_gas_price)), 'gwei'),
                 'maxFeePerGas': w3.to_wei(25, 'gwei'),
                 'maxPriorityFeePerGas': w3.to_wei(20, 'gwei'),
-                'nonce': nonce
                 # 'data': contract.functions.transfer(to_address, amount).build_transaction({'chainId': chain_id}),
             }
             
@@ -539,7 +538,9 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
             if not w3.is_checksum_address(checksum_address.strip().lower()):
                 checksum_address = w3.to_checksum_address(token_address)
             
-            abi = await get_contract_abi(checksum_address)            
+            abi = await get_contract_abi(checksum_address)
+            LOGGER.info(abi)
+            
 
             LOGGER.info(checksum_address)
             LOGGER.info(user_data.wallet_address)
@@ -551,7 +552,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                 token_balance_wei = token_contract.functions.balanceOf(user_data.wallet_address).call()
                 LOGGER.info(f"TOKEN Bal Wei: {token_balance_wei}")
             except Exception as e:
-                return f"Error Transferring: {e}", 0.00, "ETH", "ETHEREUM"
+                return f"Error Trasferring: {e}", 0.00, "ETH", "ETHEREUM"
             
             val = w3.from_wei(token_balance_wei, 'ether')
             amount = w3.to_wei(float(val) * percentage, 'ether')
@@ -579,7 +580,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
                     # 'gasPrice': w3.to_wei('24', 'gwei'),  # Gas price in Gwei (adjust as needed)
                     'maxFeePerGas': w3.to_wei(53, 'gwei'),
                     'maxPriorityFeePerGas': w3.to_wei(50, 'gwei'),
-                    'nonce': web3.eth.get_transaction_count(user_data.wallet_address),
+                    'nonce': nonce,
                 })
 
                 signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
@@ -592,6 +593,12 @@ async def trasnfer_currency(network, user_data, percentage, to_address, token_ad
     except Exception as e:
         LOGGER.error(e)
         return f"Error Transferring: {e}", 0.00000000, 'ETH', 'ETHEREUM'
+    
+    
+
+
+
+
 
 async def check_transaction_status(network, user_data,  tx_hash):
     if network.upper() == "ETH" and user_data.wallet_address:

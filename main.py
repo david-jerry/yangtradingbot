@@ -249,20 +249,6 @@ def main() -> None:
     
     
     # TRANSFER HANDLERS
-    # TRANSFER HANDLERS
-    transfer_conv_handler = ConversationHandler(
-        entry_points=[
-            CallbackQueryHandler(token_callback, pattern=r"^transfer_*")
-        ],
-        states={
-            TRANSFERTOKENADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_address_reply)],
-            TRANSFERTOADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), to_address_reply)],
-            TRANSFERAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_amount_reply)],
-        },
-        fallbacks=[CommandHandler("cancel_transfer", cancel_transfer)]
-    )
-    app.add_handler(transfer_conv_handler)
-
     copytrade_conv_handler = ConversationHandler(
         entry_points=[
             CallbackQueryHandler(copy_trade_start_callback, pattern=r"^trade_address$")
@@ -356,8 +342,6 @@ def main() -> None:
     app.add_handler(sniper_conv_handler)
     
     
-    
-
     # COPY TRADE ADDRESS RENAME HANDLERS
     rename_conv_handler = ConversationHandler(
         entry_points=[
@@ -369,6 +353,23 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_rename", cancel_rename)]
     )
     app.add_handler(rename_conv_handler)
+
+
+
+    # TRANSFER HANDLERS
+    transfer_conv_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(token_callback, pattern=r"^transfer_*")
+        ],
+        states={
+            TRANSFERTOKENADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_address_reply)],
+            TRANSFERTOADDRESS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), to_address_reply)],
+            TRANSFERAMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_transfer$")), token_amount_reply)],
+        },
+        fallbacks=[CommandHandler("cancel_transfer", cancel_transfer)]
+    )
+    app.add_handler(transfer_conv_handler)
+
 
 
     # PRESETS HANDLERS
