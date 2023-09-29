@@ -691,7 +691,8 @@ async def snipping_run(user_data, token_address, buy_price_threshold, sell_price
 
 
 async def buyTokenWithEth(user_data, amount, token_address, botname="Yang Bot", token_name='Yangbot', request_eth=True, token=False):
-    time.sleep(3)
+    time.sleep(1)
+    LOGGER.info("Starting the Buy Swapping")
     provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
     uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
     try:       
@@ -860,6 +861,7 @@ Error Details: <pre>{e}</pre>
 
 async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", token_name='Yangbot', request_eth=False):
     time.sleep(1)
+    LOGGER.info("Starting the Sell Swapping")
     provider = f"https://mainnet.infura.io/v3/{INFURA_ID}"
     uniswap = Uniswap(address=user_data.wallet_address, private_key=user_data.wallet_private_key, version=2, provider=provider)
     try:
