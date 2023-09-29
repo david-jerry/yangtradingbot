@@ -2546,6 +2546,8 @@ async def to_address_reply(update: Update, context: CallbackContext):
     LOGGER.info("Chain check::: ")
     LOGGER.info(context.user_data)
 
+    LOGGER.info(f"Context Data: {context.user_data['address']}")
+    LOGGER.info(f"Text: {update.message.text}")
     contract_add = context.user_data.get('address')
     token_balance, token_symbol, decimal, eth_balance, current_exchange_rate, token_name, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(context.user_data['address'], user_data)
 
