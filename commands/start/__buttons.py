@@ -2520,7 +2520,7 @@ async def token_address_reply(update: Update, context: CallbackContext):
     user_data = await load_user_data(str(user_id))
     
     contract_add = update.message.text
-    token_balance, token_symbol, decimal, eth_balance, current_exchange_rate, token_name, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(contract_address, user_data)
+    token_balance, token_symbol, decimal, eth_balance, current_exchange_rate, token_name, token_liquidity_positions, owner_address, token_age_seconds, market_cap = await get_token_full_information(contract_add, user_data)
 
     # token_name, token_symbol, token_decimals, token_lp, balance, contract_add = await get_token_full_information(context.user_data['address'], user_data) #get_token_info(context.user_data['address'], context.user_data["network_chain"], user_data) 
 
@@ -2540,6 +2540,7 @@ async def token_address_reply(update: Update, context: CallbackContext):
 
 async def to_address_reply(update: Update, context: CallbackContext):
     context.user_data['to_address'] = update.message.text
+    text = update.message.text
     user_id = update.message.from_user.id
     user_data = await load_user_data(str(user_id))
     chat_id = update.message.chat_id
@@ -2551,7 +2552,7 @@ async def to_address_reply(update: Update, context: CallbackContext):
 
     if not token_name.startswith('An error occurred:'):
         text = f"""
-        🪙 CA: {update.message.text}
+        🪙 CA: {text}
         
     How many token do you want to send?
 
