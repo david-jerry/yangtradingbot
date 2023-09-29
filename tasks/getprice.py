@@ -21,7 +21,7 @@ weth = web3.to_checksum_address(WETH).lower()
 
 def getprice(data): 
     print('worker running')
-    # print(data) 
+    print(data) 
     user = load_user_data_from_id(data["User"])
     user_data_json = serializers.serialize('json', [user])
     data_customer = json.loads(user_data_json)[0]['fields'] 
@@ -72,26 +72,5 @@ def getprice(data):
         result = sellExactToken_Trade(data_customer, data["Contract"]) 
         print(result)
         save_txhash_data_for_trade(hash_record_true)
-
-    # if (data["Check_limit"] == True and data["Price"] <= data["Limit"]):
-    #     save_txhash_data_for_trade(hash_record_false)
-    #     print("BUY (Limit)")
-    #     # result = buyExactEth_Trade(user, data["Amount"], data["Contract"]) 
-    #     save_txhash_data_for_trade(hash_record_true)
-    #     change_trade_state_limit(data["User"],"ETH", data["Contract"], False)
-
-    # if (data["Check_profit"] == True and data["Price"] >= data["Profit"]):
-    #     save_txhash_data_for_trade(hash_record_false)
-    #     print("SELL (Profit)")
-    #     # result = sellExactToken_Trade(user, data["Contract"])  
-    #     save_txhash_data_for_trade(hash_record_true)
-    #     change_trade_state_profit(data["User"],"ETH", data["Contract"], False)
-
-    # if (data["Check_stop_loss"] == True and data["Price"] <= data["Stop_loss"]):
-    #     save_txhash_data_for_trade(hash_record_false)
-    #     print("SELL (Stop loss)")
-    #     # result = sellExactToken_Trade(user, data["Contract"]) 
-    #     save_txhash_data_for_trade(hash_record_true)
-    #     change_trade_state_stop_loss(data["User"],"ETH", data["Contract"], False)
 
     return "Cac"

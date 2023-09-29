@@ -57,6 +57,8 @@ from commands.start.__buttons import (
     configuration_button_callback,
     reply_preset_response,
     cancel_preset,
+    AskLimitammount,
+    AskLimitammount2,
     
     copy_trade_next_and_back_callback,
     copy_trade_rename,
@@ -204,6 +206,7 @@ TOKENADDRESS, TOADDRESS, AMOUNT = range(3)
 TRADEWALLETNAME, TARGETWALLET = range(2)
 CHATCHIT = range(1)
 CHATSLIP = range(1)
+CHATAMMOUNT = range(1)
 CHATGAS = range(1)
 CHATLIMIT =range(1)
 CHATPROFIT = range(1)
@@ -290,6 +293,18 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
     )
     app.add_handler(Ask_Loss)
+    #limit_Ammout
+    Ask_Limit_Ammout = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskLimitammount2, pattern=r"^ask_buyammount$")
+
+        ],
+        states={
+            CHATAMMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskLimitammount)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_Limit_Ammout)
     #limit
     Ask_Limit = ConversationHandler(
         entry_points=[
