@@ -247,8 +247,8 @@ async def get_token_info(token_address, network, user_data, api_key=ETHERAPI):
         # Call the functions to retrieve the name and symbol
         token_name = name_function.call()
         token_symbol = symbol_function.call()
-        # LOGGER.info("Updating the sniper information")
-        # token_info = await update_snipes(user_data.user_id, checksum_address, {'name': token_name, 'symbol': token_symbol, 'decimal': token_decimals})
+        LOGGER.info("Updating the sniper information")
+        token_info = await update_snipes(user_data.user_id, checksum_address, {'name': token_name, 'symbol': token_symbol, 'decimal': token_decimals})
         LOGGER.info(token_info)
         return token_name, token_symbol, int(token_decimals), lp, val, checksum_address
     except Exception as e:
