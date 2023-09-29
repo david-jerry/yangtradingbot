@@ -158,7 +158,7 @@ def update_snipes(user_id, address, updated_data):
         except Exception as e:
             LOGGER.info(e)
     except CustomUser.DoesNotExist:
-        LOGGER.info("Copy trade not found")
+        LOGGER.info("Snipper account empty")
 
         
 # @sync_to_async
