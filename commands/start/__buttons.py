@@ -483,6 +483,22 @@ Sell Amount (low): Default (100%)
     return caption
 
 @sync_to_async
+def build_trades_caption(matched_trade):
+    for i in matched_trade:
+           caption = f"""
+⚡️ ethereum
+Name: {i.token_name.title()}
+Address: {i.token_address.title()}
+🤷‍♀️ Settings
+Limit: {i.limit}
+Limit_amount: {i.ammount_limit}
+Loss: {i.stop_loss}
+Profit: {i.profit}
+                """
+    return caption
+
+
+@sync_to_async
 def build_trade_keyboard(matched_trade):
     trades_keyboard = []
     for data in matched_trade:
