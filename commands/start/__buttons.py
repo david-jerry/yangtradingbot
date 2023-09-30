@@ -30,7 +30,7 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import approve_token, attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, trasnfer_currency
+from utils import INFURA_ID, approve_token, attach_wallet_function, back_variable, buyTokenWithEth, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, sellTokenForEth, trasnfer_currency
 from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_next_sniper_data, load_previous_sniper_data, load_sniper_data, load_user_data, remove_sniper, save_copy_trade_address, save_sniper, save_user_data, update_copy_trade_addresses, update_snipes, update_user_data
 
 # ------------------------------------------------------------------------------
@@ -1142,7 +1142,7 @@ You currently have {ETHBALANCE} ETH
             await context.bot.send_message(chat_id=chat_id, text=result, parse_mode=ParseMode.HTML)
         elif button_data == 'selltoken':
             context.user_data['get_eth'] = False
-            message = f"""
+            message = f"""not yet
 How much {TOKENNAME} do you want to sell? You can use a regular number (1, 20 4, 7, etc.).
 
 If you type {TOKENBALANCE}. It will transfer the entire balance.
