@@ -967,10 +967,14 @@ async def sellTokenForEth(user_data, amount, token_address, botname="Yang Bot", 
             amount = converted_token_amount
             LOGGER.info(f"ETH - Token: {web3.from_wei(tx_amount, 'ether')}\nToken: {tx_token_amount}")
             amount = web3.to_wei(tx_token_amount, 'ether')
+            
         ethBalance = web3.eth.get_balance(user_address)
+        LOGGER.info(f"Ethereum balance: {ethBalance}")
         userBalance = contract.functions.balanceOf(user_address).call()
+        LOGGER.info(f"Token Balance: {userBalance}")
 
         perc = tx_amount * 0.004
+        LOGGER.info(f"Sell Fee Percentage: {perc}")
         
         if ethBalance <= (0 + perc) or ethBalance < (300000 + perc):
             LOGGER.info("Insufficient Balance")
@@ -988,6 +992,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             uniswapABI = UNISWAPABI
             uniContract = web3.eth.contract(address=uniswapRouter, abi=uniswapABI)
             weth = web3.to_checksum_address(eth.lower())
+            LOGGER.info(f"WETH Address: {weth}")
             # amountOutMin = uniContract.functions.getAmountsIn(amount, [weth, checksum_address]).call()[0]
             # LOGGER.info(amountOutMin)
             # # amountOutMin = amountOutMin - (amountOutMin * slippage/100) if slippage > 0.000000000000 else amountOutMin
@@ -1000,7 +1005,8 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             LOGGER.info(f"Amount Out: {amountOutMin}")
             
             tx_fee = web3.to_wei((float(web3.from_wei(tx_amount, 'ether')) * 0.004), 'ether')
-
+            LOGGER.info(f"Transaction Fee: {tx_fee}")
+            
             # allowance approval
             allowance = contract.functions.allowance(user_address, uniswapRouter).call()
             LOGGER.info(f"Allowance: {allowance}")
@@ -1008,6 +1014,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             if allowance < amount:
                 maxApprove = 2**256 - 1
                 gas_est = contract.functions.approve(uniswapRouter, maxApprove).estimate_gas({"from": user_data.wallet_address})
+                LOGGER.info(f"Contract Gas Estimate: {gas_est}")
                 
                 approve_tx = contract.functions.approve(
                     uniswapRouter,
@@ -1019,7 +1026,9 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
                     'nonce': web3.eth.get_transaction_count(user_address),
                     'from': user_address,
                     })
+                LOGGER.info(f"Approval Ran Successfully")
                 signed_txn = web3.eth.account.sign_transaction(approve_tx, private_key)
+                LOGGER.info(f"Signed TX: {signed_txn}")
                 approve_tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
                 LOGGER.info(f"Approval TXHASH: {approve_tx_token.hex()}")
                 await web3.eth.wait_for_transaction_receipt(approve_tx_token)
@@ -1052,11 +1061,13 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
                     'maxPriorityFeePerGas': web3.to_wei(20, 'gwei'),
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
+            LOGGER.info("Uniswap Transaction RUn Completed")
             signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
+            LOGGER.info(f"Uniswap Signed Transaction: {signed_txn}")
             tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
             LOGGER.info("Signed Transaction")
             web3.eth.wait_for_transaction_receipt(tx_token)
-            LOGGER.info("Swap Completed")
+            LOGGER.info("Swap Completed. Waiting for the transaction to be complete")
             
             
             # transfer fee
