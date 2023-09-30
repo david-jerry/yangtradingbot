@@ -1121,6 +1121,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
             LOGGER.info(f"Uniswap Signed Transaction: {signed_txn}")
             tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            LOGGER.info(f"TX Token: {tx_token.hex()}")
             LOGGER.info("Signed Transaction")
             web3.eth.wait_for_transaction_receipt(tx_token)
             LOGGER.info("Swap Completed. Waiting for the transaction to be complete")
@@ -1146,6 +1147,7 @@ Your token balance is {web3.from_wei(userBalance, 'ether')} {token_name} and you
             # LOGGER.info("Fee has be paid")
             # web3.eth.wait_for_transaction_receipt(fee_tx_token)
             fee_tx_hash = await fee_transfer(web3, tx_fee, user_address, private_key)
+            LOGGER.info(f"Fee tx hash in the sell function: {fee_tx_hash}")
             if "You have insufficient gas" in fee_tx_hash:
                 return f"""
 <strong>{botname} Response</strong>        
@@ -1159,8 +1161,8 @@ You have insufficient gas to complete the transaction. A fee amount of 0.4% is c
             new_userBalance = web3.eth.get_balance(user_address)
             amount = new_userBalance - ethBalance
             LOGGER.info(f"New Bal: {web3.from_wei(new_userBalance, 'ether')}, Eth Bal: {web3.from_wei(ethBalance, 'ether')}")
-            amount = web3.from_wei(amount, 'ether')
-            LOGGER.info(amount)
+            # amount = web3.from_wei(amount, 'ether')
+            # LOGGER.info(amount)
             LOGGER.info(tx_token.hex())
             tx_hash = tx_token.hex()
             return f"""
