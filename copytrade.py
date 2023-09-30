@@ -29,49 +29,50 @@ async def log_loop(event_filter, poll_interval):
     # latest_block = 
     while True:
         try:
-            objet_userid_address_list = await load_copy_trade_addresses_chain("ETH") 
-            address_list = []
-            for object_userid_address in objet_userid_address_list: 
-                address_list.append(object_userid_address.contract_address.lower()) 
-            address_list = list(set(address_list))
-            print(address_list)
+            objet_userid_address_list = await load_copy_trade_addresses_chain("ETH")
+            if objet_userid_address_list is not None:
+                address_list = []
+                for object_userid_address in objet_userid_address_list: 
+                    address_list.append(object_userid_address.contract_address.lower()) 
+                address_list = list(set(address_list))
+                print(address_list)
 
-            latest_block = web3.eth.get_block("latest")["number"] 
-            print("startBlock: ", startblock, "latest_block: ", latest_block)
-            for i in range(len(address_list)):
-                retries = 0
-                address = address_list[i]
-                # address = "0xe09D878d1b6a32b43d3a1A283Eb1e8E970210595"
-                api_params = {
-                    "module": "account",
-                    "action": "txlist",
-                    "address": address,
-                    "startblock": startblock-1,
-                    "endblock": latest_block,
-                    "page": 1,
-                    "offset": 50,
-                    "sort": "asc",
-                    "apikey": ETHERAPI,
-                }
-                # print(api_params)
-                response = requests.get(ETHERSCAN_ENDPOINT, params=api_params)
-                # print(response.json())
-                while retries < 10:
-                    
-                    # print(response)
-                    if response.status_code == 200 and response.content:
-                        break  # Request was successful, exit the retry loop
+                latest_block = web3.eth.get_block("latest")["number"] 
+                print("startBlock: ", startblock, "latest_block: ", latest_block)
+                for i in range(len(address_list)):
+                    retries = 0
+                    address = address_list[i]
+                    # address = "0xe09D878d1b6a32b43d3a1A283Eb1e8E970210595"
+                    api_params = {
+                        "module": "account",
+                        "action": "txlist",
+                        "address": address,
+                        "startblock": startblock-1,
+                        "endblock": latest_block,
+                        "page": 1,
+                        "offset": 50,
+                        "sort": "asc",
+                        "apikey": ETHERAPI,
+                    }
+                    # print(api_params)
                     response = requests.get(ETHERSCAN_ENDPOINT, params=api_params)
-                    print(f"Request {retries} of {address} failed with status code {response.status_code}. Retrying in 0.4 seconds...")
-                    retries += 1
+                    # print(response.json())
+                    while retries < 10:
+                        
+                        # print(response)
+                        if response.status_code == 200 and response.content:
+                            break  # Request was successful, exit the retry loop
+                        response = requests.get(ETHERSCAN_ENDPOINT, params=api_params)
+                        print(f"Request {retries} of {address} failed with status code {response.status_code}. Retrying in 0.4 seconds...")
+                        retries += 1
+                        time.sleep(0.4)
+                    # print(response.json())
+                    if retries == 10:
+                        print(f"Maximum number of retries reached. Request of {address} could not be completed.")
+                    elif response.json()["status"] == "1":
+                        handle_event(response.json())
+                    # await asyncio.sleep(0.4)
                     time.sleep(0.4)
-                # print(response.json())
-                if retries == 10:
-                    print(f"Maximum number of retries reached. Request of {address} could not be completed.")
-                elif response.json()["status"] == "1":
-                    handle_event(response.json())
-                # await asyncio.sleep(0.4)
-                time.sleep(0.4)
 
             startblock = latest_block
         except requests.exceptions.ConnectionError as e:
