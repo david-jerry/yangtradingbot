@@ -496,6 +496,7 @@ Auto Sell (low): Default(-50%)
 Sell Amount (low): Default (100%)            
             """
     return caption
+
 @sync_to_async
 def build_trade_keyboard(matched_trade):
     trades_keyboard = []
@@ -518,6 +519,8 @@ def build_trade_keyboard(matched_trade):
     trades_markup = InlineKeyboardMarkup(trades_keyboard)
     
     return trades_markup
+
+
 @sync_to_async
 def build_copy_name_keyboard(matched_trade):
     multi = InlineKeyboardButton(f"{'❌' if not matched_trade.multi else '✅'} Multi", callback_data=f"copyname_multi")
