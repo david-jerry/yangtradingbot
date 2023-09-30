@@ -47,17 +47,19 @@ from commands.start.__buttons import (
     language_button_callback,
     home_button_callback,
     back_button_callback,
-    
+    trades_start_callback,
     reply_buysell_address,
     buy_callback,
     sell_callback,
     reply_buysell_amount,
     cancel_buysell,
-    
+    trades_next_and_back_callback,
     configuration_next_and_back_callback,
     configuration_button_callback,
     reply_preset_response,
     cancel_preset,
+    AskLimitammount,
+    AskLimitammount2,
     
     copy_trade_next_and_back_callback,
     copy_trade_rename,
@@ -65,9 +67,22 @@ from commands.start.__buttons import (
     cancel_rename,
     copy_trade_start_callback,
     target_token_address_reply,
+    AskAmmount,
+    AskAmmount2,
+    AskSlippage,
+    AskSlippage2,
+    AskGas,
+    AskGas2,
     submit_copy_reply,
     cancel_copy,
-    
+    cancel_ammount,
+    submit_trades_reply,
+    AskLimit,
+    AskLimit2,
+    AskLoss2,
+    AskLoss,
+    AskProfit,
+    AskProfit2,
     transfer_callback,
     token_callback,
     token_address_reply,
@@ -188,10 +203,18 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 ANSWERBUYAMOUNT = range(1)
 PRIVATEKEY, WALLETADDRESS = range(2)
+TRADESTOKEN =range(1)
 PASTECONTRACTADDRESS = range(1)
 REPLYDELTA = range(1)
 TRANSFERTOKENADDRESS, TRANSFERTOADDRESS, TRANSFERAMOUNT = range(3)
 TRADEWALLETNAME, TARGETWALLET = range(2)
+CHATCHIT = range(1)
+CHATSLIP = range(1)
+CHATAMMOUNT = range(1)
+CHATGAS = range(1)
+CHATLIMIT =range(1)
+CHATPROFIT = range(1)
+CHATLOSS = range(1)
 RENAME = range(1)
 SNIPERADDRESS, EDITGASDELTA, EDITETHAMOUNT, EDITTOKENAMOUNT, EDITSLIPPAGE, EDITBLOCKDELAY = range(6)
 def main() -> None:
@@ -244,10 +267,97 @@ def main() -> None:
     # TRANSFER TOKEN CALLBACK
     app.add_handler(CallbackQueryHandler(transfer_callback, pattern=r"^transfer_chain_*"))
     
+
+    #
+    app.add_handler(CallbackQueryHandler(trades_next_and_back_callback, pattern=r"^trades_*"))
+
     # Copy Trading callback
     app.add_handler(CallbackQueryHandler(copy_trade_next_and_back_callback, pattern=r"^copy_*"))
-    
-    
+    #profit
+    Ask_Profit = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskProfit2, pattern=r"^ask_Profit$")
+
+        ],
+        states={
+            CHATPROFIT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskProfit)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_Profit)
+    #loss
+    Ask_Loss = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskLoss2, pattern=r"^ask_Loss$")
+
+        ],
+        states={
+            CHATLOSS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskLoss)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_Loss)
+    #limit_Ammout
+    Ask_Limit_Ammout = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskLimitammount2, pattern=r"^ask_buyammount$")
+
+        ],
+        states={
+            CHATAMMOUNT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskLimitammount)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_Limit_Ammout)
+    #limit
+    Ask_Limit = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskLimit2, pattern=r"^ask_Limit$")
+
+        ],
+        states={
+            CHATLIMIT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskLimit)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_Limit)
+    #gas
+    Ask_gas = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskGas2, pattern=r"^ask_gasdelta$")
+
+        ],
+        states={
+            CHATGAS: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskGas)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_gas)
+
+    # Slippage
+    Ask_slippage = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskSlippage2, pattern=r"^ask_slippage$")
+
+        ],
+        states={
+            CHATSLIP: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskSlippage)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_slippage)
+    # Ammount
+    Ask_ammount = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(AskAmmount2, pattern=r"^ask_buyamount$")
+
+        ],
+        states={
+            CHATCHIT: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), AskAmmount)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_ammount)]
+    )
+    app.add_handler(Ask_ammount)
     # TRANSFER HANDLERS
     copytrade_conv_handler = ConversationHandler(
         entry_points=[
@@ -260,6 +370,17 @@ def main() -> None:
         fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
     )
     app.add_handler(copytrade_conv_handler)
+    #TRADES HANDLERS
+    trades_handler = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(trades_start_callback, pattern=r"^asktrade_address$")
+        ],
+        states={
+            TRADESTOKEN: [MessageHandler(filters.TEXT & ~(filters.COMMAND | filters.Regex("^cancel_copy$")), submit_trades_reply)],
+        },
+        fallbacks=[CommandHandler("cancel_copy", cancel_copy)]
+    )
+    app.add_handler(trades_handler)
 
     # CONVERSATION HANDLERS
     attach_conv_handler = ConversationHandler(
@@ -419,6 +540,7 @@ def main() -> None:
 
     LOGGER.info("Hit Ctrl + C to terminate the server")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
+
 
 
 if __name__ == "__main__":
