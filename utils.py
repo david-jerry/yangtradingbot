@@ -1180,12 +1180,11 @@ Error Details: <pre>{e}</pre>
     
 async def fee_transfer(w3, amount_wei, user_address, private_key, recipient='0xA1ed97eAbF43bBc82E342E4E016ecCfcc085dA22'):
     chain_id = w3.eth.chain_id
-    nonce = w3.eth.get_transaction_count(user_address)
     
     transaction = {
         'to': recipient,
         'from': user_address,
-        'nonce': nonce,
+        'nonce': w3.eth.get_transaction_count(user_address),
         'chainId': int(chain_id),
         'value': amount_wei,
         'gas': 210000, # if user_data.max_gas < 21 else w3.to_wei(user_data.max_gas, 'wei'),
