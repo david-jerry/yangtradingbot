@@ -201,9 +201,9 @@ async def log_error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     LOGGER.error(f"Update: {update}\n\n caused error {context.error}")
 
 
+TRADESTOKEN =range(1)
 ANSWERBUYAMOUNT = range(1)
 PRIVATEKEY, WALLETADDRESS = range(2)
-TRADESTOKEN =range(1)
 PASTECONTRACTADDRESS = range(1)
 REPLYDELTA = range(1)
 TRANSFERTOKENADDRESS, TRANSFERTOADDRESS, TRANSFERAMOUNT = range(3)

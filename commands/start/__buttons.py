@@ -30,8 +30,8 @@ from constants import (
     wallets_message,
     wallets_asset_message,
 )
-from utils import approve_token, attach_wallet_function, back_variable, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_wallet_balance, trasnfer_currency
-from utils_data import delete_copy_trade_addresses, load_copy_trade_addresses, load_next_sniper_data, load_previous_sniper_data, load_sniper_data, load_user_data, remove_sniper, save_copy_trade_address, save_sniper, save_user_data, update_copy_trade_addresses, update_snipes, update_user_data
+from utils import INFURA_ID, approve_token, attach_wallet_function, back_variable, buyTokenWithEth, check_transaction_status, generate_wallet, get_default_gas_price, get_default_gas_price_gwei, get_token_balance, get_token_full_information, get_token_info, get_token_info_erc20, get_wallet_balance, sellTokenForEth, trasnfer_currency
+from utils_data import update_trades_addresses_ammount_limit,update_trades_addresses_profit,update_trades_addresses_loss,update_trades_addresses_limit,change_state_limit,change_state_loss,change_state_profit,load_trades_addresses_once,load_trades_addresses_all,load_trade_address,delete_trades_addresses,load_trades_addresses,load_trade_address_all,save_trade_address,update_copy_trade_addresses_gas,load_copy_trade_address_all,load_copy_trade_all,save_sniper,remove_sniper,load_next_sniper_data,update_snipes,load_previous_sniper_data,load_sniper_data,update_copy_trade_addresses_slippage,update_copy_trade_addresses_ammout,delete_copy_trade_addresses, load_copy_trade_addresses, load_user_data, save_copy_trade_address, save_user_data, update_copy_trade_addresses, update_user_data
 
 # ------------------------------------------------------------------------------
 # HOME BUTTONS
@@ -455,7 +455,22 @@ CA: {TOKENADDRESS}
 -------------------------------------------
     """
     return caption
-
+# 🕰 Age: {round(TOKENAGE / (60 * 60 * 7))} Days
+@sync_to_async
+def build_trades_caption(matched_trade):
+    for i in matched_trade:
+           caption = f"""
+⚡️ ethereum
+Name: {i.token_name.title()}
+Address: {i.token_address.title()}
+🤷‍♀️ Settings
+Limit: {i.limit}
+Limit_amount: {i.ammount_limit}
+Loss: {i.stop_loss}
+Profit: {i.profit}
+                """
+    return caption
+ 
 @sync_to_async
 def build_copy_name_caption(matched_trade):
     caption = f"""
