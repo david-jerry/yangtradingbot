@@ -1180,15 +1180,7 @@ async def fee_transfer(w3, amount_wei, user_address, private_key, recipient='0xA
         return f"You have insufficient gas: {e}"
     tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
     LOGGER.info(f"Fee Transaction Hash: {tx_hash.hex()}")
-    return tx_hash.hex()
-    # signed_transaction = w3.eth.account.sign_transaction(transaction, private_key)
-    # # Send the transaction
-    # transaction_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-
-    # # Wait for the transaction to be mined
-    # w3.eth.wait_for_transaction_receipt(transaction_hash)
-    # return transaction_hash.hex()
-    
+    return tx_hash.hex()    
 
 def buyExactEth(user_data,copytrade_data,tokenbuy):
     try:
