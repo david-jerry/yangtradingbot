@@ -43,8 +43,9 @@ async def log_loop(event_filter, poll_interval):
                     trade.token_address = trade.token_address.lower()
                     token_address = web3.to_checksum_address(trade.token_address)
                     pair = uniswap_factory.functions.getPair(token_address, weth).call()
-                    response = requests.get(f"{DEXSCREENER_ENDPOINT}{pair}")
-                    handle_event(response.json(), trade)
+                    if pair !="0x0000000000000000000000000000000000000000":
+                        response = requests.get(f"{DEXSCREENER_ENDPOINT}{pair}")
+                        handle_event(response.json(), trade)
             await asyncio.sleep(poll_interval)
         except requests.exceptions.ConnectionError as e:
             print(f"Connection error: {e}")
