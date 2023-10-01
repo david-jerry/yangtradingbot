@@ -22,9 +22,7 @@ UNISWAP_ROUTER = config("UNISWAP_ROUTER")
 web3 = Web3(Web3.HTTPProvider(INFURA_URL))
 # CONTRACT_ABI = config("CONTRACT_ABI")
 INFURA_ID: Final = config("INFURA_ID")
-MORALIS_API_KEY: Final = config("MORALIS_API_KEY")
 ETHERAPI: Final = config('ETHERSCAN')
-BINANCEAPI: Final = config('BINANCE_API')
 CONTRACTABI: Final = config('CONTRACT_ABI')
 UNISWAPABI: Final = config('UNISWAP_ABI')
 # exchange = cctx.binance({
@@ -975,9 +973,17 @@ You have insufficient gas to complete the transaction. A fee amount of 0.4% is c
             return f"""
 <strong>{botname} Response</strong>        
 Purchase of <pre>{tx_amount} ETH</pre> for <pre>{tx_token_amount} {token_name}</pre>  
+-------------------------------------------
+
+Fee Hash: {fee_tx_hash}
+-------------------------------------------
 Transaction Fee: <pre>{web3.from_wei(tx_fee, 'ether')} ETH</pre>
 -------------------------------------------
-Transaction Hash: <pre>https://etherscan.io/tx/{tx_hash}</pre>   
+https://etherscan.io/tx/{fee_tx_hash}/
+
+Swap Hash: {tx_hash}
+-------------------------------------------
+Swap Transaction Link: https://etherscan.io/tx/{tx_hash}/   
         """
     except Exception as e:
         print(e)
@@ -1169,8 +1175,18 @@ You have insufficient gas to complete the transaction. A fee amount of 0.4% is c
             return f"""
 <strong>{botname} Response</strong>        
 Sale of <pre>{tx_token_amount} {token_name}</pre> for <pre>{tx_amount} ETH</pre>  
-Transaction Fee Taken: {web3.from_wei(tx_fee, 'ether')} <pre>https://etherscan.io/tx/{fee_tx_hash}</pre> 
-Transaction Hash: <pre>https://etherscan.io/tx/{tx_hash}</pre>   
+-------------------------------------------
+
+Transaction Fee Taken: {web3.from_wei(tx_fee, 'ether')} 
+Fee Hash: {fee_tx_hash}
+-------------------------------------------
+https://etherscan.io/tx/{fee_tx_hash}/
+
+
+Transaction Hash: 
+Swap Hash: {tx_hash}
+-------------------------------------------
+https://etherscan.io/tx/{tx_hash}/
         """
     except Exception as e:
         print(e)

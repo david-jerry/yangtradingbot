@@ -6,6 +6,7 @@ from web3 import Web3
 INFURA_URL = config("INFURA_URL")
 web3 = Web3(Web3.HTTPProvider(INFURA_URL))
 CONTRACT_ABI = config("CONTRACT_ABI")
+from utils_constants import ROUTER_ABI
 from telegram import Bot
 import django, os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")

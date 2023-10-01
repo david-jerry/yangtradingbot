@@ -4,6 +4,8 @@ import asyncio
 from decouple import config
 from tasks import copytrade
 
+from utils_constants import ROUTER_ABI
+
 infura_url = config("PUBLICRPC")
 web3 = Web3(Web3.HTTPProvider(infura_url))
 import requests
@@ -15,7 +17,6 @@ ETHERAPI = config("ETHERAPI")
 ETHERSCAN_ENDPOINT = config("ETHERSCAN_ENDPOINT")
 UNISWAP_ROUTER =config("UNISWAP_ROUTER")
 UNISWAP_ABI = config("UNISWAP_ABI")
-ROUTER_ABI = config("ROUTER_ABI")
 from utils_data import load_copy_trade_addresses_chain, save_txhash_data
 from uniswap_universal_router_decoder import RouterCodec
 contract_abi = config("CONTRACT_ABI")
