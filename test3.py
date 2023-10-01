@@ -4,7 +4,7 @@ import asyncio
 from decouple import config
 from tasks import copytrade
 
-from .utils_constants import ROUTER_ABI
+from utils_constants import ROUTER_ABI
 
 infura_url = config("PUBLICRPC")
 web3 = Web3(Web3.HTTPProvider(infura_url))

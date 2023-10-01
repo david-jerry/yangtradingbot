@@ -12,7 +12,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")
 django.setup()
 EXPLORER_URL = config("EXPLORER_URL")
 from utils_data import load_txhash_data,Load_txhash_copy_data, load_user_data_from_id
-from .utils_constants import ROUTER_ABI
+from utils_constants import ROUTER_ABI
 from utils import fee_transfer
 UNISWAP_ROUTER =config("UNISWAP_ROUTER").lower()
 UNISWAP_ABI = ROUTER_ABI
