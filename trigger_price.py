@@ -14,7 +14,7 @@ EXPLORER_URL = config("EXPLORER_URL")
 from utils_data import load_txhash_data,Load_txhash_copy_data, Load_trade_txhash_copy_data, load_user_data_from_id
 from utils import fee_transfer
 UNISWAP_ROUTER =config("UNISWAP_ROUTER").lower()
-UNISWAP_ABI = config("ROUTER_ABI")
+UNISWAP_ABI = config("UNISWAP_ABI")
 WETH = config("WETH").lower()
 TOKEN = config("TOKEN")
 async def send_message(bot_token, chat_id, message):
@@ -49,7 +49,7 @@ async def checkDatabase(bot_token,contract_ab):
                         amount = web3.to_wei(amount, 'ether')
                     else:
                         token_address = web3.to_checksum_address(copytradetxhash[i]['token_address'])
-                        amount = uniswap.functions.getAmountsOut(web3.to_wei(copytradetxhash[i]['amount'], 'ether'), 
+                        amount = uniswap.functions.getAmountOut(web3.to_wei(copytradetxhash[i]['amount'], 'ether'), 
                                                                  [token_address, weth]).call()
                     name = contract.functions.name().call()
                     if (name == 'Wrapped Ether'):

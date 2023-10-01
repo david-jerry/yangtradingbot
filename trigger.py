@@ -14,7 +14,7 @@ EXPLORER_URL = config("EXPLORER_URL")
 from utils_data import load_txhash_data,Load_txhash_copy_data, load_user_data_from_id
 from utils import fee_transfer
 UNISWAP_ROUTER =config("UNISWAP_ROUTER").lower()
-UNISWAP_ABI = config("ROUTER_ABI")
+UNISWAP_ABI = config("UNISWAP_ABI")
 WETH = config("WETH").lower()
 TOKEN = config("TOKEN")
 async def send_message(bot_token, chat_id, message):
