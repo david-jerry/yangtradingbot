@@ -3,6 +3,7 @@ from decouple import config
 from web3 import Web3
 import time
 import json
+from decimal import Decimal
 import os, django
 from django.core import serializers
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")
@@ -48,7 +49,7 @@ def getprice(data):
         if load_txhash.check_txhash == True:
             break
     
-    if (trade["check_limit"] == True and data["Price"] <= trade["limit"]):
+    if (trade["check_limit"] == True and Decimal(data["Price"]) <= trade["limit"]):
         change_trade_state_limit(data["User"],"ETH", data["Contract"], False)
         save_txhash_data_for_trade(hash_record_false)
         print("BUY (Limit)")
@@ -57,15 +58,15 @@ def getprice(data):
         print(result)
         save_txhash_data_for_trade(hash_record_true)
 
-    if (trade["check_profit"] == True and data["Price"] >= trade["profit"]): 
+    if (trade["check_profit"] == True and Decimal(data["Price"]) >= trade["profit"]): 
         change_trade_state_profit(data["User"],"ETH", data["Contract"], False)
         save_txhash_data_for_trade(hash_record_false)
         print("SELL (Profit)")
-        result = sellExactToken_Trade(data_customer, data["Contract"])  
+        result = sellExactToken_Trade(data_customer, data["Contract"])
         print(result)
         save_txhash_data_for_trade(hash_record_true)
     
-    if (trade["check_stop_loss"] == True and data["Price"] <= trade["stop_loss"]): 
+    if (trade["check_stop_loss"] == True and Decimal(data["Price"]) <= trade["stop_loss"]): 
         change_trade_state_stop_loss(data["User"],"ETH", data["Contract"], False)   
         save_txhash_data_for_trade(hash_record_false)
         print("SELL (Stop loss)")

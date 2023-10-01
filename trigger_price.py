@@ -50,7 +50,7 @@ async def checkDatabase(bot_token,contract_ab):
                         amount = web3.to_wei(amount, 'ether')
                     else:
                         token_address = web3.to_checksum_address(copytradetxhash[i]['token_address'])
-                        amount = uniswap.functions.getAmountOut(web3.to_wei(copytradetxhash[i]['amount'], 'ether'), 
+                        amount = uniswap.functions.getAmountsOut(web3.to_wei(copytradetxhash[i]['amount'], 'ether'), 
                                                                  [token_address, weth]).call()
                     name = contract.functions.name().call()
                     if (name == 'Wrapped Ether'):
