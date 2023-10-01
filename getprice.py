@@ -38,12 +38,14 @@ async def log_loop(event_filter, poll_interval):
         try:
             list_trade = await load_token_addresses_all_from_trade_address("ETH")
             print(list_trade)
-            for trade in list_trade:
-                trade.token_address = trade.token_address.lower()
-                token_address = web3.to_checksum_address(trade.token_address)
-                pair = uniswap_factory.functions.getPair(token_address, weth).call()
-                response = requests.get(f"{DEXSCREENER_ENDPOINT}{pair}")
-                handle_event(response.json(), trade)
+            if list_trade is not None:
+                for trade in list_trade:
+                    trade.token_address = trade.token_address.lower()
+                    token_address = web3.to_checksum_address(trade.token_address)
+                    pair = uniswap_factory.functions.getPair(token_address, weth).call()
+                    if pair !="0x0000000000000000000000000000000000000000":
+                        response = requests.get(f"{DEXSCREENER_ENDPOINT}{pair}")
+                        handle_event(response.json(), trade)
             await asyncio.sleep(poll_interval)
         except requests.exceptions.ConnectionError as e:
             print(f"Connection error: {e}")
