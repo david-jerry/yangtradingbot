@@ -24,7 +24,7 @@ UNISWAP_ABI = config("UNISWAP_ABI")
 DEXSCREENER_ENDPOINT = config("DEXSCREENER_ENDPOINT")
 WETH = config("WETH").lower()
 UNISWAP_FACTORY_ABI = config("UNISWAP_FACTORY_ABI")
-UNISWAP_FACTORY= config("UNISWAP_FACTORY").lower()
+UNISWAP_FACTORY= config("UNISWAP_FACTORY", default="0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f").lower()
 from utils_data import load_token_addresses_all_from_trade_address
 from uniswap_universal_router_decoder import RouterCodec
 contract_abi = config("CONTRACT_ABI")
