@@ -6,6 +6,7 @@ from web3 import Web3
 INFURA_URL = config("INFURA_URL")
 web3 = Web3(Web3.HTTPProvider(INFURA_URL))
 CONTRACT_ABI = config("CONTRACT_ABI")
+from .utils_constants import ROUTER_ABI
 from telegram import Bot
 import django, os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "yangbot.settings")
@@ -14,7 +15,7 @@ EXPLORER_URL = config("EXPLORER_URL")
 from utils_data import load_txhash_data,Load_txhash_copy_data, Load_trade_txhash_copy_data, load_user_data_from_id
 from utils import fee_transfer
 UNISWAP_ROUTER =config("UNISWAP_ROUTER").lower()
-UNISWAP_ABI = config("ROUTER_ABI")
+UNISWAP_ABI = ROUTER_ABI
 WETH = config("WETH").lower()
 TOKEN = config("TOKEN")
 async def send_message(bot_token, chat_id, message):
