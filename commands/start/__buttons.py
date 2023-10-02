@@ -145,9 +145,9 @@ detach_confirm_markup = InlineKeyboardMarkup(detach_confirm_keyboard)
 
 english = InlineKeyboardButton("🇺🇸 English (en)", callback_data="language_en")
 french = InlineKeyboardButton("🇫🇷 French (fr)", callback_data="language_fr")
-dutch = InlineKeyboardButton("🇻🇳 Vietnam (vi)", callback_data="language_de")
-spanish = InlineKeyboardButton("🇨🇳 China (ch)", callback_data="language_es")
-italian = InlineKeyboardButton("🇹🇷 Turkey  (tu)", callback_data="language_it")
+dutch = InlineKeyboardButton("🇻🇳 Vietnam (vi)", callback_data="language_vi")
+spanish = InlineKeyboardButton("🇨🇳 China (ch)", callback_data="language_ch")
+italian = InlineKeyboardButton("🇹🇷 Turkey  (tu)", callback_data="language_tu")
 
 language_keyboard = [[english, french, dutch, spanish, italian], [home]]
 language_markup = InlineKeyboardMarkup(language_keyboard)
@@ -323,19 +323,19 @@ async def language_button_callback(update: Update, context: ContextTypes.DEFAULT
                 text=f"Language Selected: <pre>{button_data.lower()}</pre>",
                 parse_mode=ParseMode.HTML,
             )
-        elif button_data == "de":
+        elif button_data == "vi":
             await context.bot.send_message(
                 chat_id=query.message.chat_id,
                 text=f"Language Selected: <pre>{button_data.lower()}</pre>",
                 parse_mode=ParseMode.HTML,
             )
-        elif button_data == "it":
+        elif button_data == "tu":
             await context.bot.send_message(
                 chat_id=query.message.chat_id,
                 text=f"Language Selected: <pre>{button_data.lower()}</pre>",
                 parse_mode=ParseMode.HTML,
             )
-        elif button_data == "es":
+        elif button_data == "ch":
             await context.bot.send_message(
                 chat_id=query.message.chat_id,
                 text=f"Language Selected: <pre>{button_data.lower()}</pre>",
