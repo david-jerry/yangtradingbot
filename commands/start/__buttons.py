@@ -2979,7 +2979,6 @@ You have {BALANCE} {NETWORK}
     else:
         await query.message.reply_text("I don't understand that command.")
 
-
 TRANSFERTOKENADDRESS, TRANSFERTOADDRESS, TRANSFERAMOUNT = range(3)
 async def token_callback(update: Update, context: CallbackContext):
     global TOKEN_NAME
@@ -3081,7 +3080,6 @@ What wallet address do you wish to send the token to?
             )
             message
             return TRANSFERTOADDRESS
-
             
 async def token_address_reply(update: Update, context: CallbackContext):
     context.user_data['token_address'] = update.message.text
@@ -3160,10 +3158,10 @@ async def token_amount_reply(update: Update, context: CallbackContext):
     tx_hash, amount, symbol, symbol_name = await trasnfer_currency(NETWORK, user_data, percentage, to_address, transfer_eth, token_address=address)
     
     if "Insufficient balance" in tx_hash:
-        await update.message.reply_text(tx_hash)
+        await update.message.reply_text(tx_hash, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
     elif "Error Transferring:" in tx_hash:
-        await update.message.reply_text(tx_hash)
+        await update.message.reply_text(tx_hash, parse_mode=ParseMode.HTML)
         return ConversationHandler.END
     
     receipt = await check_transaction_status(NETWORK, user_data,  tx_hash)
@@ -3190,7 +3188,7 @@ async def cancel_transfer(update: Update, context: CallbackContext):
     context.user_data.pop('token_address', None)
     context.user_data.pop('to_address', None)
     context.user_data.pop("network_chain", None)
-    await update.message.reply_text("Investment Cancelled.")
+    await update.message.reply_text("Transfer Cancelled.")
     return ConversationHandler.END
 
 

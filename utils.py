@@ -271,7 +271,7 @@ async def get_token_info_erc20(token_address, network, user_data, api_key=ETHERA
     
     checksum_address = token_address
     if not w3.is_address(checksum_address.strip().lower()):
-        return f"An error occurred: Invalid address format\n\n{e}", "", "", "", "", ""
+        return f"An error occurred: Invalid address format", "", "", "", "", ""
     
     if not w3.is_checksum_address(checksum_address.strip().lower()):
         checksum_address = w3.to_checksum_address(token_address.strip().lower())
@@ -557,7 +557,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, transfer
 
 
     try:
-        gas_price = w3.to_wei('40', 'gwei')
+        gas_price = w3.eth.gas_price
         
         # contract_abi = await get_contract_abi(str(token_address)) if token_address != None else None
         # Build the transaction
@@ -565,14 +565,18 @@ async def trasnfer_currency(network, user_data, percentage, to_address, transfer
             balance = w3.eth.get_balance(user_data.wallet_address)
             LOGGER.info(f"Gas Price: {gas_price}")
             LOGGER.info(f"Balance: {web3.from_wei(balance, 'ether')}")
-            amount = web3.from_wei(balance, 'ether') * Decimal(percentage)
+            LOGGER.info(f"Converted Info: {web3.from_wei(balance, 'ether')}")
+            amount = web3.from_wei(balance, 'ether') * round(Decimal(percentage), 6)
             LOGGER.info(f"Amount: {amount}")
+            LOGGER.info(f"Percentage: {round(Decimal(percentage), 6)}")
             
             
 
-            if balance - web3.to_wei(amount, 'ether') < gas_price:
+            if balance <= 0.000000 or balance - web3.to_wei(amount, 'ether') < gas_price:
                 LOGGER.info('We got here: insufficient funds')
-                return f"Insufficient balance\n\nBal: {web3.from_wei(balance, 'ether')}\nGas Required: {w3.from_wei(gas_price, 'ether')}\nAmount Transferring: {amount}", amount, "ETH", "ETHEREUM"
+                return f"""<strong>YANGBOT Response</strong>
+               
+❌ Insufficient balance\n\nBal: {web3.from_wei(balance, 'ether')}\nGas Required: {w3.from_wei(gas_price, 'ether')}\nAmount Transferring: {amount}""", amount, "ETH", "ETHEREUM"
 
             transaction = {
                 'to': fmt_address,
@@ -656,7 +660,7 @@ async def trasnfer_currency(network, user_data, percentage, to_address, transfer
                     gas = gas_price
                     
                     
-                LOGGER.info(f"Gas Fee in ETH: {gas_estimate}")
+                LOGGER.info(f"Gas Fee in ETH: {web3.from_wei(gas_estimate, 'ether')}")
                 LOGGER.info(f"Gas Price: {gas}")
                 
                 # check if the balance you have is enough for the gas
@@ -679,7 +683,9 @@ async def trasnfer_currency(network, user_data, percentage, to_address, transfer
                     signed_transaction = w3.eth.account.sign_transaction(transaction, user_data.wallet_private_key)
                     tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
                 except Exception as e:
-                    return f"Insufficient balance: {e}", amount, "ETH", "ETHEREUM"
+                    return f"""<strong>YANGBOT Response</strong>   
+                     
+❌ Insufficient balance: {e}""", amount, "ETH", "ETHEREUM"
                 
                 
                 try:
