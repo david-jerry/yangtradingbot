@@ -689,9 +689,9 @@ async def trasnfer_currency(network, user_data, percentage, to_address, transfer
                 
                 
                 try:
-                    LOGGER.info(tx_hash)
+                    LOGGER.info(tx_hash.hex())
                     token_name, token_symbol, token_decimals, token_lp, balance, contract_add= await get_token_info(checksum_address, network, user_data)
-                    return tx_hash, fmt_amount, token_symbol, token_name
+                    return tx_hash.hex(), fmt_amount, token_symbol, token_name
                 except Exception as e:
                     return f"You have insufficient gas: {e}", "", "", ""
 
