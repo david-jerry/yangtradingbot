@@ -1,7 +1,6 @@
 start - Lets get this party started 🎉.
 language - To change the bot response language to the one you are most comfortable with.
 about - To gain information about the bot.
-
 cancel_copy - ❌ Stops the conversation to setup a copytrade
 cancel_attachment - ❌ Stops the conversation to attach a wallet address
 cancel_buysell - ❌ Stops the conversation to buy or sell a token against the native currency ETH
