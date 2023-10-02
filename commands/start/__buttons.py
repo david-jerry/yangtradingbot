@@ -145,7 +145,7 @@ detach_confirm_markup = InlineKeyboardMarkup(detach_confirm_keyboard)
 
 english = InlineKeyboardButton("🇺🇸 English (en)", callback_data="language_en")
 french = InlineKeyboardButton("🇫🇷 French (fr)", callback_data="language_fr")
-dutch = InlineKeyboardButton("🇻🇳  Vietnam (vi)", callback_data="language_de")
+dutch = InlineKeyboardButton("🇻🇳 Vietnam (vi)", callback_data="language_de")
 spanish = InlineKeyboardButton("🇨🇳 China (ch)", callback_data="language_es")
 italian = InlineKeyboardButton("🇹🇷 Turkey  (tu)", callback_data="language_it")
 
