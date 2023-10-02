@@ -1291,7 +1291,7 @@ def buyExactEth(user_data,copytrade_data,tokenbuy):
         return None
 
 def buyExactEth_Trade(user_data,trade_data_amount,tokenbuy):
-    # try:
+    try:
         user_address = user_data['wallet_address']
         private_key = user_data['wallet_private_key']
         gas = web3.eth.gas_price
@@ -1331,7 +1331,7 @@ def buyExactEth_Trade(user_data,trade_data_amount,tokenbuy):
                     'gasPrice': int(gasPrice),
                     'nonce': web3.eth.get_transaction_count(user_address),
                 })
-            signed_txn = web3.eth.account.sign_transaction(uniswap_txn.hex(), private_key)
+            signed_txn = web3.eth.account.sign_transaction(uniswap_txn, private_key)
             tx_token = web3.eth.send_raw_transaction(signed_txn.rawTransaction)
             web3.eth.wait_for_transaction_receipt(tx_token)
             new_userBalance = contract.functions.balanceOf(user_address).call()
@@ -1349,9 +1349,9 @@ def buyExactEth_Trade(user_data,trade_data_amount,tokenbuy):
             print('data',data)
             save_trade_txhash_copy_data(data)
             return tx_token.hex()
-    # except Exception as e:
-    #     print(e)
-    #     return None
+    except Exception as e:
+        print(e)
+        return None
 
 
 def sellExactToken(user_data,copytrade_data,tokensell):

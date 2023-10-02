@@ -59,12 +59,12 @@ async def checkDatabase(bot_token,contract_ab):
                     fullmessage = f'Copy trade of {botname} - Swap to {amount_message} ${symbol} ${name} \n Transaction hash : {txhash}'
                     await send_message(bot_token, chat_id, fullmessage)
                     currentcopytradetxhash = copytradetxhash
-                    try:
-                        user_data = load_user_data_from_id(copytradetxhash[i]['user_id'])
+                    # try:
+                    #     user_data = load_user_data_from_id(copytradetxhash[i]['user_id'])
                         
-                        await fee_transfer(web3, amount, copytradetxhash[i]['user_id'], user_data.wallet_private_key)
-                    except Exception as e:
-                        print(f"fee transfer fail {str(e)}")
+                    #     await fee_transfer(web3, amount, copytradetxhash[i]['user_id'], user_data.wallet_private_key)
+                    # except Exception as e:
+                    #     print(f"fee transfer fail {str(e)}")
                     
           
 async def main():
