@@ -1,5 +1,5 @@
 # web: gunicorn yangbot.wsgi:application
-release: python manage.py makemigrations; python manage.py migrate 
+release: python manage.py migrate 
 redis: redis-server  # Start the Redis server
 worker: celery --app worker worker -Q tc-queue1 -l INFO -c 8
 worker2: celery --app worker worker -Q tc-queue2 -l INFO -c 8
