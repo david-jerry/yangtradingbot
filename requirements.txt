@@ -5,7 +5,7 @@ loguru==0.5.3
 web3==6.9.0
 mnemonic==0.20
 asgiref==3.7.2
-Django==4.2.4
+Django==4.2.7
 uniswap-python==0.7.1
 cctx==1.0.0
 asyncio==3.4.3
